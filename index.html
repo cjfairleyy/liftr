@@ -202,13 +202,19 @@
             font-weight: bold;
         }
 
+        /* Highly visible high-contrast target boxes for input fields */
         .input-wrapper {
             display: flex;
             align-items: center;
-            background-color: var(--input-bg);
-            border-radius: 8px;
-            padding: 2px 8px;
+            background-color: #1c1c1e;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 4px 10px;
             flex: 1;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: rgba(255, 255, 255, 0.4);
         }
 
         .input-label {
@@ -216,15 +222,18 @@
             text-transform: uppercase;
             color: var(--muted-text);
             font-weight: bold;
-            margin-right: 4px;
+            margin-right: 6px;
+            user-select: none;
         }
 
         .set-row input {
             margin-bottom: 0;
-            padding: 8px 4px;
+            padding: 6px 2px;
             background: transparent;
+            border: none;
             border-radius: 0;
-            font-size: 0.95rem;
+            font-size: 1rem;
+            width: 100%;
         }
 
         .btn-mini-add {
@@ -232,6 +241,22 @@
             font-size: 0.85rem;
             margin-top: 8px;
             margin-bottom: 0;
+        }
+
+        .btn-row-delete {
+            background: transparent;
+            color: #ff453a;
+            padding: 4px 6px;
+            width: auto;
+            font-size: 0.9rem;
+            margin: 0;
+            font-weight: bold;
+            opacity: 0.6;
+        }
+        
+        .btn-row-delete:active {
+            opacity: 1;
+            transform: scale(0.9);
         }
 
         /* Modal Overlay Window Styling */
@@ -247,7 +272,7 @@
             z-index: 2000;
             display: none;
             justify-content: center;
-            align-items: flex-end; /* iPhone style pull-up sheet */
+            align-items: flex-end;
         }
 
         .modal-window {
@@ -472,37 +497,51 @@
                 return;
             }
 
-            const newEx = { name: name, sets: [] };
+            const newEx = { name: name, uid: Date.now() + Math.random().toString(36).substr(2, 5) };
             activeWorkout.exercises.push(newEx);
-            const exIndex = activeWorkout.exercises.length - 1;
             
-            renderExerciseBlockElement(newEx, exIndex);
-            addSetToBlock(exIndex);
+            renderAllExerciseBlocks();
         }
 
-        function renderExerciseBlockElement(exObj, index) {
+        function renderAllExerciseBlocks() {
             const container = document.getElementById('current-exercises-list');
-            const blockHtml = `
-                <div class="exercise-block" id="ex-block-${index}">
-                    <div class="exercise-title">${exObj.name}</div>
-                    <div id="sets-container-${index}"></div>
-                    <button class="secondary btn-mini-add" onclick="addSetToBlock(${index})">+ Add Set</button>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', blockHtml);
+            container.innerHTML = '';
+            
+            activeWorkout.exercises.forEach((exObj, index) => {
+                const blockHtml = `
+                    <div class="exercise-block" id="ex-block-${index}">
+                        <div class="exercise-title">${exObj.name}</div>
+                        <div id="sets-container-${index}"></div>
+                        <button class="secondary btn-mini-add" onclick="addSetToBlock(${index})">+ Add Set</button>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', blockHtml);
+                
+                // If this is a newly initialized exercise with zero sets, auto-give it one row
+                if (!exObj.sets || exObj.sets.length === 0) {
+                    exObj.sets = [];
+                    addSetToBlock(index);
+                } else {
+                    // Otherwise rebuild what row memories were actively mapped
+                    const savedSets = [...exObj.sets];
+                    exObj.sets = [];
+                    savedSets.forEach(s => addSetToBlock(index, s.weight, s.reps));
+                }
+            });
         }
 
-        function addSetToBlock(exIndex) {
+        function addSetToBlock(exIndex, optW = null, optR = null) {
+            const exObj = activeWorkout.exercises[exIndex];
             const setsContainer = document.getElementById(`sets-container-${exIndex}`);
-            const currentSetsCount = setsContainer.children.length;
+            const currentSetsCount = exObj.sets.length;
             const nextSetNum = currentSetsCount + 1;
             
             let placeholderWeight = "0";
             let placeholderReps = "0";
-            const currentExName = activeWorkout.exercises[exIndex].name;
-
+            
+            // History lookup fallback engine
             for (let i = workouts.length - 1; i >= 0; i--) {
-                const found = workouts[i].exercises.find(e => e.name.toLowerCase() === currentExName.toLowerCase().trim());
+                const found = workouts[i].exercises.find(e => e.name.toLowerCase() === exObj.name.toLowerCase().trim());
                 if (found && found.sets[currentSetsCount]) {
                     placeholderWeight = found.sets[currentSetsCount].weight;
                     placeholderReps = found.sets[currentSetsCount].reps;
@@ -515,20 +554,59 @@
                 }
             }
 
+            // Construct structural memory row object metrics trace tracker
+            const newSetObj = {
+                weight: optW !== null ? optW : (placeholderWeight === "0" ? "" : placeholderWeight),
+                reps: optR !== null ? optR : (placeholderReps === "0" ? "" : placeholderReps)
+            };
+            exObj.sets.push(newSetObj);
+
+            const rowIdx = currentSetsCount;
             const setRowHtml = `
-                <div class="set-row">
-                    <span class="set-number">SET ${nextSetNum}</span>
+                <div class="set-row" id="set-row-${exIndex}-${rowIdx}">
+                    <span class="set-number" id="set-num-label-${exIndex}-${rowIdx}">SET ${nextSetNum}</span>
                     <div class="input-wrapper">
                         <span class="input-label">wt:</span>
-                        <input type="number" id="w-${exIndex}-${currentSetsCount}" pattern="[0-9]*" value="${placeholderWeight === "0" ? "" : placeholderWeight}" placeholder="${placeholderWeight}">
+                        <input type="number" id="w-${exIndex}-${rowIdx}" pattern="[0-9]*" 
+                               value="${newSetObj.weight}" placeholder="${placeholderWeight}" 
+                               oninput="syncSetData(${exIndex}, ${rowIdx})">
                     </div>
                     <div class="input-wrapper">
                         <span class="input-label">reps:</span>
-                        <input type="number" id="r-${exIndex}-${currentSetsCount}" pattern="[0-9]*" value="${placeholderReps === "0" ? "" : placeholderReps}" placeholder="${placeholderReps}">
+                        <input type="number" id="r-${exIndex}-${rowIdx}" pattern="[0-9]*" 
+                               value="${newSetObj.reps}" placeholder="${placeholderReps}"
+                               oninput="syncSetData(${exIndex}, ${rowIdx})">
                     </div>
+                    <button class="btn-row-delete" onclick="deleteSetFromBlock(${exIndex}, ${rowIdx})">✕</button>
                 </div>
             `;
             setsContainer.insertAdjacentHTML('beforeend', setRowHtml);
+        }
+
+        // Live caches updates directly into memory structures to preserve data across deletion re-renders
+        function syncSetData(exIdx, setIdx) {
+            const wInput = document.getElementById(`w-${exIdx}-${setIdx}`);
+            const rInput = document.getElementById(`r-${exIdx}-${setIdx}`);
+            if (activeWorkout.exercises[exIdx] && activeWorkout.exercises[exIdx].sets[setIdx]) {
+                activeWorkout.exercises[exIdx].sets[setIdx].weight = wInput.value;
+                activeWorkout.exercises[exIdx].sets[setIdx].reps = rInput.value;
+            }
+        }
+
+        function deleteSetFromBlock(exIdx, setIdx) {
+            // Remove row entry matching exact targeting structural array parameters
+            activeWorkout.exercises[exIdx].sets.splice(setIdx, 1);
+            
+            // Re-render this isolated exercise item block container to fix indices layout lists instantly
+            const container = document.getElementById(`sets-container-${exIdx}`);
+            container.innerHTML = '';
+            
+            const currentSets = [...activeWorkout.exercises[exIdx].sets];
+            activeWorkout.exercises[exIdx].sets = [];
+            
+            currentSets.forEach((s, newIdx) => {
+                addSetToBlock(exIdx, s.weight, s.reps);
+            });
         }
 
         function exitActiveWorkoutMode() {
@@ -552,26 +630,26 @@
 
             let processingValid = true;
 
-            activeWorkout.exercises.forEach((ex, exIdx) => {
-                const container = document.getElementById(`sets-container-${exIdx}`);
-                const rowsCount = container.children.length;
-                ex.sets = [];
-                
-                for (let sIdx = 0; sIdx < rowsCount; sIdx++) {
-                    const wVal = document.getElementById(`w-${exIdx}-${sIdx}`).value;
-                    const rVal = document.getElementById(`r-${exIdx}-${sIdx}`).value;
-                    
-                    if (!wVal || !rVal) {
+            activeWorkout.exercises.forEach((ex) => {
+                ex.sets.forEach(s => {
+                    if (!s.weight || !s.reps) {
                         processingValid = false;
                     }
-                    ex.sets.push({ weight: wVal || "0", reps: rVal || "0" });
-                }
+                });
             });
 
             if (!processingValid) {
                 if (!confirm("Some fields are blank. Save workout anyway?")) {
                     return;
                 }
+            }
+
+            // Cleanup step: Filter out any completely empty exercises or ones where sets are left entirely at 0 explicitly
+            activeWorkout.exercises = activeWorkout.exercises.filter(ex => ex.sets.length > 0);
+
+            if (activeWorkout.exercises.length === 0) {
+                alert("No non-empty set logs found to save!");
+                return;
             }
 
             activeWorkout.duration = document.getElementById('timer').innerText;
