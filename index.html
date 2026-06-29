@@ -80,18 +80,50 @@
 
         input {
             width: 100%;
-            padding: 14px 16px;
+            padding: 12px 14px;
             background-color: var(--input-bg);
             border: 1px solid transparent;
-            border-radius: 12px;
+            border-radius: 10px;
             color: var(--text-color);
             font-size: 1rem;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         input:focus {
             outline: none;
             border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Quick-select exercise tags chips */
+        .exercise-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 8px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .exercise-chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip {
+            background-color: #2c2c2e;
+            color: var(--text-color);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-weight: 500;
+        }
+
+        .chip:active {
+            background-color: #3a3a3c;
+            transform: scale(0.95);
         }
 
         button {
@@ -122,15 +154,6 @@
         button.danger {
             background-color: rgba(255, 69, 58, 0.15);
             color: #ff453a;
-        }
-
-        .row-inputs {
-            display: flex;
-            gap: 12px;
-        }
-
-        .row-inputs div {
-            flex: 1;
         }
 
         label {
@@ -180,12 +203,48 @@
             color: var(--text-color);
         }
 
-        .logged-item {
+        /* Exercise block inside the active workout */
+        .exercise-block {
             background: #2c2c2e;
-            padding: 14px;
-            border-radius: 10px;
-            margin: 12px 0;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
             border-left: 4px solid var(--accent-color);
+        }
+
+        .exercise-title {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .set-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .set-number {
+            font-size: 0.85rem;
+            color: var(--muted-text);
+            width: 50px;
+            font-weight: bold;
+        }
+
+        .set-row input {
+            margin-bottom: 0;
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        .btn-mini-add {
+            padding: 8px;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            margin-bottom: 0;
         }
 
         .btn-delete {
@@ -218,27 +277,32 @@
             </div>
 
             <div class="card">
-                <h2>Log Exercise</h2>
-                <label>Exercise Name</label>
-                <input type="text" id="exercise-name" placeholder="e.g., Bench Press" oninput="checkAutofill(this.value)">
+                <h2>Add Exercise</h2>
                 
-                <div class="row-inputs">
-                    <div>
-                        <label>Weight (lbs)</label>
-                        <input type="number" id="weight" pattern="[0-9]*" placeholder="0">
-                    </div>
-                    <div>
-                        <label>Reps</label>
-                        <input type="number" id="reps" pattern="[0-9]*" placeholder="0">
-                    </div>
+                <label>Quick Select</label>
+                <div class="exercise-chips">
+                    <div class="chip" onclick="selectExercise('Bench Press')">Bench Press</div>
+                    <div class="chip" onclick="selectExercise('Incline Bench')">Incline Bench</div>
+                    <div class="chip" onclick="selectExercise('Squat')">Squat</div>
+                    <div class="chip" onclick="selectExercise('Deadlift')">Deadlift</div>
+                    <div class="chip" onclick="selectExercise('Overhead Press')">Overhead Press</div>
+                    <div class="chip" onclick="selectExercise('Barbell Row')">Barbell Row</div>
+                    <div class="chip" onclick="selectExercise('Lat Pulldown')">Lat Pulldown</div>
+                    <div class="chip" onclick="selectExercise('Bicep Curl')">Bicep Curl</div>
+                    <div class="chip" onclick="selectExercise('Tricep Pushdown')">Tricep Pushdown</div>
+                    <div class="chip" onclick="selectExercise('Lateral Raise')">Lateral Raise</div>
+                    <div class="chip" onclick="selectExercise('Leg Press')">Leg Press</div>
                 </div>
-                <button class="secondary" onclick="addSetToCurrent()">Log Set</button>
+
+                <input type="text" id="exercise-name" placeholder="Type custom exercise...">
+                <button class="secondary" onclick="addNewExerciseBlock()">Add to Workout</button>
             </div>
 
             <div class="card">
-                <h2>Current Session Logs</h2>
-                <div id="current-logs"></div>
-                <button style="margin-top: 20px; background-color: #34c759; color: #000;" onclick="endWorkout()">Finish & Save</button>
+                <h2>Current Session</h2>
+                <div id="current-exercises-list"></div>
+                
+                <button style="margin-top: 30px; background-color: #34c759; color: #000;" onclick="endWorkout()">Finish & Save</button>
                 <button class="danger" onclick="cancelWorkout()">Cancel Workout</button>
             </div>
         </div>
@@ -297,6 +361,7 @@
             
             document.getElementById('main-header').style.display = 'none';
             document.getElementById('main-nav').style.display = 'none';
+            document.getElementById('current-exercises-list').innerHTML = '';
             
             switchView('active-workout-view', null);
             
@@ -313,64 +378,96 @@
             document.getElementById('timer').innerText = `${hrs}:${mins}:${secs}`;
         }
 
-        function checkAutofill(exerciseName) {
-            if (!exerciseName.trim()) return;
-            for (let i = workouts.length - 1; i >= 0; i--) {
-                const foundExercise = workouts[i].exercises.find(e => e.name.toLowerCase() === exerciseName.toLowerCase().trim());
-                if (foundExercise && foundExercise.sets.length > 0) {
-                    const lastSet = foundExercise.sets[foundExercise.sets.length - 1];
-                    document.getElementById('weight').placeholder = `${lastSet.weight} (last)`;
-                    document.getElementById('reps').placeholder = `${lastSet.reps} (last)`;
-                    document.getElementById('weight').value = lastSet.weight;
-                    document.getElementById('reps').value = lastSet.reps;
-                    break;
-                }
-            }
+        function selectExercise(name) {
+            document.getElementById('exercise-name').value = name;
+            addNewExerciseBlock();
         }
 
-        function addSetToCurrent() {
-            const name = document.getElementById('exercise-name').value.trim();
-            const weight = document.getElementById('weight').value;
-            const reps = document.getElementById('reps').value;
+        // Creates a new exercise card block inside the live tracker screen
+        function addNewExerciseBlock() {
+            const nameInput = document.getElementById('exercise-name');
+            const name = nameInput.value.trim();
 
-            if (!name || !weight || !reps) {
-                alert("Please fill in exercise name, weight, and reps.");
+            if (!name) {
+                alert("Please select or enter an exercise name.");
                 return;
             }
 
-            let exercise = activeWorkout.exercises.find(e => e.name.toLowerCase() === name.toLowerCase());
-            if (!exercise) {
-                exercise = { name: name, sets: [] };
-                activeWorkout.exercises.push(exercise);
+            // Prevent duplicating the exact same block setup if already open
+            let existing = activeWorkout.exercises.find(e => e.name.toLowerCase() === name.toLowerCase());
+            if (existing) {
+                alert("This exercise is already added to your list below!");
+                return;
             }
 
-            exercise.sets.push({ weight: weight, reps: reps });
-            updateCurrentLogsUI();
+            const newEx = { name: name, sets: [] };
+            activeWorkout.exercises.push(newEx);
+            
+            const exIndex = activeWorkout.exercises.length - 1;
+            renderExerciseBlockElement(newEx, exIndex);
+            
+            // Auto-append 1 default set row immediately upon card creation
+            addSetToBlock(exIndex);
 
-            document.getElementById('weight').value = '';
-            document.getElementById('reps').value = '';
+            nameInput.value = '';
         }
 
-        function updateCurrentLogsUI() {
-            const container = document.getElementById('current-logs');
-            container.innerHTML = '';
-            activeWorkout.exercises.forEach(ex => {
-                let setsHtml = ex.sets.map((s, index) => `SET ${index+1}: ${s.weight} LBS × ${s.reps}`).join('<br>');
-                container.innerHTML += `
-                    <div class="logged-item">
-                        <strong style="text-transform:uppercase; letter-spacing:1px; font-size:0.95rem;">${ex.name}</strong><br>
-                        <span style="font-size:0.85rem; color:var(--muted-text); line-height:1.6; display:inline-block; margin-top:6px;">${setsHtml}</span>
-                    </div>
-                `;
-            });
+        // Renders the wrapper node frame for an added exercise
+        function renderExerciseBlockElement(exObj, index) {
+            const container = document.getElementById('current-exercises-list');
+            
+            const blockHtml = `
+                <div class="exercise-block" id="ex-block-${index}">
+                    <div class="exercise-title">${exObj.name}</div>
+                    <div id="sets-container-${index}"></div>
+                    <button class="secondary btn-mini-add" onclick="addSetToBlock(${index})">+ Add Set</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', blockHtml);
+        }
+
+        // Spawns input line metrics row when clicking "+ Add Set" within an exercise block
+        function addSetToBlock(exIndex) {
+            const setsContainer = document.getElementById(`sets-container-${exIndex}`);
+            const currentSetsCount = setsContainer.children.length;
+            const nextSetNum = currentSetsCount + 1;
+            
+            // Check lookup historical records for placeholder data matching this title string
+            let placeholderWeight = "0";
+            let placeholderReps = "0";
+            const currentExName = activeWorkout.exercises[exIndex].name;
+
+            for (let i = workouts.length - 1; i >= 0; i--) {
+                const found = workouts[i].exercises.find(e => e.name.toLowerCase() === currentExName.toLowerCase().trim());
+                if (found && found.sets[currentSetsCount]) {
+                    placeholderWeight = found.sets[currentSetsCount].weight;
+                    placeholderReps = found.sets[currentSetsCount].reps;
+                    break;
+                } else if (found && found.sets.length > 0) {
+                    // Fallback to the last logged set if exact count match row index doesn't align
+                    const lastSet = found.sets[found.sets.length - 1];
+                    placeholderWeight = lastSet.weight;
+                    placeholderReps = lastSet.reps;
+                    break;
+                }
+            }
+
+            const setRowHtml = `
+                <div class="set-row">
+                    <span class="set-number">SET ${nextSetNum}</span>
+                    <input type="number" id="w-${exIndex}-${currentSetsCount}" pattern="[0-9]*" value="${placeholderWeight === "0" ? "" : placeholderWeight}" placeholder="${placeholderWeight} lbs">
+                    <input type="number" id="r-${exIndex}-${currentSetsCount}" pattern="[0-9]*" value="${placeholderReps === "0" ? "" : placeholderReps}" placeholder="${placeholderReps} reps">
+                </div>
+            `;
+            setsContainer.insertAdjacentHTML('beforeend', setRowHtml);
         }
 
         function exitActiveWorkoutMode() {
             clearInterval(timerInterval);
             activeWorkout = null;
-            document.getElementById('current-logs').innerHTML = '';
             document.getElementById('exercise-name').value = '';
             document.getElementById('timer').innerText = '00:00:00';
+            document.getElementById('current-exercises-list').innerHTML = '';
             
             document.getElementById('main-header').style.display = 'block';
             document.getElementById('main-nav').style.display = 'flex';
@@ -379,11 +476,40 @@
             switchView('home-view', workoutTab);
         }
 
+        // Pulls values from live dynamic textboxes right before processing structural preservation
         function endWorkout() {
             if (activeWorkout.exercises.length === 0) {
-                alert("You haven't logged any exercises yet!");
+                alert("You haven't added any exercises yet!");
                 return;
             }
+
+            let processingValid = true;
+
+            // Step through each active block object tree item to ingest row inputs values safely
+            activeWorkout.exercises.forEach((ex, exIdx) => {
+                const container = document.getElementById(`sets-container-${exIdx}`);
+                const rowsCount = container.children.length;
+                
+                ex.sets = []; // wipe tracking templates array clear to map verified data nodes explicitly
+                
+                for (let sIdx = 0; sIdx < rowsCount; sIdx++) {
+                    const wVal = document.getElementById(`w-${exIdx}-${sIdx}`).value;
+                    const rVal = document.getElementById(`r-${exIdx}-${sIdx}`).value;
+                    
+                    if (!wVal || !rVal) {
+                        processingValid = false;
+                    }
+                    
+                    ex.sets.push({ weight: wVal || "0", reps: rVal || "0" });
+                }
+            });
+
+            if (!processingValid) {
+                if (!confirm("Some set fields are blank. Save workout anyway?")) {
+                    return;
+                }
+            }
+
             activeWorkout.duration = document.getElementById('timer').innerText;
             workouts.push(activeWorkout);
             localStorage.setItem('workouts', JSON.stringify(workouts));
