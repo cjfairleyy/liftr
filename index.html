@@ -12,14 +12,13 @@
     <style>
         :root {
             --bg-color: #000000;
-            --card-bg: #1c1c1e; /* Smooth iOS dark grey */
+            --card-bg: #1c1c1e;
             --input-bg: #2c2c2e;
             --accent-color: #ffffff;
             --accent-text: #000000;
             --text-color: #ffffff;
             --muted-text: #aeaeb2;
-            --border-radius: 16px; /* Smooth rounded corners */
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 16px;
         }
 
         * {
@@ -30,12 +29,11 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             padding-bottom: 100px;
             padding-top: env(safe-area-inset-top);
-            background: linear-gradient(180deg, #121212 0%, #000000 100%);
             min-height: 100vh;
         }
 
@@ -49,9 +47,6 @@
             text-transform: lowercase;
             font-size: 2rem;
             font-weight: 800;
-            background: linear-gradient(180deg, #ffffff 0%, #a1a1a1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         .container {
@@ -62,27 +57,18 @@
 
         .view {
             display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .view.active {
             display: block;
         }
 
-        /* Sleek Card Styles */
         .card {
             background-color: var(--card-bg);
             border-radius: var(--border-radius);
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: var(--transition);
         }
 
         h2 {
@@ -90,12 +76,9 @@
             font-size: 1.1rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: var(--accent-color);
-            font-weight: 700;
         }
 
-        /* Inputs & Buttons */
-        input, select {
+        input {
             width: 100%;
             padding: 14px 16px;
             background-color: var(--input-bg);
@@ -104,17 +87,11 @@
             color: var(--text-color);
             font-size: 1rem;
             margin-bottom: 16px;
-            transition: var(--transition);
         }
 
         input:focus {
             outline: none;
             border-color: rgba(255, 255, 255, 0.3);
-            background-color: #3a3a3c;
-        }
-
-        input::placeholder {
-            color: #636366;
         }
 
         button {
@@ -129,38 +106,24 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
         }
 
         button:active {
             transform: scale(0.98);
-            opacity: 0.9;
         }
 
         button.secondary {
             background-color: #2c2c2e;
             color: var(--text-color);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: none;
-        }
-
-        button.secondary:active {
-            background-color: #3a3a3c;
         }
 
         button.danger {
             background-color: rgba(255, 69, 58, 0.15);
             color: #ff453a;
-            border: 1px solid rgba(255, 69, 58, 0.3);
-            box-shadow: none;
-        }
-        
-        button.danger:active {
-            background-color: rgba(255, 69, 58, 0.25);
         }
 
-        /* Inline group for sets */
         .row-inputs {
             display: flex;
             gap: 12px;
@@ -180,26 +143,20 @@
             font-weight: 600;
         }
 
-        /* Timer style */
         .timer-display {
             font-size: 3.2rem;
             font-weight: 800;
             text-align: center;
-            margin: 10px 0 20px 0;
+            margin-bottom: 20px;
             font-variant-numeric: tabular-nums;
-            letter-spacing: 1px;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
         }
 
-        /* Bottom Navigation Bar */
         nav {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: rgba(28, 28, 30, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background-color: rgba(28, 28, 30, 0.95);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: space-around;
@@ -215,17 +172,14 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             cursor: pointer;
-            transition: var(--transition);
             font-weight: 600;
             padding: 8px 0;
         }
 
         nav .nav-item.active {
             color: var(--text-color);
-            transform: translateY(-1px);
         }
 
-        /* Logging lists */
         .logged-item {
             background: #2c2c2e;
             padding: 14px;
@@ -234,48 +188,58 @@
             border-left: 4px solid var(--accent-color);
         }
 
-        .history-workout {
-            margin-top: 15px;
+        .btn-delete {
+            background: transparent;
+            color: #ff453a;
+            padding: 4px 8px;
+            width: auto;
+            font-size: 0.8rem;
+            margin: 0;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1 id="app-title">liftr</h1>
+    <header id="main-header">
+        <h1>liftr</h1>
     </header>
 
     <div class="container">
-        <div id="workout-view" class="view active">
+        <div id="home-view" class="view active">
+            <div class="card" style="text-align: center; padding: 40px 20px;">
+                <h2 style="margin-bottom: 20px;">Ready?</h2>
+                <button onclick="startNewWorkout()">Start Blank Workout</button>
+            </div>
+        </div>
+
+        <div id="active-workout-view" class="view">
             <div class="card">
                 <div class="timer-display" id="timer">00:00:00</div>
-                <button id="start-btn" onclick="toggleWorkout()">Start Workout</button>
             </div>
 
-            <div id="workout-controls" style="display: none;">
-                <div class="card">
-                    <h2>Log Exercise</h2>
-                    <label>Exercise Name</label>
-                    <input type="text" id="exercise-name" placeholder="e.g., Bench Press" oninput="checkAutofill(this.value)">
-                    
-                    <div class="row-inputs">
-                        <div>
-                            <label>Weight (lbs)</label>
-                            <input type="number" id="weight" pattern="[0-9]*" placeholder="0">
-                        </div>
-                        <div>
-                            <label>Reps</label>
-                            <input type="number" id="reps" pattern="[0-9]*" placeholder="0">
-                        </div>
+            <div class="card">
+                <h2>Log Exercise</h2>
+                <label>Exercise Name</label>
+                <input type="text" id="exercise-name" placeholder="e.g., Bench Press" oninput="checkAutofill(this.value)">
+                
+                <div class="row-inputs">
+                    <div>
+                        <label>Weight (lbs)</label>
+                        <input type="number" id="weight" pattern="[0-9]*" placeholder="0">
                     </div>
-                    <button class="secondary" onclick="addSetToCurrent()">Log Set</button>
+                    <div>
+                        <label>Reps</label>
+                        <input type="number" id="reps" pattern="[0-9]*" placeholder="0">
+                    </div>
                 </div>
+                <button class="secondary" onclick="addSetToCurrent()">Log Set</button>
+            </div>
 
-                <div class="card">
-                    <h2>Current Session</h2>
-                    <div id="current-logs"></div>
-                    <button class="danger" style="margin-top: 10px;" onclick="endWorkout()">End & Save Workout</button>
-                </div>
+            <div class="card">
+                <h2>Current Session Logs</h2>
+                <div id="current-logs"></div>
+                <button style="margin-top: 20px; background-color: #34c759; color: #000;" onclick="endWorkout()">Finish & Save</button>
+                <button class="danger" onclick="cancelWorkout()">Cancel Workout</button>
             </div>
         </div>
 
@@ -298,8 +262,8 @@
         </div>
     </div>
 
-    <nav>
-        <div class="nav-item active" onclick="switchView('workout-view', this)">Workout</div>
+    <nav id="main-nav">
+        <div class="nav-item active" onclick="switchView('home-view', this)">Workout</div>
         <div class="nav-item" onclick="switchView('history-view', this)">History</div>
         <div class="nav-item" onclick="switchView('weight-view', this)">Weight</div>
     </nav>
@@ -313,44 +277,33 @@
         let secondsElapsed = 0;
 
         function switchView(viewId, element) {
+            if (activeWorkout && viewId !== 'active-workout-view') {
+                alert("Please finish or cancel your active workout first!");
+                return;
+            }
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             
             document.getElementById(viewId).classList.add('active');
-            element.classList.add('active');
+            if (element) element.classList.add('active');
             
             if(viewId === 'history-view') renderHistory();
             if(viewId === 'weight-view') renderBodyweight();
         }
 
-        function toggleWorkout() {
-            const startBtn = document.getElementById('start-btn');
-            const controls = document.getElementById('workout-controls');
-
-            if (!activeWorkout) {
-                activeWorkout = { date: new Date().toLocaleDateString(), exercises: [] };
-                secondsElapsed = 0;
-                controls.style.display = 'block';
-                startBtn.innerText = 'Pause Workout';
-                startBtn.classList.add('secondary');
-                
-                timerInterval = setInterval(() => {
-                    secondsElapsed++;
-                    updateTimerDisplay();
-                }, 1000);
-            } else {
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    startBtn.innerText = 'Resume Workout';
-                } else {
-                    timerInterval = setInterval(() => {
-                        secondsElapsed++;
-                        updateTimerDisplay();
-                    }, 1000);
-                    startBtn.innerText = 'Pause Workout';
-                }
-            }
+        function startNewWorkout() {
+            activeWorkout = { date: new Date().toLocaleDateString(), exercises: [] };
+            secondsElapsed = 0;
+            
+            document.getElementById('main-header').style.display = 'none';
+            document.getElementById('main-nav').style.display = 'none';
+            
+            switchView('active-workout-view', null);
+            
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                updateTimerDisplay();
+            }, 1000);
         }
 
         function updateTimerDisplay() {
@@ -362,17 +315,12 @@
 
         function checkAutofill(exerciseName) {
             if (!exerciseName.trim()) return;
-            
             for (let i = workouts.length - 1; i >= 0; i--) {
-                const foundExercise = workouts[i].exercises.find(
-                    e => e.name.toLowerCase() === exerciseName.toLowerCase().trim()
-                );
-                
+                const foundExercise = workouts[i].exercises.find(e => e.name.toLowerCase() === exerciseName.toLowerCase().trim());
                 if (foundExercise && foundExercise.sets.length > 0) {
                     const lastSet = foundExercise.sets[foundExercise.sets.length - 1];
                     document.getElementById('weight').placeholder = `${lastSet.weight} (last)`;
                     document.getElementById('reps').placeholder = `${lastSet.reps} (last)`;
-                    
                     document.getElementById('weight').value = lastSet.weight;
                     document.getElementById('reps').value = lastSet.reps;
                     break;
@@ -406,7 +354,6 @@
         function updateCurrentLogsUI() {
             const container = document.getElementById('current-logs');
             container.innerHTML = '';
-            
             activeWorkout.exercises.forEach(ex => {
                 let setsHtml = ex.sets.map((s, index) => `SET ${index+1}: ${s.weight} LBS × ${s.reps}`).join('<br>');
                 container.innerHTML += `
@@ -418,27 +365,36 @@
             });
         }
 
+        function exitActiveWorkoutMode() {
+            clearInterval(timerInterval);
+            activeWorkout = null;
+            document.getElementById('current-logs').innerHTML = '';
+            document.getElementById('exercise-name').value = '';
+            document.getElementById('timer').innerText = '00:00:00';
+            
+            document.getElementById('main-header').style.display = 'block';
+            document.getElementById('main-nav').style.display = 'flex';
+            
+            const workoutTab = document.querySelector('#main-nav .nav-item');
+            switchView('home-view', workoutTab);
+        }
+
         function endWorkout() {
             if (activeWorkout.exercises.length === 0) {
                 alert("You haven't logged any exercises yet!");
                 return;
             }
-
-            clearInterval(timerInterval);
             activeWorkout.duration = document.getElementById('timer').innerText;
             workouts.push(activeWorkout);
             localStorage.setItem('workouts', JSON.stringify(workouts));
-            
-            activeWorkout = null;
-            document.getElementById('workout-controls').style.display = 'none';
-            document.getElementById('current-logs').innerHTML = '';
-            document.getElementById('exercise-name').value = '';
-            document.getElementById('timer').innerText = '00:00:00';
-            const startBtn = document.getElementById('start-btn');
-            startBtn.innerText = 'Start Workout';
-            startBtn.classList.remove('secondary');
-            
-            alert("Workout Saved Successfully!");
+            alert("Workout Saved!");
+            exitActiveWorkoutMode();
+        }
+
+        function cancelWorkout() {
+            if (confirm("Are you sure you want to cancel this workout? Data won't be saved.")) {
+                exitActiveWorkoutMode();
+            }
         }
 
         function renderHistory() {
@@ -447,13 +403,11 @@
                 container.innerHTML = '<p style="color:var(--muted-text); text-transform:uppercase; letter-spacing:1px; font-size:0.85rem;">No workouts logged yet.</p>';
                 return;
             }
-
             container.innerHTML = workouts.slice().reverse().map(w => {
                 let exercisesHtml = w.exercises.map(ex => {
                     let setsText = ex.sets.map((s, i) => `S${i+1}: ${s.weight}lbs × ${s.reps}`).join(', ');
                     return `<div style="margin-bottom:12px;"><strong style="text-transform:uppercase; font-size:0.9rem;">${ex.name}</strong><br><span style="color:var(--muted-text); font-size:0.85rem;">${setsText}</span></div>`;
                 }).join('');
-
                 return `
                     <div class="card">
                         <div style="display:flex; justify-content:space-between; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; font-size:0.95rem;">
@@ -469,15 +423,15 @@
         function logBodyweight() {
             const wt = document.getElementById('body-weight-input').value;
             if(!wt) return;
-
-            const entry = {
-                date: new Date().toLocaleDateString(),
-                weight: wt
-            };
-
-            bodyweightLog.push(entry);
+            bodyweightLog.push({ id: Date.now(), date: new Date().toLocaleDateString(), weight: wt });
             localStorage.setItem('bodyweightLog', JSON.stringify(bodyweightLog));
             document.getElementById('body-weight-input').value = '';
+            renderBodyweight();
+        }
+
+        function deleteBodyweight(id) {
+            bodyweightLog = bodyweightLog.filter(entry => entry.id !== id);
+            localStorage.setItem('bodyweightLog', JSON.stringify(bodyweightLog));
             renderBodyweight();
         }
 
@@ -487,11 +441,13 @@
                 container.innerHTML = '<p style="color:var(--muted-text); text-transform:uppercase; letter-spacing:1px; font-size:0.85rem;">No weight logs yet.</p>';
                 return;
             }
-
             container.innerHTML = bodyweightLog.slice().reverse().map(b => `
-                <div style="display:flex; justify-content:space-between; padding: 14px 4px; border-bottom:1px solid rgba(255,255,255,0.08)">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding: 14px 4px; border-bottom:1px solid rgba(255,255,255,0.08)">
                     <span style="color:var(--muted-text); font-size:0.9rem;">${b.date}</span>
-                    <strong style="font-size:0.95rem;">${b.weight} LBS</strong>
+                    <div>
+                        <strong style="font-size:0.95rem; margin-right:15px;">${b.weight} LBS</strong>
+                        <button class="btn-delete" onclick="deleteBodyweight(${b.id})">Delete</button>
+                    </div>
                 </div>
             `).join('');
         }
