@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>liftr - Workout Logger</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f5;
+            --card-bg: #ffffff;
+            --text-main: #18181b;
+            --text-muted: #71717a;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #22c55e;
+            --border: #e4e4e7;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--card-bg);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .screen {
+            display: none;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            margin-top: 10px;
+        }
+
+        /* Cards */
+        .exercise-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: var(--card-bg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .delete-btn {
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Set Rows */
+        .set-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 1fr 40px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .set-row.completed {
+            background-color: #dcfce7;
+        }
+
+        .set-number {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .check-btn {
+            background: #e4e4e7;
+            border: none;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .set-row.completed .check-btn {
+            background: var(--success);
+        }
+
+        .add-set-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* Exercise List Modal */
+        .exercise-list-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .exercise-list-item:hover {
+            background-color: var(--bg-color);
+        }
+
+        .exercise-category {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 15px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <header>
+        <h1>liftr</h1>
+    </header>
+
+    <div id="home-screen" class="screen active">
+        <div style="text-align: center; margin-top: 50px; margin-bottom: 50px;">
+            <p style="color: var(--text-muted);">Ready to lift?</p>
+            <h2 id="streak-text">0 Workouts Completed</h2>
+        </div>
+        <button class="btn" onclick="startWorkout()">Start Empty Workout</button>
+    </div>
+
+    <div id="workout-screen" class="screen">
+        <div id="workout-timer" style="text-align: center; font-weight: bold; margin-bottom: 20px; color: var(--accent);">00:00</div>
+        
+        <div id="workout-cards"></div>
+
+        <button class="btn btn-outline" onclick="showExerciseModal()">+ Add Exercise</button>
+        <button class="btn" style="margin-top: 20px; background-color: var(--success);" onclick="finishWorkout()">Finish Workout</button>
+    </div>
+
+    <div id="exercise-modal" class="screen">
+        <h2>Select Exercise</h2>
+        <input type="text" id="search-exercise" placeholder="Search exercises..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;" onkeyup="filterExercises()">
+        <div id="exercise-list"></div>
+        <button class="btn btn-outline" onclick="hideExerciseModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    // --- Data ---
+    const exerciseDatabase = [
+        { name: "Barbell Bench Press", category: "Chest" },
+        { name: "Incline Dumbbell Press", category: "Chest" },
+        { name: "Cable Crossover", category: "Chest" },
+        { name: "Push-Ups", category: "Chest" },
+        { name: "Barbell Squat", category: "Legs" },
+        { name: "Leg Press", category: "Legs" },
+        { name: "Romanian Deadlift", category: "Legs" },
+        { name: "Calf Raises", category: "Legs" },
+        { name: "Deadlift", category: "Back" },
+        { name: "Pull-Ups", category: "Back" },
+        { name: "Lat Pulldown", category: "Back" },
+        { name: "Barbell Row", category: "Back" },
+        { name: "Overhead Press", category: "Shoulders" },
+        { name: "Lateral Raises", category: "Shoulders" },
+        { name: "Barbell Bicep Curl", category: "Arms" },
+        { name: "Tricep Rope Pushdown", category: "Arms" },
+        { name: "Plank", category: "Core" },
+        { name: "Crunch", category: "Core" }
+    ];
+
+    let currentWorkout = [];
+    let workoutTimerInterval;
+    let secondsElapsed = 0;
+    let workoutsCompleted = 0;
+
+    // --- Navigation Functions ---
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // --- Workout Functions ---
+    function startWorkout() {
+        currentWorkout = [];
+        secondsElapsed = 0;
+        document.getElementById('workout-cards').innerHTML = '';
+        updateTimerDisplay();
+        workoutTimerInterval = setInterval(() => {
+            secondsElapsed++;
+            updateTimerDisplay();
+        }, 1000);
+        showScreen('workout-screen');
+    }
+
+    function updateTimerDisplay() {
+        const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+        const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+        document.getElementById('workout-timer').innerText = `${mins}:${secs}`;
+    }
+
+    function finishWorkout() {
+        clearInterval(workoutTimerInterval);
+        workoutsCompleted++;
+        document.getElementById('streak-text').innerText = `${workoutsCompleted} Workouts Completed`;
+        alert("Workout saved successfully!");
+        showScreen('home-screen');
+    }
+
+    // --- Exercise Modal Functions ---
+    function showExerciseModal() {
+        renderExerciseList(exerciseDatabase);
+        showScreen('exercise-modal');
+    }
+
+    function hideExerciseModal() {
+        showScreen('workout-screen');
+    }
+
+    function renderExerciseList(list) {
+        const container = document.getElementById('exercise-list');
+        container.innerHTML = '';
+        
+        let currentCategory = '';
+        list.forEach(ex => {
+            if (ex.category !== currentCategory) {
+                const catHeader = document.createElement('div');
+                catHeader.className = 'exercise-category';
+                catHeader.innerText = ex.category;
+                container.appendChild(catHeader);
+                currentCategory = ex.category;
+            }
+            const item = document.createElement('div');
+            item.className = 'exercise-list-item';
+            item.innerText = ex.name;
+            item.onclick = () => addExerciseToWorkout(ex.name);
+            container.appendChild(item);
+        });
+    }
+
+    function filterExercises() {
+        const query = document.getElementById('search-exercise').value.toLowerCase();
+        const filtered = exerciseDatabase.filter(ex => ex.name.toLowerCase().includes(query));
+        renderExerciseList(filtered);
+    }
+
+    // --- Logging Functions ---
+    function addExerciseToWorkout(exerciseName) {
+        currentWorkout.push({
+            id: Date.now(),
+            name: exerciseName,
+            sets: [{ weight: '', reps: '', completed: false }]
+        });
+        hideExerciseModal();
+        renderWorkout();
+    }
+
+    function removeExercise(exerciseId) {
+        currentWorkout = currentWorkout.filter(ex => ex.id !== exerciseId);
+        renderWorkout();
+    }
+
+    function addSet(exerciseId) {
+        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        // Copy weight and reps from previous set if it exists
+        const lastSet = exercise.sets[exercise.sets.length - 1];
+        exercise.sets.push({ 
+            weight: lastSet ? lastSet.weight : '', 
+            reps: lastSet ? lastSet.reps : '', 
+            completed: false 
+        });
+        renderWorkout();
+    }
+
+    function toggleSet(exerciseId, setIndex) {
+        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        exercise.sets[setIndex].completed = !exercise.sets[setIndex].completed;
+        renderWorkout();
+    }
+
+    function updateSetData(exerciseId, setIndex, field, value) {
+        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        exercise.sets[setIndex][field] = value;
+    }
+
+    // --- Rendering Functions ---
+    function renderWorkout() {
+        const container = document.getElementById('workout-cards');
+        container.innerHTML = '';
+
+        currentWorkout.forEach(exercise => {
+            const card = document.createElement('div');
+            card.className = 'exercise-card';
+
+            // Card Header
+            const header = document.createElement('div');
+            header.className = 'exercise-header';
+            header.innerHTML = `
+                <span>${exercise.name}</span>
+                <button class="delete-btn" onclick="removeExercise(${exercise.id})">×</button>
+            `;
+            card.appendChild(header);
+
+            // Sets
+            exercise.sets.forEach((set, index) => {
+                const setRow = document.createElement('div');
+                setRow.className = `set-row ${set.completed ? 'completed' : ''}`;
+                
+                setRow.innerHTML = `
+                    <div class="set-number">${index + 1}</div>
+                    <div class="input-group">
+                        <label>lbs</label>
+                        <input type="number" value="${set.weight}" onchange="updateSetData(${exercise.id}, ${index}, 'weight', this.value)" ${set.completed ? 'disabled' : ''}>
+                    </div>
+                    <div class="input-group">
+                        <label>Reps</label>
+                        <input type="number" value="${set.reps}" onchange="updateSetData(${exercise.id}, ${index}, 'reps', this.value)" ${set.completed ? 'disabled' : ''}>
+                    </div>
+                    <button class="check-btn" onclick="toggleSet(${exercise.id}, ${index})">✓</button>
+                `;
+                card.appendChild(setRow);
+            });
+
+            // Add Set Button
+            const addSetBtn = document.createElement('button');
+            addSetBtn.className = 'add-set-btn';
+            addSetBtn.innerText = '+ Add Set';
+            addSetBtn.onclick = () => addSet(exercise.id);
+            card.appendChild(addSetBtn);
+
+            container.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>
