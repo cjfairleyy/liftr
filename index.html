@@ -22,16 +22,16 @@
             --btn-primary-text: #000000;
             --btn-primary-hover: #e4e4e7;
             
-            --check-active-bg: #ffffff;
-            --check-active-text: #000000;
+            --check-active-bg: #22c55e;
+            --check-active-text: #ffffff;
             --check-inactive-bg: #27272a;
             
             --tag-bg: #18181b;
             
             /* Custom Modifier Colors */
-            --mod-bw: #3b82f6;      /* Blue */
-            --mod-side: #f97316;    /* Orange */
-            --mod-fail: #ef4444;    /* Red */
+            --mod-bw: #3b82f6;
+            --mod-side: #f97316;
+            --mod-fail: #ef4444;
         }
 
         * {
@@ -62,13 +62,13 @@
 
         /* Typography & Headers */
         header {
-            padding: 24px 24px 16px;
-            background-color: rgba(0, 0, 0, 0.85);
+            padding: 20px 20px 14px;
+            background-color: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 40;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -77,34 +77,35 @@
 
         header h1 {
             margin: 0;
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
         }
         
         .header-btn {
             background: none;
             border: none;
             color: var(--text-muted);
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             padding: 8px;
             display: flex;
             align-items: center;
             gap: 4px;
+            font-weight: 500;
         }
 
         h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 24px;
-            letter-spacing: -0.5px;
+            font-size: 1.6rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            letter-spacing: -0.3px;
         }
 
         /* Screens */
         .screen {
             display: none;
-            padding: 24px 24px 120px;
+            padding: 20px 20px 120px;
             flex-grow: 1;
             animation: fadeIn 0.3s ease;
         }
@@ -130,9 +131,9 @@
             color: var(--btn-primary-text);
             border: none;
             padding: 16px 20px;
-            border-radius: 16px;
+            border-radius: 14px;
             font-size: 1rem;
-            font-weight: 700;
+            font-weight: 500;
             cursor: pointer;
             width: 100%;
             transition: transform 0.1s, background-color 0.2s;
@@ -143,30 +144,37 @@
         }
 
         .btn:active { transform: scale(0.98); }
-        .btn:hover { background-color: var(--btn-primary-hover); }
         
         .btn-outline {
             background-color: transparent;
             color: var(--text-main);
             border: 1px solid var(--border-light);
         }
+        .btn-outline:hover {
+            background-color: var(--bg-surface);
+            border-color: var(--text-muted);
+        }
+        .btn-outline:active {
+            background-color: var(--bg-surface-elevated);
+            border-color: var(--text-muted);
+        }
 
         /* Cards */
         .card {
             background: var(--bg-surface);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 16px;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 12px;
         }
 
         .exercise-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            font-weight: 700;
-            font-size: 1.1rem;
+            margin-bottom: 14px;
+            font-weight: 500;
+            font-size: 1rem;
         }
 
         .icon-btn {
@@ -177,7 +185,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 6px;
+            padding: 8px;
             border-radius: 50%;
             transition: background-color 0.2s, color 0.2s;
         }
@@ -189,30 +197,30 @@
 
         /* Active Workout Top Bar */
         .workout-top-bar {
-            background-color: rgba(0, 0, 0, 0.9);
+            background-color: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             position: sticky;
             top: 0;
-            z-index: 30;
-            padding: 16px 24px;
+            z-index: 50;
+            padding: 14px 20px;
             border-bottom: 1px solid var(--border);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .workout-name-input {
             background: transparent;
             border: none;
             color: var(--text-main);
-            font-size: 1.5rem;
-            font-weight: 800;
+            font-size: 1.4rem;
+            font-weight: 600;
             width: 100%;
             padding: 0;
-            margin-bottom: 16px;
-            letter-spacing: -0.5px;
+            margin-bottom: 14px;
+            letter-spacing: -0.3px;
         }
         .workout-name-input:focus { outline: none; }
-        .workout-name-input::placeholder { color: var(--text-placeholder); font-weight: 700; }
+        .workout-name-input::placeholder { color: var(--text-placeholder); font-weight: 500; }
 
         .workout-controls {
             display: flex;
@@ -221,20 +229,20 @@
         }
 
         .timer {
-            font-weight: 800;
-            font-size: 1.1rem;
+            font-weight: 500;
+            font-size: 1rem;
             color: var(--text-main);
             font-variant-numeric: tabular-nums;
         }
 
         .btn-small {
-            padding: 8px 16px;
+            padding: 10px 18px;
             border-radius: 10px;
             font-size: 0.85rem;
-            font-weight: 700;
+            font-weight: 500;
             cursor: pointer;
             border: none;
-            transition: transform 0.1s;
+            transition: transform 0.1s, background-color 0.2s;
         }
         .btn-small:active { transform: scale(0.95); }
         
@@ -243,50 +251,64 @@
             color: var(--mod-fail);
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
+        .btn-small.cancel:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
         .btn-small.finish {
             background-color: var(--btn-primary-bg);
             color: var(--btn-primary-text);
         }
+        .btn-small.finish:hover {
+            background-color: var(--btn-primary-hover);
+        }
 
         /* Set Rows & Modifiers */
         .set-container {
-            margin-bottom: 8px;
-            padding: 8px 12px;
-            border-radius: 12px;
+            margin-bottom: 6px;
+            padding: 6px 8px;
+            border-radius: 10px;
             border: 1px solid transparent;
             transition: all 0.2s;
         }
-        .set-container.completed { opacity: 0.5; }
+        .set-container.completed { 
+            opacity: 0.6; 
+        }
         
-        /* Highlight for Failure Sets */
         .set-container.is-failure {
-            background-color: rgba(239, 68, 68, 0.1);
-            border-color: rgba(239, 68, 68, 0.3);
+            background-color: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.25);
         }
 
         .set-row {
             display: grid;
-            grid-template-columns: 20px 1fr 1fr 44px 24px;
-            gap: 12px;
+            grid-template-columns: 32px 1fr 1fr 44px 36px;
+            gap: 8px;
             align-items: center;
         }
 
         .set-number {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
-            font-weight: 700;
+            font-weight: 500;
             text-align: center;
+            min-width: 32px;
+        }
+        
+        .set-number.side-indicator {
+            color: var(--mod-side);
+            font-weight: 600;
+            font-size: 0.8rem;
         }
 
         .input-group input {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background-color: var(--bg-base);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 10px;
             color: var(--text-main);
-            font-size: 1rem;
-            font-weight: 600;
+            font-size: 0.95rem;
+            font-weight: 500;
             text-align: center;
             transition: border-color 0.2s;
         }
@@ -299,16 +321,15 @@
             border-color: transparent;
         }
         
-        /* Bodyweight Input Highlight */
         .input-group input.bw-active:disabled {
             color: var(--mod-bw);
-            font-weight: 800;
+            font-weight: 600;
         }
 
         .check-btn {
             background: var(--check-inactive-bg);
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             width: 44px;
             height: 44px;
             cursor: pointer;
@@ -323,91 +344,129 @@
             color: var(--check-active-text);
         }
 
+        .menu-btn {
+            background: none;
+            border: none;
+            border-radius: 10px;
+            width: 36px;
+            height: 44px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            padding: 0;
+        }
+        .menu-btn:hover {
+            color: var(--text-main);
+            background-color: var(--bg-surface-elevated);
+        }
+        .menu-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
         /* 3-Dot Drawer Menu */
         .set-drawer {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding-top: 12px;
-            margin-top: 8px;
-            border-top: 1px dashed var(--border-light);
-            padding-left: 32px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            padding-top: 10px;
+            margin-top: 6px;
+            border-top: 1px solid var(--border-light);
+            padding-left: 40px;
         }
         
-        .mod-tag {
+        .set-drawer .mod-tag {
             background: var(--tag-bg);
             border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 6px 12px;
+            padding: 10px 12px;
             border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 700;
+            font-size: 0.82rem;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
+            text-align: center;
         }
         
         .mod-tag.bw.active { background: var(--mod-bw); border-color: var(--mod-bw); color: #fff; }
         .mod-tag.side.active { background: var(--mod-side); border-color: var(--mod-side); color: #fff; }
         .mod-tag.fail.active { background: var(--mod-fail); border-color: var(--mod-fail); color: #fff; }
-        .mod-tag.delete { color: var(--mod-fail); background: transparent; border-color: rgba(239, 68, 68, 0.3); margin-left: auto; }
+        
+        .set-drawer .mod-tag.delete { 
+            color: var(--mod-fail); 
+            background: transparent; 
+            border-color: rgba(239, 68, 68, 0.3); 
+            grid-column: 1 / -1;
+        }
 
         .add-set-btn {
-            background: none;
-            border: none;
+            background: var(--bg-surface-elevated);
+            border: 1px dashed var(--border-light);
             color: var(--text-muted);
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             text-align: center;
-            border-radius: 12px;
+            border-radius: 10px;
             margin-top: 8px;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            font-size: 0.95rem;
         }
         .add-set-btn:hover {
             background-color: var(--bg-surface-elevated);
             color: var(--text-main);
+            border-color: var(--text-muted);
         }
 
         /* Filters */
         .filter-section {
-            padding: 0 24px 16px;
+            padding: 0 20px 14px;
             border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             position: sticky;
             top: 0;
             background: var(--bg-base);
-            z-index: 10;
+            z-index: 30;
         }
         
         .filter-row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             overflow-x: auto;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
-            scrollbar-width: none; /* Firefox */
+            padding-bottom: 6px;
+            margin-bottom: 6px;
+            scrollbar-width: none;
         }
-        .filter-row::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .filter-row::-webkit-scrollbar { display: none; }
         
         .filter-pill {
             background: var(--tag-bg);
             border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 18px;
+            font-size: 0.82rem;
+            font-weight: 500;
             cursor: pointer;
             white-space: nowrap;
+            transition: all 0.2s;
         }
         .filter-pill.active {
             background: var(--text-main);
             color: var(--bg-base);
             border-color: var(--text-main);
+        }
+        .filter-pill:hover:not(.active) {
+            border-color: var(--text-muted);
+            color: var(--text-main);
         }
 
         /* Lists */
@@ -415,14 +474,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 24px;
+            padding: 14px 20px;
             border-bottom: 1px solid var(--border);
             cursor: pointer;
+            transition: background-color 0.15s;
         }
-        .list-item:active { background-color: var(--bg-surface); }
+        .list-item:hover { background-color: var(--bg-surface); }
+        .list-item:active { background-color: var(--bg-surface-elevated); }
         .list-item:last-child { border-bottom: none; }
-        .list-item-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; }
-        .list-item-sub { color: var(--text-muted); font-size: 0.85rem; }
+        .list-item-title { font-weight: 500; font-size: 1.05rem; margin-bottom: 3px; }
+        .list-item-sub { color: var(--text-muted); font-size: 0.82rem; }
 
         /* Bottom Navigation */
         #bottom-nav {
@@ -430,13 +491,13 @@
             bottom: 0;
             width: 100%;
             max-width: 480px;
-            background-color: rgba(0, 0, 0, 0.9);
+            background-color: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-around;
-            padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+            padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
             z-index: 20;
         }
 
@@ -444,30 +505,31 @@
             background: none;
             border: none;
             color: var(--text-muted);
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 500;
             cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 12px;
+            padding: 6px 14px;
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             transition: color 0.2s;
         }
-        .nav-btn svg { width: 24px; height: 24px; stroke-width: 2; }
+        .nav-btn svg { width: 22px; height: 22px; stroke-width: 2; }
         .nav-btn.active { color: var(--text-main); }
 
         /* Inputs */
         .text-input {
             width: 100%;
-            padding: 16px;
-            border-radius: 16px;
+            padding: 14px;
+            border-radius: 14px;
             border: 1px solid var(--border-light);
             background-color: var(--bg-surface);
             color: var(--text-main);
-            margin-bottom: 16px;
-            font-size: 1rem;
+            margin-bottom: 14px;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
         .text-input:focus { outline: none; border-color: var(--text-main); }
         .text-input::placeholder { color: var(--text-placeholder); }
@@ -475,27 +537,42 @@
         .empty-state {
             text-align: center;
             color: var(--text-muted);
-            margin-top: 60px;
-            font-size: 0.95rem;
+            margin-top: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         /* Detail View */
-        .detail-exercise { margin-bottom: 24px; }
+        .detail-exercise { margin-bottom: 20px; }
         .detail-set-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px solid var(--border);
             color: var(--text-muted);
+            font-weight: 500;
         }
-        .detail-set-row span { font-weight: 600; color: var(--text-main); }
-        .detail-tags { display: flex; gap: 6px; margin-left: 8px; }
+        .detail-set-row span { font-weight: 500; color: var(--text-main); }
+        .detail-tags { display: flex; gap: 4px; margin-left: 6px; }
         
-        .d-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 700; }
+        .d-tag { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 500; }
         .d-tag.bw { background: var(--mod-bw); }
         .d-tag.side { background: var(--mod-side); }
         .d-tag.fail { background: var(--mod-fail); }
+        
+        /* Inline side tag on set row */
+        .side-mini-tag {
+            display: inline-block;
+            background: var(--mod-side);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -504,15 +581,15 @@
     <header id="main-header">
         <h1>liftr</h1>
         <button id="header-action" class="header-btn" style="display:none;" onclick="goBack()">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Back
         </button>
     </header>
 
     <div id="home-screen" class="screen active">
-        <div style="text-align: center; margin-top: 60px; margin-bottom: 80px;">
-            <h2 id="streak-text" style="font-size: 4.5rem; margin-bottom: 0; font-weight: 800; letter-spacing: -2px;">0</h2>
-            <p style="color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;">Workouts Completed</p>
+        <div style="text-align: center; margin-top: 50px; margin-bottom: 60px;">
+            <h2 id="streak-text" style="font-size: 4rem; margin-bottom: 0; font-weight: 600; letter-spacing: -1.5px;">0</h2>
+            <p style="color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 2px; font-size: 0.75rem;">Workouts Completed</p>
         </div>
         <button class="btn" onclick="startWorkout()">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -530,14 +607,14 @@
     </div>
 
     <div id="workout-detail-screen" class="screen">
-        <h2 id="detail-title" style="margin-top: 0; margin-bottom: 8px;">Workout</h2>
-        <p id="detail-stats" style="color: var(--text-muted); margin-top: 0; margin-bottom: 32px;"></p>
+        <h2 id="detail-title" style="margin-top: 0; margin-bottom: 6px;">Workout</h2>
+        <p id="detail-stats" style="color: var(--text-muted); margin-top: 0; margin-bottom: 28px; font-weight: 500;"></p>
         
         <div id="detail-exercises"></div>
         
-        <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);">
             <button class="btn btn-outline" style="color: var(--mod-fail); border-color: rgba(239, 68, 68, 0.3);" id="delete-workout-btn">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
                 Delete Log
             </button>
         </div>
@@ -545,9 +622,9 @@
 
     <div id="weight-screen" class="screen">
         <h2 style="margin-top: 0;">Body Weight</h2>
-        <div style="display: flex; gap: 12px; margin-bottom: 32px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 28px;">
             <input type="number" id="new-weight" class="text-input" placeholder="Enter weight (lbs)" step="0.1" style="margin-bottom: 0;">
-            <button class="btn" style="width: auto; border-radius: 16px;" onclick="logWeight()">Log</button>
+            <button class="btn" style="width: auto; border-radius: 14px; flex-shrink: 0; padding: 14px 24px;" onclick="logWeight()">Log</button>
         </div>
         <div class="card" style="padding: 0; overflow: hidden; border: none; background: transparent;">
             <div id="weight-list">
@@ -566,9 +643,9 @@
             </div>
         </div>
         
-        <div style="padding: 0 24px;">
+        <div style="padding: 0 20px;">
             <div id="workout-cards"></div>
-            <button class="btn btn-outline" style="margin-bottom: 24px; border-style: dashed;" onclick="showExerciseModal()">
+            <button class="btn btn-outline" style="margin-bottom: 20px; border-style: dashed; border-color: var(--border-light);" onclick="showExerciseModal()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                 Add Exercise
             </button>
@@ -577,11 +654,11 @@
 
     <div id="exercise-modal" class="screen">
         <div class="filter-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; margin-top: 16px;">
-                <h2 style="margin: 0; font-size: 1.5rem;">Select Exercise</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; margin-top: 14px;">
+                <h2 style="margin: 0; font-size: 1.4rem;">Select Exercise</h2>
                 <button class="header-btn" onclick="hideExerciseModal()">Close</button>
             </div>
-            <input type="text" id="search-exercise" class="text-input" placeholder="Search..." onkeyup="filterExercises()" style="margin-bottom: 12px; padding: 12px;">
+            <input type="text" id="search-exercise" class="text-input" placeholder="Search..." onkeyup="filterExercises()" style="margin-bottom: 10px; padding: 12px;">
             
             <div class="filter-row" id="muscle-filters">
                 <button class="filter-pill active" onclick="setCategory('All')">All Muscles</button>
@@ -625,80 +702,146 @@
 <script>
     // --- Data ---
     const exerciseDatabase = [
+        // Chest
         { name: "Barbell Bench Press", category: "Chest", equipment: "Barbell" },
-        { name: "Incline Barbell Press", category: "Chest", equipment: "Barbell" },
+        { name: "Barbell Incline Bench Press", category: "Chest", equipment: "Barbell" },
+        { name: "Barbell Decline Bench Press", category: "Chest", equipment: "Barbell" },
+        { name: "Barbell Floor Press", category: "Chest", equipment: "Barbell" },
         { name: "Dumbbell Bench Press", category: "Chest", equipment: "Dumbbell" },
-        { name: "Incline Dumbbell Press", category: "Chest", equipment: "Dumbbell" },
-        { name: "Dumbbell Flyes", category: "Chest", equipment: "Dumbbell" },
-        { name: "Push-Ups", category: "Chest", equipment: "Bodyweight" },
-        { name: "Dips", category: "Chest", equipment: "Bodyweight" },
+        { name: "Dumbbell Incline Bench Press", category: "Chest", equipment: "Dumbbell" },
+        { name: "Dumbbell Decline Bench Press", category: "Chest", equipment: "Dumbbell" },
+        { name: "Dumbbell Fly", category: "Chest", equipment: "Dumbbell" },
+        { name: "Dumbbell Incline Fly", category: "Chest", equipment: "Dumbbell" },
+        { name: "Dumbbell Pullover", category: "Chest", equipment: "Dumbbell" },
+        { name: "Bodyweight Push Up", category: "Chest", equipment: "Bodyweight" },
+        { name: "Bodyweight Dip", category: "Chest", equipment: "Bodyweight" },
+        { name: "Bodyweight Decline Push Up", category: "Chest", equipment: "Bodyweight" },
         { name: "Cable Crossover", category: "Chest", equipment: "Cable" },
-        { name: "Chest Press Machine", category: "Chest", equipment: "Machine" },
-        { name: "Pec Deck", category: "Chest", equipment: "Machine" },
+        { name: "Cable Low to High Crossover", category: "Chest", equipment: "Cable" },
+        { name: "Cable High to Low Crossover", category: "Chest", equipment: "Cable" },
+        { name: "Machine Chest Press", category: "Chest", equipment: "Machine" },
+        { name: "Machine Incline Chest Press", category: "Chest", equipment: "Machine" },
+        { name: "Machine Pec Deck", category: "Chest", equipment: "Machine" },
+        { name: "Machine Seated Fly", category: "Chest", equipment: "Machine" },
+        { name: "Smith Machine Bench Press", category: "Chest", equipment: "Machine" },
+        { name: "Smith Machine Incline Bench Press", category: "Chest", equipment: "Machine" },
         
-        { name: "Barbell Squat", category: "Legs", equipment: "Barbell" },
-        { name: "Front Squat", category: "Legs", equipment: "Barbell" },
-        { name: "Bulgarian Split Squat", category: "Legs", equipment: "Dumbbell" },
-        { name: "Romanian Deadlift", category: "Legs", equipment: "Barbell" },
-        { name: "Dumbbell RDL", category: "Legs", equipment: "Dumbbell" },
-        { name: "Leg Press", category: "Legs", equipment: "Machine" },
-        { name: "Hack Squat", category: "Legs", equipment: "Machine" },
-        { name: "Leg Extension", category: "Legs", equipment: "Machine" },
-        { name: "Seated Leg Curl", category: "Legs", equipment: "Machine" },
-        { name: "Lying Leg Curl", category: "Legs", equipment: "Machine" },
-        { name: "Calf Raises", category: "Legs", equipment: "Machine" },
-        { name: "Walking Lunges", category: "Legs", equipment: "Dumbbell" },
+        // Legs
+        { name: "Barbell Back Squat", category: "Legs", equipment: "Barbell" },
+        { name: "Barbell Front Squat", category: "Legs", equipment: "Barbell" },
+        { name: "Barbell Romanian Deadlift", category: "Legs", equipment: "Barbell" },
+        { name: "Barbell Hip Thrust", category: "Legs", equipment: "Barbell" },
+        { name: "Barbell Walking Lunge", category: "Legs", equipment: "Barbell" },
+        { name: "Dumbbell Bulgarian Split Squat", category: "Legs", equipment: "Dumbbell" },
+        { name: "Dumbbell Goblet Squat", category: "Legs", equipment: "Dumbbell" },
+        { name: "Dumbbell Romanian Deadlift", category: "Legs", equipment: "Dumbbell" },
+        { name: "Dumbbell Reverse Lunge", category: "Legs", equipment: "Dumbbell" },
+        { name: "Dumbbell Step Up", category: "Legs", equipment: "Dumbbell" },
+        { name: "Machine Leg Press", category: "Legs", equipment: "Machine" },
+        { name: "Machine Hack Squat", category: "Legs", equipment: "Machine" },
+        { name: "Machine Leg Extension", category: "Legs", equipment: "Machine" },
+        { name: "Machine Seated Leg Curl", category: "Legs", equipment: "Machine" },
+        { name: "Machine Lying Leg Curl", category: "Legs", equipment: "Machine" },
+        { name: "Machine Standing Calf Raise", category: "Legs", equipment: "Machine" },
+        { name: "Machine Seated Calf Raise", category: "Legs", equipment: "Machine" },
+        { name: "Machine Hip Abductor", category: "Legs", equipment: "Machine" },
+        { name: "Machine Hip Adductor", category: "Legs", equipment: "Machine" },
+        { name: "Machine Glute Kickback", category: "Legs", equipment: "Machine" },
+        { name: "Smith Machine Squat", category: "Legs", equipment: "Machine" },
+        { name: "Bodyweight Bodyweight Squat", category: "Legs", equipment: "Bodyweight" },
+        { name: "Bodyweight Walking Lunge", category: "Legs", equipment: "Bodyweight" },
         
-        { name: "Deadlift", category: "Back", equipment: "Barbell" },
-        { name: "Pull-Ups", category: "Back", equipment: "Bodyweight" },
-        { name: "Chin-Ups", category: "Back", equipment: "Bodyweight" },
-        { name: "Lat Pulldown", category: "Back", equipment: "Cable" },
-        { name: "Dumbbell Row", category: "Back", equipment: "Dumbbell" },
-        { name: "Seated Cable Row", category: "Back", equipment: "Cable" },
-        { name: "Barbell Row", category: "Back", equipment: "Barbell" },
-        { name: "T-Bar Row", category: "Back", equipment: "Machine" },
-        { name: "Machine Row", category: "Back", equipment: "Machine" },
-        { name: "Straight Arm Pulldown", category: "Back", equipment: "Cable" },
+        // Back
+        { name: "Barbell Deadlift", category: "Back", equipment: "Barbell" },
+        { name: "Barbell Bent Over Row", category: "Back", equipment: "Barbell" },
+        { name: "Barbell Pendlay Row", category: "Back", equipment: "Barbell" },
+        { name: "Barbell Rack Pull", category: "Back", equipment: "Barbell" },
+        { name: "Dumbbell Single Arm Row", category: "Back", equipment: "Dumbbell" },
+        { name: "Dumbbell Chest Supported Row", category: "Back", equipment: "Dumbbell" },
+        { name: "Dumbbell Reverse Fly", category: "Back", equipment: "Dumbbell" },
+        { name: "Bodyweight Pull Up", category: "Back", equipment: "Bodyweight" },
+        { name: "Bodyweight Chin Up", category: "Back", equipment: "Bodyweight" },
+        { name: "Bodyweight Australian Pull Up", category: "Back", equipment: "Bodyweight" },
+        { name: "Cable Lat Pulldown", category: "Back", equipment: "Cable" },
+        { name: "Cable Seated Row", category: "Back", equipment: "Cable" },
+        { name: "Cable Single Arm Pulldown", category: "Back", equipment: "Cable" },
+        { name: "Cable Single Arm Row", category: "Back", equipment: "Cable" },
+        { name: "Cable Straight Arm Pulldown", category: "Back", equipment: "Cable" },
+        { name: "Cable Face Pull", category: "Back", equipment: "Cable" },
+        { name: "Machine T-Bar Row", category: "Back", equipment: "Machine" },
+        { name: "Machine Seated Row", category: "Back", equipment: "Machine" },
+        { name: "Machine Lat Pulldown", category: "Back", equipment: "Machine" },
+        { name: "Machine Assisted Pull Up", category: "Back", equipment: "Machine" },
         
-        { name: "Overhead Press", category: "Shoulders", equipment: "Barbell" },
+        // Shoulders
+        { name: "Barbell Overhead Press", category: "Shoulders", equipment: "Barbell" },
+        { name: "Barbell Seated Overhead Press", category: "Shoulders", equipment: "Barbell" },
+        { name: "Barbell Upright Row", category: "Shoulders", equipment: "Barbell" },
         { name: "Dumbbell Shoulder Press", category: "Shoulders", equipment: "Dumbbell" },
-        { name: "Shoulder Press Machine", category: "Shoulders", equipment: "Machine" },
-        { name: "Lateral Raises", category: "Shoulders", equipment: "Dumbbell" },
-        { name: "Cable Lateral Raises", category: "Shoulders", equipment: "Cable" },
-        { name: "Front Raises", category: "Shoulders", equipment: "Dumbbell" },
-        { name: "Face Pulls", category: "Shoulders", equipment: "Cable" },
-        { name: "Reverse Pec Deck", category: "Shoulders", equipment: "Machine" },
-        { name: "Barbell Shrugs", category: "Shoulders", equipment: "Barbell" },
-        { name: "Dumbbell Shrugs", category: "Shoulders", equipment: "Dumbbell" },
+        { name: "Dumbbell Arnold Press", category: "Shoulders", equipment: "Dumbbell" },
+        { name: "Dumbbell Lateral Raise", category: "Shoulders", equipment: "Dumbbell" },
+        { name: "Dumbbell Front Raise", category: "Shoulders", equipment: "Dumbbell" },
+        { name: "Dumbbell Bent Over Reverse Fly", category: "Shoulders", equipment: "Dumbbell" },
+        { name: "Cable Lateral Raise", category: "Shoulders", equipment: "Cable" },
+        { name: "Cable Front Raise", category: "Shoulders", equipment: "Cable" },
+        { name: "Cable Reverse Fly", category: "Shoulders", equipment: "Cable" },
+        { name: "Machine Shoulder Press", category: "Shoulders", equipment: "Machine" },
+        { name: "Machine Lateral Raise", category: "Shoulders", equipment: "Machine" },
+        { name: "Machine Reverse Pec Deck", category: "Shoulders", equipment: "Machine" },
+        { name: "Smith Machine Overhead Press", category: "Shoulders", equipment: "Machine" },
         
-        { name: "Barbell Bicep Curl", category: "Arms", equipment: "Barbell" },
+        // Arms - Biceps
+        { name: "Barbell Curl", category: "Arms", equipment: "Barbell" },
         { name: "Dumbbell Curl", category: "Arms", equipment: "Dumbbell" },
-        { name: "Hammer Curls", category: "Arms", equipment: "Dumbbell" },
-        { name: "Preacher Curl", category: "Arms", equipment: "Machine" },
+        { name: "Dumbbell Hammer Curl", category: "Arms", equipment: "Dumbbell" },
+        { name: "Dumbbell Incline Curl", category: "Arms", equipment: "Dumbbell" },
+        { name: "Dumbbell Concentration Curl", category: "Arms", equipment: "Dumbbell" },
         { name: "Cable Curl", category: "Arms", equipment: "Cable" },
-        { name: "Tricep Pushdown", category: "Arms", equipment: "Cable" },
-        { name: "Overhead Tricep Extension", category: "Arms", equipment: "Dumbbell" },
-        { name: "Cable Tricep Extension", category: "Arms", equipment: "Cable" },
-        { name: "Skullcrushers", category: "Arms", equipment: "Barbell" },
-        { name: "Close Grip Bench Press", category: "Arms", equipment: "Barbell" },
+        { name: "Cable High Cable Curl", category: "Arms", equipment: "Cable" },
+        { name: "Machine Preacher Curl", category: "Arms", equipment: "Machine" },
+        { name: "Bodyweight Chin Up", category: "Arms", equipment: "Bodyweight" },
         
-        { name: "Plank", category: "Core", equipment: "Bodyweight" },
-        { name: "Crunches", category: "Core", equipment: "Bodyweight" },
-        { name: "Cable Crunches", category: "Core", equipment: "Cable" },
-        { name: "Hanging Leg Raises", category: "Core", equipment: "Bodyweight" },
-        { name: "Russian Twists", category: "Core", equipment: "Bodyweight" },
-        { name: "Ab Wheel Rollout", category: "Core", equipment: "Machine" }
+        // Arms - Triceps
+        { name: "Barbell Close Grip Bench Press", category: "Arms", equipment: "Barbell" },
+        { name: "Barbell Skull Crusher", category: "Arms", equipment: "Barbell" },
+        { name: "Dumbbell Overhead Tricep Extension", category: "Arms", equipment: "Dumbbell" },
+        { name: "Dumbbell Tricep Kickback", category: "Arms", equipment: "Dumbbell" },
+        { name: "Cable Tricep Pushdown", category: "Arms", equipment: "Cable" },
+        { name: "Cable Overhead Tricep Extension", category: "Arms", equipment: "Cable" },
+        { name: "Cable Single Arm Pushdown", category: "Arms", equipment: "Cable" },
+        { name: "Machine Tricep Dip", category: "Arms", equipment: "Machine" },
+        { name: "Bodyweight Tricep Dip", category: "Arms", equipment: "Bodyweight" },
+        { name: "Bodyweight Close Grip Push Up", category: "Arms", equipment: "Bodyweight" },
+        
+        // Arms - Forearms
+        { name: "Barbell Wrist Curl", category: "Arms", equipment: "Barbell" },
+        { name: "Dumbbell Wrist Curl", category: "Arms", equipment: "Dumbbell" },
+        { name: "Barbell Reverse Curl", category: "Arms", equipment: "Barbell" },
+        
+        // Core
+        { name: "Bodyweight Plank", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Side Plank", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Crunch", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Hanging Leg Raise", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Hanging Knee Raise", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Bicycle Crunch", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Russian Twist", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Dead Bug", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Lying Leg Raise", category: "Core", equipment: "Bodyweight" },
+        { name: "Cable Crunch", category: "Core", equipment: "Cable" },
+        { name: "Cable Oblique Twist", category: "Core", equipment: "Cable" },
+        { name: "Machine Ab Crunch", category: "Core", equipment: "Machine" },
+        { name: "Machine Ab Wheel Rollout", category: "Core", equipment: "Machine" },
+        { name: "Bodyweight Ab Wheel Rollout", category: "Core", equipment: "Bodyweight" },
     ].sort((a, b) => a.name.localeCompare(b.name));
 
     let currentWorkout = [];
     let workoutTimerInterval;
     let secondsElapsed = 0;
     
-    // Filters
     let activeCategory = 'All';
     let activeEquipment = 'All';
 
-    // Persistent Data 
     let workoutHistory = []; 
     let weightHistory = [];  
 
@@ -778,7 +921,6 @@
         const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         const volume = calculateTotalVolume();
         
-        // Strip out UI state (menuOpen)
         const savedExercises = JSON.parse(JSON.stringify(currentWorkout)).map(ex => {
             ex.sets.forEach(s => delete s.menuOpen);
             return ex;
@@ -832,7 +974,7 @@
     function setCategory(cat) {
         activeCategory = cat;
         document.querySelectorAll('#muscle-filters .filter-pill').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText.includes(cat) || (cat==='All' && btn.innerText==='All Muscles'));
+            btn.classList.toggle('active', btn.innerText === cat || (cat==='All' && btn.innerText==='All Muscles'));
         });
         filterExercises();
     }
@@ -840,7 +982,7 @@
     function setEquipment(eq) {
         activeEquipment = eq;
         document.querySelectorAll('#equipment-filters .filter-pill').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText.includes(eq) || (eq==='All' && btn.innerText==='All Equipment'));
+            btn.classList.toggle('active', btn.innerText === eq || (eq==='All' && btn.innerText==='All Equipment'));
         });
         filterExercises();
     }
@@ -872,7 +1014,7 @@
             item.innerHTML = `
                 <div>
                     <div class="list-item-title">${ex.name}</div>
-                    <div class="list-item-sub">${ex.category} • ${ex.equipment}</div>
+                    <div class="list-item-sub">${ex.category}</div>
                 </div>
             `;
             item.onclick = () => addExerciseToWorkout(ex.name);
@@ -880,7 +1022,6 @@
         });
     }
 
-    // --- Logging & Modifiers ---
     function addExerciseToWorkout(exerciseName) {
         currentWorkout.push({ id: Date.now(), name: exerciseName, sets: getPreviousExerciseData(exerciseName) });
         hideExerciseModal();
@@ -938,7 +1079,7 @@
         
         if (modType === 'BW') {
             set.isBW = !set.isBW;
-            if (set.isBW) set.weight = 'BW'; 
+            if (set.isBW) set.weight = 'Bodyweight'; 
             else set.weight = '';
         } else if (modType === 'Side') {
             if (set.side === 'none') set.side = 'L';
@@ -964,7 +1105,7 @@
             header.innerHTML = `
                 <span>${exercise.name}</span>
                 <button class="icon-btn" style="color: var(--mod-fail);" onclick="removeExercise(${exercise.id})">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             `;
             card.appendChild(header);
@@ -976,17 +1117,19 @@
                 let weightPlaceholder = 'lbs';
                 let weightValue = set.weight;
                 if(set.isBW) {
-                    weightPlaceholder = 'BW';
-                    weightValue = 'BW';
+                    weightPlaceholder = 'Bodyweight';
+                    weightValue = 'Bodyweight';
                 }
                 
-                let tagsHtml = '';
-                if(set.isBW && !set.menuOpen) tagsHtml += `<div class="d-tag bw" style="margin-top: 4px; display:inline-block;">BW</div>`;
-                if(set.side !== 'none' && !set.menuOpen) tagsHtml += `<div class="d-tag side" style="margin-top: 4px; margin-left:4px; display:inline-block;">${set.side === 'L' ? 'Left' : 'Right'}</div>`;
+                // Determine what to show in the set number position
+                let setNumberHtml = `<span class="set-number">${index + 1}</span>`;
+                if (set.side !== 'none') {
+                    setNumberHtml = `<span class="set-number side-indicator">${set.side === 'L' ? 'L' : 'R'}</span>`;
+                }
                 
                 setContainer.innerHTML = `
                     <div class="set-row">
-                        <div class="set-number">${index + 1}</div>
+                        ${setNumberHtml}
                         <div class="input-group">
                             <input type="${set.isBW ? 'text' : 'number'}" placeholder="${weightPlaceholder}" value="${weightValue}" class="${set.isBW ? 'bw-active' : ''}" onchange="updateSetData(${exercise.id}, ${index}, 'weight', this.value)" ${set.completed || set.isBW ? 'disabled' : ''}>
                         </div>
@@ -996,23 +1139,19 @@
                         <button class="check-btn" onclick="toggleSet(${exercise.id}, ${index})">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
                         </button>
-                        <button class="icon-btn" onclick="toggleSetMenu(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                        <button class="menu-btn" onclick="toggleSetMenu(${exercise.id}, ${index})">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.5"></circle><circle cx="12" cy="12" r="2.5"></circle><circle cx="12" cy="19" r="2.5"></circle></svg>
                         </button>
                     </div>
-                    ${tagsHtml ? `<div>${tagsHtml}</div>` : ''}
                     
                     ${set.menuOpen ? `
                     <div class="set-drawer">
-                        <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">BW</button>
+                        <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">Bodyweight</button>
                         <button class="mod-tag side ${set.side !== 'none' ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">
-                            ${set.side === 'none' ? 'L / R' : set.side}
+                            ${set.side === 'none' ? 'Left / Right' : (set.side === 'L' ? 'Left' : 'Right')}
                         </button>
                         <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">Failure</button>
-                        <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                            Delete
-                        </button>
+                        <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${index})">Delete Set</button>
                     </div>
                     ` : ''}
                 `;
@@ -1042,15 +1181,15 @@
             const exCount = workout.exercises.length;
             const item = document.createElement('div');
             item.className = 'list-item card';
-            item.style.marginBottom = '12px';
-            item.style.padding = '20px';
+            item.style.marginBottom = '10px';
+            item.style.padding = '16px';
             item.onclick = () => viewWorkoutInfo(workout.id);
             item.innerHTML = `
                 <div>
                     <div class="list-item-title">${workout.name}</div>
                     <div class="list-item-sub">${workout.date} • ${exCount} Exercises</div>
                 </div>
-                <div style="color: var(--text-muted); font-weight: 600;">${workout.duration}</div>
+                <div style="color: var(--text-muted); font-weight: 500;">${workout.duration}</div>
             `;
             list.appendChild(item);
         });
@@ -1068,7 +1207,7 @@
         document.querySelector('header h1').innerText = 'Summary';
         const backBtn = document.getElementById('header-action');
         backBtn.style.display = 'flex';
-        backBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back`;
+        backBtn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back`;
         backBtn.onclick = goBack;
 
         document.getElementById('detail-title').innerText = workout.name;
@@ -1078,10 +1217,10 @@
         exContainer.innerHTML = '';
         
         workout.exercises.forEach(ex => {
-            let html = `<div class="detail-exercise card"><div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 16px;">${ex.name}</div>`;
+            let html = `<div class="detail-exercise card"><div style="font-weight: 500; font-size: 1rem; margin-bottom: 14px;">${ex.name}</div>`;
             ex.sets.forEach((set, idx) => {
                 if (set.completed) {
-                    let weightStr = set.isBW ? 'BW' : (set.weight || '0');
+                    let weightStr = set.isBW ? 'Bodyweight' : (set.weight || '0');
                     let tagsHtml = '';
                     if (set.isBW) tagsHtml += `<span class="d-tag bw">BW</span>`;
                     if (set.side === 'L') tagsHtml += `<span class="d-tag side">Left</span>`;
@@ -1089,7 +1228,7 @@
                     if (set.isFailure) tagsHtml += `<span class="d-tag fail">Failure</span>`;
                     
                     html += `
-                        <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.1)' : 'transparent'}; padding: 10px 8px; margin: 0 -8px; border-radius: 8px;">
+                        <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.08)' : 'transparent'}; padding: 8px 6px; margin: 0 -6px; border-radius: 6px;">
                             <div>Set ${idx + 1}</div>
                             <div style="display:flex; align-items:center;">
                                 <span>${weightStr}</span> &nbsp;×&nbsp; <span>${set.reps || 0}</span>
@@ -1142,15 +1281,15 @@
         weightHistory.forEach(entry => {
             const item = document.createElement('div');
             item.className = 'list-item card';
-            item.style.marginBottom = '12px';
-            item.style.padding = '20px';
+            item.style.marginBottom = '10px';
+            item.style.padding = '16px';
             item.innerHTML = `
                 <div>
                     <div class="list-item-title">${entry.weight} lbs</div>
                     <div class="list-item-sub">${entry.date}</div>
                 </div>
                 <button class="icon-btn" onclick="deleteWeight(${entry.id})" style="color: var(--mod-fail);">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             `;
             list.appendChild(item);
