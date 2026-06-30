@@ -373,9 +373,8 @@
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
-            padding-top: 8px;
-            margin-top: 6px;
-            border-top: 1px solid var(--border-light);
+            padding-top: 6px;
+            margin-top: 2px;
             padding-left: 40px;
         }
         
@@ -1054,16 +1053,20 @@
     
     function toggleSetMenu(exerciseId, setIndex) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
-        // Close all other menus first
+        const currentlyOpen = exercise.sets[setIndex].menuOpen;
+        
+        // Close all menus in all exercises
         currentWorkout.forEach(ex => {
-            ex.sets.forEach((s, i) => {
-                if (!(ex.id === exerciseId && i === setIndex)) {
-                    s.menuOpen = false;
-                }
+            ex.sets.forEach(s => {
+                s.menuOpen = false;
             });
         });
-        // Toggle the clicked menu
-        exercise.sets[setIndex].menuOpen = !exercise.sets[setIndex].menuOpen;
+        
+        // If it wasn't open before, open it now
+        if (!currentlyOpen) {
+            exercise.sets[setIndex].menuOpen = true;
+        }
+        
         renderWorkout();
     }
 
