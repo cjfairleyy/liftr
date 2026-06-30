@@ -22,8 +22,8 @@
             --btn-primary-text: #000000;
             --btn-primary-hover: #e4e4e7;
             
-            --check-active-bg: #ffffff;
-            --check-active-text: #000000;
+            --check-active-bg: #22c55e; /* Green */
+            --check-active-text: #ffffff;
             --check-inactive-bg: #27272a;
             
             --tag-bg: #18181b;
@@ -57,10 +57,11 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
         }
 
         /* Typography & Headers */
+        h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.5px; }
+        
         header {
             padding: 24px 24px 16px;
             background-color: rgba(0, 0, 0, 0.85);
@@ -75,12 +76,7 @@
             border-bottom: 1px solid var(--border);
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
+        header h1 { font-size: 1.5rem; font-weight: 800; }
         
         .header-btn {
             background: none;
@@ -94,24 +90,16 @@
             gap: 4px;
         }
 
-        h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 24px;
-            letter-spacing: -0.5px;
-        }
+        h2 { font-size: 1.6rem; margin-bottom: 20px; }
 
         /* Screens */
         .screen {
             display: none;
-            padding: 24px 24px 120px;
+            padding: 20px 20px 120px;
             flex-grow: 1;
             animation: fadeIn 0.3s ease;
         }
-
-        .screen.active {
-            display: block;
-        }
+        .screen.active { display: block; }
         
         #workout-screen.active, #exercise-modal.active {
             padding-top: 0;
@@ -141,32 +129,36 @@
             align-items: center;
             gap: 8px;
         }
-
         .btn:active { transform: scale(0.98); }
         .btn:hover { background-color: var(--btn-primary-hover); }
         
         .btn-outline {
             background-color: transparent;
             color: var(--text-main);
-            border: 1px solid var(--border-light);
+            border: 1px dashed var(--border-light);
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .btn-outline:active {
+            background-color: var(--bg-surface-elevated);
+            border-color: var(--text-muted);
         }
 
         /* Cards */
         .card {
             background: var(--bg-surface);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 16px;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
         }
 
         .exercise-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
         }
 
         .icon-btn {
@@ -177,48 +169,40 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 6px;
-            border-radius: 50%;
+            padding: 10px;
+            border-radius: 12px;
             transition: background-color 0.2s, color 0.2s;
         }
-        
-        .icon-btn:hover {
-            color: var(--text-main);
-            background-color: var(--bg-surface-elevated);
-        }
+        .icon-btn:active { background-color: var(--bg-surface-elevated); color: var(--text-main); }
 
         /* Active Workout Top Bar */
         .workout-top-bar {
-            background-color: rgba(0, 0, 0, 0.9);
+            background-color: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             position: sticky;
             top: 0;
-            z-index: 30;
-            padding: 16px 24px;
+            z-index: 50;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .workout-name-input {
             background: transparent;
             border: none;
             color: var(--text-main);
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 800;
             width: 100%;
             padding: 0;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             letter-spacing: -0.5px;
         }
         .workout-name-input:focus { outline: none; }
-        .workout-name-input::placeholder { color: var(--text-placeholder); font-weight: 700; }
+        .workout-name-input::placeholder { color: var(--text-placeholder); }
 
-        .workout-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .workout-controls { display: flex; justify-content: space-between; align-items: center; }
 
         .timer {
             font-weight: 800;
@@ -234,10 +218,7 @@
             font-weight: 700;
             cursor: pointer;
             border: none;
-            transition: transform 0.1s;
         }
-        .btn-small:active { transform: scale(0.95); }
-        
         .btn-small.cancel {
             background-color: transparent;
             color: var(--mod-fail);
@@ -250,65 +231,50 @@
 
         /* Set Rows & Modifiers */
         .set-container {
-            margin-bottom: 8px;
-            padding: 8px 12px;
+            margin-bottom: 4px;
+            padding: 6px 8px;
             border-radius: 12px;
             border: 1px solid transparent;
             transition: all 0.2s;
         }
         .set-container.completed { opacity: 0.5; }
-        
-        /* Highlight for Failure Sets */
-        .set-container.is-failure {
-            background-color: rgba(239, 68, 68, 0.1);
-            border-color: rgba(239, 68, 68, 0.3);
-        }
+        .set-container.is-failure { background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
 
         .set-row {
             display: grid;
-            grid-template-columns: 20px 1fr 1fr 44px 24px;
-            gap: 12px;
+            grid-template-columns: 24px 1fr 1fr 44px 36px;
+            gap: 10px;
             align-items: center;
         }
 
         .set-number {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-muted);
             font-weight: 700;
             text-align: center;
         }
+        .set-number.side { color: var(--mod-side); }
 
         .input-group input {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background-color: var(--bg-base);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 10px;
             color: var(--text-main);
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 500;
             text-align: center;
             transition: border-color 0.2s;
         }
-        .input-group input:focus {
-            outline: none;
-            border-color: var(--text-muted);
-        }
-        .input-group input:disabled {
-            background-color: var(--bg-surface-elevated);
-            border-color: transparent;
-        }
-        
-        /* Bodyweight Input Highlight */
-        .input-group input.bw-active:disabled {
-            color: var(--mod-bw);
-            font-weight: 800;
-        }
+        .input-group input:focus { outline: none; border-color: var(--text-muted); }
+        .input-group input:disabled { background-color: var(--bg-surface-elevated); border-color: transparent; }
+        .input-group input.bw-active:disabled { color: var(--mod-bw); font-weight: 700; }
 
         .check-btn {
             background: var(--check-inactive-bg);
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             width: 44px;
             height: 44px;
             cursor: pointer;
@@ -316,67 +282,62 @@
             justify-content: center;
             align-items: center;
             color: var(--text-muted);
-            transition: all 0.2s;
         }
         .set-container.completed .check-btn {
             background: var(--check-active-bg);
             color: var(--check-active-text);
         }
 
-        /* 3-Dot Drawer Menu */
+        /* Improved Drawer Menu */
         .set-drawer {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
             gap: 8px;
-            padding-top: 12px;
-            margin-top: 8px;
+            padding-top: 10px;
+            margin-top: 10px;
             border-top: 1px dashed var(--border-light);
-            padding-left: 32px;
+            padding-left: 34px;
         }
         
         .mod-tag {
             background: var(--tag-bg);
             border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 6px 12px;
+            padding: 8px;
             border-radius: 8px;
             font-size: 0.8rem;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 4px;
         }
-        
         .mod-tag.bw.active { background: var(--mod-bw); border-color: var(--mod-bw); color: #fff; }
         .mod-tag.side.active { background: var(--mod-side); border-color: var(--mod-side); color: #fff; }
         .mod-tag.fail.active { background: var(--mod-fail); border-color: var(--mod-fail); color: #fff; }
-        .mod-tag.delete { color: var(--mod-fail); background: transparent; border-color: rgba(239, 68, 68, 0.3); margin-left: auto; }
+        .mod-tag.delete { color: var(--mod-fail); background: transparent; border-color: rgba(239, 68, 68, 0.3); padding: 8px 12px; }
 
         .add-set-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
+            background: var(--tag-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            padding: 16px;
-            text-align: center;
-            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.95rem;
+            border-radius: 10px;
             margin-top: 8px;
             transition: background-color 0.2s;
         }
-        .add-set-btn:hover {
-            background-color: var(--bg-surface-elevated);
-            color: var(--text-main);
-        }
+        .add-set-btn:active { background-color: var(--bg-surface-elevated); }
 
         /* Filters */
         .filter-section {
-            padding: 0 24px 16px;
+            padding: 0 20px 12px;
             border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             position: sticky;
             top: 0;
             background: var(--bg-base);
@@ -388,10 +349,10 @@
             gap: 8px;
             overflow-x: auto;
             padding-bottom: 8px;
-            margin-bottom: 8px;
-            scrollbar-width: none; /* Firefox */
+            margin-bottom: 4px;
+            scrollbar-width: none;
         }
-        .filter-row::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .filter-row::-webkit-scrollbar { display: none; }
         
         .filter-pill {
             background: var(--tag-bg);
@@ -404,24 +365,20 @@
             cursor: pointer;
             white-space: nowrap;
         }
-        .filter-pill.active {
-            background: var(--text-main);
-            color: var(--bg-base);
-            border-color: var(--text-main);
-        }
+        .filter-pill.active { background: var(--text-main); color: var(--bg-base); border-color: var(--text-main); }
 
         /* Lists */
         .list-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 24px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border);
             cursor: pointer;
         }
         .list-item:active { background-color: var(--bg-surface); }
         .list-item:last-child { border-bottom: none; }
-        .list-item-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; }
+        .list-item-title { font-weight: 600; font-size: 1.05rem; margin-bottom: 4px; }
         .list-item-sub { color: var(--text-muted); font-size: 0.85rem; }
 
         /* Bottom Navigation */
@@ -439,7 +396,6 @@
             padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
             z-index: 20;
         }
-
         .nav-btn {
             background: none;
             border: none;
@@ -453,7 +409,6 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            transition: color 0.2s;
         }
         .nav-btn svg { width: 24px; height: 24px; stroke-width: 2; }
         .nav-btn.active { color: var(--text-main); }
@@ -461,8 +416,8 @@
         /* Inputs */
         .text-input {
             width: 100%;
-            padding: 16px;
-            border-radius: 16px;
+            padding: 14px;
+            border-radius: 12px;
             border: 1px solid var(--border-light);
             background-color: var(--bg-surface);
             color: var(--text-main);
@@ -470,16 +425,9 @@
             font-size: 1rem;
         }
         .text-input:focus { outline: none; border-color: var(--text-main); }
-        .text-input::placeholder { color: var(--text-placeholder); }
 
-        .empty-state {
-            text-align: center;
-            color: var(--text-muted);
-            margin-top: 60px;
-            font-size: 0.95rem;
-        }
+        .empty-state { text-align: center; color: var(--text-muted); margin-top: 60px; font-size: 0.95rem; }
 
-        /* Detail View */
         .detail-exercise { margin-bottom: 24px; }
         .detail-set-row {
             display: flex;
@@ -488,10 +436,10 @@
             padding: 10px 0;
             border-bottom: 1px solid var(--border);
             color: var(--text-muted);
+            font-size: 0.95rem;
         }
         .detail-set-row span { font-weight: 600; color: var(--text-main); }
         .detail-tags { display: flex; gap: 6px; margin-left: 8px; }
-        
         .d-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 700; }
         .d-tag.bw { background: var(--mod-bw); }
         .d-tag.side { background: var(--mod-side); }
@@ -521,8 +469,8 @@
     </div>
 
     <div id="history-screen" class="screen">
-        <h2 style="margin-top: 0;">History</h2>
-        <div class="card" style="padding: 0; border: none; overflow: hidden; background: transparent;">
+        <h2>History</h2>
+        <div class="card" style="padding: 0; border: none; background: transparent;">
             <div id="history-list">
                 <div class="empty-state">No workouts logged yet.</div>
             </div>
@@ -530,11 +478,9 @@
     </div>
 
     <div id="workout-detail-screen" class="screen">
-        <h2 id="detail-title" style="margin-top: 0; margin-bottom: 8px;">Workout</h2>
+        <h2 id="detail-title" style="margin-bottom: 8px;">Workout</h2>
         <p id="detail-stats" style="color: var(--text-muted); margin-top: 0; margin-bottom: 32px;"></p>
-        
         <div id="detail-exercises"></div>
-        
         <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border);">
             <button class="btn btn-outline" style="color: var(--mod-fail); border-color: rgba(239, 68, 68, 0.3);" id="delete-workout-btn">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
@@ -544,10 +490,10 @@
     </div>
 
     <div id="weight-screen" class="screen">
-        <h2 style="margin-top: 0;">Body Weight</h2>
+        <h2>Body Weight</h2>
         <div style="display: flex; gap: 12px; margin-bottom: 32px;">
             <input type="number" id="new-weight" class="text-input" placeholder="Enter weight (lbs)" step="0.1" style="margin-bottom: 0;">
-            <button class="btn" style="width: auto; border-radius: 16px;" onclick="logWeight()">Log</button>
+            <button class="btn" style="width: auto; border-radius: 12px;" onclick="logWeight()">Log</button>
         </div>
         <div class="card" style="padding: 0; overflow: hidden; border: none; background: transparent;">
             <div id="weight-list">
@@ -566,9 +512,9 @@
             </div>
         </div>
         
-        <div style="padding: 0 24px;">
+        <div style="padding: 0 20px;">
             <div id="workout-cards"></div>
-            <button class="btn btn-outline" style="margin-bottom: 24px; border-style: dashed;" onclick="showExerciseModal()">
+            <button class="btn btn-outline" style="margin-bottom: 24px;" onclick="showExerciseModal()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                 Add Exercise
             </button>
@@ -578,7 +524,7 @@
     <div id="exercise-modal" class="screen">
         <div class="filter-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; margin-top: 16px;">
-                <h2 style="margin: 0; font-size: 1.5rem;">Select Exercise</h2>
+                <h2 style="margin: 0;">Select Exercise</h2>
                 <button class="header-btn" onclick="hideExerciseModal()">Close</button>
             </div>
             <input type="text" id="search-exercise" class="text-input" placeholder="Search..." onkeyup="filterExercises()" style="margin-bottom: 12px; padding: 12px;">
@@ -623,86 +569,84 @@
 </div>
 
 <script>
-    // --- Data ---
     const exerciseDatabase = [
         { name: "Barbell Bench Press", category: "Chest", equipment: "Barbell" },
-        { name: "Incline Barbell Press", category: "Chest", equipment: "Barbell" },
+        { name: "Barbell Incline Press", category: "Chest", equipment: "Barbell" },
         { name: "Dumbbell Bench Press", category: "Chest", equipment: "Dumbbell" },
-        { name: "Incline Dumbbell Press", category: "Chest", equipment: "Dumbbell" },
+        { name: "Dumbbell Incline Press", category: "Chest", equipment: "Dumbbell" },
         { name: "Dumbbell Flyes", category: "Chest", equipment: "Dumbbell" },
-        { name: "Push-Ups", category: "Chest", equipment: "Bodyweight" },
-        { name: "Dips", category: "Chest", equipment: "Bodyweight" },
+        { name: "Bodyweight Push-Up", category: "Chest", equipment: "Bodyweight" },
+        { name: "Bodyweight Dips", category: "Chest", equipment: "Bodyweight" },
         { name: "Cable Crossover", category: "Chest", equipment: "Cable" },
-        { name: "Chest Press Machine", category: "Chest", equipment: "Machine" },
-        { name: "Pec Deck", category: "Chest", equipment: "Machine" },
+        { name: "Machine Chest Press", category: "Chest", equipment: "Machine" },
+        { name: "Machine Pec Deck", category: "Chest", equipment: "Machine" },
         
         { name: "Barbell Squat", category: "Legs", equipment: "Barbell" },
-        { name: "Front Squat", category: "Legs", equipment: "Barbell" },
-        { name: "Bulgarian Split Squat", category: "Legs", equipment: "Dumbbell" },
-        { name: "Romanian Deadlift", category: "Legs", equipment: "Barbell" },
-        { name: "Dumbbell RDL", category: "Legs", equipment: "Dumbbell" },
-        { name: "Leg Press", category: "Legs", equipment: "Machine" },
-        { name: "Hack Squat", category: "Legs", equipment: "Machine" },
-        { name: "Leg Extension", category: "Legs", equipment: "Machine" },
-        { name: "Seated Leg Curl", category: "Legs", equipment: "Machine" },
-        { name: "Lying Leg Curl", category: "Legs", equipment: "Machine" },
-        { name: "Calf Raises", category: "Legs", equipment: "Machine" },
-        { name: "Walking Lunges", category: "Legs", equipment: "Dumbbell" },
+        { name: "Barbell Front Squat", category: "Legs", equipment: "Barbell" },
+        { name: "Barbell Romanian Deadlift", category: "Legs", equipment: "Barbell" },
+        { name: "Dumbbell Bulgarian Split Squat", category: "Legs", equipment: "Dumbbell" },
+        { name: "Dumbbell Romanian Deadlift", category: "Legs", equipment: "Dumbbell" },
+        { name: "Dumbbell Lunges", category: "Legs", equipment: "Dumbbell" },
+        { name: "Machine Leg Press", category: "Legs", equipment: "Machine" },
+        { name: "Machine Hack Squat", category: "Legs", equipment: "Machine" },
+        { name: "Machine Leg Extension", category: "Legs", equipment: "Machine" },
+        { name: "Machine Seated Leg Curl", category: "Legs", equipment: "Machine" },
+        { name: "Machine Lying Leg Curl", category: "Legs", equipment: "Machine" },
+        { name: "Machine Calf Raises", category: "Legs", equipment: "Machine" },
         
-        { name: "Deadlift", category: "Back", equipment: "Barbell" },
-        { name: "Pull-Ups", category: "Back", equipment: "Bodyweight" },
-        { name: "Chin-Ups", category: "Back", equipment: "Bodyweight" },
-        { name: "Lat Pulldown", category: "Back", equipment: "Cable" },
-        { name: "Dumbbell Row", category: "Back", equipment: "Dumbbell" },
-        { name: "Seated Cable Row", category: "Back", equipment: "Cable" },
+        { name: "Barbell Deadlift", category: "Back", equipment: "Barbell" },
         { name: "Barbell Row", category: "Back", equipment: "Barbell" },
-        { name: "T-Bar Row", category: "Back", equipment: "Machine" },
+        { name: "Bodyweight Pull-Up", category: "Back", equipment: "Bodyweight" },
+        { name: "Bodyweight Chin-Up", category: "Back", equipment: "Bodyweight" },
+        { name: "Cable Lat Pulldown", category: "Back", equipment: "Cable" },
+        { name: "Cable Seated Row", category: "Back", equipment: "Cable" },
+        { name: "Cable Straight Arm Pulldown", category: "Back", equipment: "Cable" },
+        { name: "Dumbbell Single Arm Row", category: "Back", equipment: "Dumbbell" },
+        { name: "Dumbbell Pullover", category: "Back", equipment: "Dumbbell" },
+        { name: "Machine T-Bar Row", category: "Back", equipment: "Machine" },
         { name: "Machine Row", category: "Back", equipment: "Machine" },
-        { name: "Straight Arm Pulldown", category: "Back", equipment: "Cable" },
         
-        { name: "Overhead Press", category: "Shoulders", equipment: "Barbell" },
-        { name: "Dumbbell Shoulder Press", category: "Shoulders", equipment: "Dumbbell" },
-        { name: "Shoulder Press Machine", category: "Shoulders", equipment: "Machine" },
-        { name: "Lateral Raises", category: "Shoulders", equipment: "Dumbbell" },
-        { name: "Cable Lateral Raises", category: "Shoulders", equipment: "Cable" },
-        { name: "Front Raises", category: "Shoulders", equipment: "Dumbbell" },
-        { name: "Face Pulls", category: "Shoulders", equipment: "Cable" },
-        { name: "Reverse Pec Deck", category: "Shoulders", equipment: "Machine" },
+        { name: "Barbell Overhead Press", category: "Shoulders", equipment: "Barbell" },
         { name: "Barbell Shrugs", category: "Shoulders", equipment: "Barbell" },
+        { name: "Dumbbell Shoulder Press", category: "Shoulders", equipment: "Dumbbell" },
+        { name: "Dumbbell Lateral Raise", category: "Shoulders", equipment: "Dumbbell" },
+        { name: "Dumbbell Front Raise", category: "Shoulders", equipment: "Dumbbell" },
         { name: "Dumbbell Shrugs", category: "Shoulders", equipment: "Dumbbell" },
+        { name: "Cable Lateral Raise", category: "Shoulders", equipment: "Cable" },
+        { name: "Cable Face Pull", category: "Shoulders", equipment: "Cable" },
+        { name: "Machine Shoulder Press", category: "Shoulders", equipment: "Machine" },
+        { name: "Machine Reverse Pec Deck", category: "Shoulders", equipment: "Machine" },
         
         { name: "Barbell Bicep Curl", category: "Arms", equipment: "Barbell" },
-        { name: "Dumbbell Curl", category: "Arms", equipment: "Dumbbell" },
-        { name: "Hammer Curls", category: "Arms", equipment: "Dumbbell" },
-        { name: "Preacher Curl", category: "Arms", equipment: "Machine" },
-        { name: "Cable Curl", category: "Arms", equipment: "Cable" },
-        { name: "Tricep Pushdown", category: "Arms", equipment: "Cable" },
-        { name: "Overhead Tricep Extension", category: "Arms", equipment: "Dumbbell" },
-        { name: "Cable Tricep Extension", category: "Arms", equipment: "Cable" },
-        { name: "Skullcrushers", category: "Arms", equipment: "Barbell" },
-        { name: "Close Grip Bench Press", category: "Arms", equipment: "Barbell" },
+        { name: "Barbell Skullcrusher", category: "Arms", equipment: "Barbell" },
+        { name: "Barbell Close Grip Bench", category: "Arms", equipment: "Barbell" },
+        { name: "Dumbbell Bicep Curl", category: "Arms", equipment: "Dumbbell" },
+        { name: "Dumbbell Hammer Curl", category: "Arms", equipment: "Dumbbell" },
+        { name: "Dumbbell Overhead Tricep Extension", category: "Arms", equipment: "Dumbbell" },
+        { name: "Cable Bicep Curl", category: "Arms", equipment: "Cable" },
+        { name: "Cable Tricep Pushdown", category: "Arms", equipment: "Cable" },
+        { name: "Cable Overhead Tricep Extension", category: "Arms", equipment: "Cable" },
+        { name: "Machine Preacher Curl", category: "Arms", equipment: "Machine" },
+        { name: "Machine Tricep Extension", category: "Arms", equipment: "Machine" },
         
-        { name: "Plank", category: "Core", equipment: "Bodyweight" },
-        { name: "Crunches", category: "Core", equipment: "Bodyweight" },
-        { name: "Cable Crunches", category: "Core", equipment: "Cable" },
-        { name: "Hanging Leg Raises", category: "Core", equipment: "Bodyweight" },
-        { name: "Russian Twists", category: "Core", equipment: "Bodyweight" },
-        { name: "Ab Wheel Rollout", category: "Core", equipment: "Machine" }
+        { name: "Bodyweight Plank", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Crunch", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Hanging Leg Raise", category: "Core", equipment: "Bodyweight" },
+        { name: "Bodyweight Russian Twist", category: "Core", equipment: "Bodyweight" },
+        { name: "Cable Crunch", category: "Core", equipment: "Cable" },
+        { name: "Machine Ab Wheel Rollout", category: "Core", equipment: "Machine" }
     ].sort((a, b) => a.name.localeCompare(b.name));
 
     let currentWorkout = [];
     let workoutTimerInterval;
     let secondsElapsed = 0;
     
-    // Filters
     let activeCategory = 'All';
     let activeEquipment = 'All';
 
-    // Persistent Data 
     let workoutHistory = []; 
     let weightHistory = [];  
 
-    // --- Navigation Functions ---
     function navigate(tab) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(tab + '-screen').classList.add('active');
@@ -722,16 +666,12 @@
     function showWorkoutScreen() {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('workout-screen').classList.add('active');
-        
         document.getElementById('bottom-nav').style.display = 'none';
         document.getElementById('main-header').style.display = 'none';
     }
 
-    function goBack() {
-        navigate('history');
-    }
+    function goBack() { navigate('history'); }
 
-    // --- Autofill Logic ---
     function getPreviousExerciseData(exerciseName) {
         for (let i = 0; i < workoutHistory.length; i++) {
             const pastEx = workoutHistory[i].exercises.find(e => e.name === exerciseName);
@@ -745,7 +685,6 @@
         return [{ weight: '', reps: '', completed: false, isBW: false, side: 'none', isFailure: false, menuOpen: false }];
     }
 
-    // --- Workout Functions ---
     function startWorkout() {
         currentWorkout = [];
         secondsElapsed = 0;
@@ -778,19 +717,15 @@
         const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         const volume = calculateTotalVolume();
         
-        // Strip out UI state (menuOpen)
         const savedExercises = JSON.parse(JSON.stringify(currentWorkout)).map(ex => {
             ex.sets.forEach(s => delete s.menuOpen);
             return ex;
         });
 
         workoutHistory.unshift({
-            id: Date.now(),
-            name: customName,
-            date: dateStr,
+            id: Date.now(), name: customName, date: dateStr,
             duration: document.getElementById('workout-timer').innerText,
-            volume: volume,
-            exercises: savedExercises
+            volume: volume, exercises: savedExercises
         });
 
         document.getElementById('streak-text').innerText = workoutHistory.length;
@@ -816,18 +751,14 @@
         return vol;
     }
 
-    // --- Modal / Filters ---
     function showExerciseModal() {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('exercise-modal').classList.add('active');
         document.getElementById('main-header').style.display = 'none';
-        
         filterExercises();
     }
 
-    function hideExerciseModal() {
-        showWorkoutScreen();
-    }
+    function hideExerciseModal() { showWorkoutScreen(); }
     
     function setCategory(cat) {
         activeCategory = cat;
@@ -869,18 +800,12 @@
             const item = document.createElement('div');
             item.className = 'list-item';
             if (idx === list.length -1) item.style.borderBottom = 'none';
-            item.innerHTML = `
-                <div>
-                    <div class="list-item-title">${ex.name}</div>
-                    <div class="list-item-sub">${ex.category} • ${ex.equipment}</div>
-                </div>
-            `;
+            item.innerHTML = `<div><div class="list-item-title">${ex.name}</div><div class="list-item-sub">${ex.category}</div></div>`;
             item.onclick = () => addExerciseToWorkout(ex.name);
             container.appendChild(item);
         });
     }
 
-    // --- Logging & Modifiers ---
     function addExerciseToWorkout(exerciseName) {
         currentWorkout.push({ id: Date.now(), name: exerciseName, sets: getPreviousExerciseData(exerciseName) });
         hideExerciseModal();
@@ -898,13 +823,9 @@
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
         const lastSet = exercise.sets[exercise.sets.length - 1];
         exercise.sets.push({ 
-            weight: lastSet ? lastSet.weight : '', 
-            reps: lastSet ? lastSet.reps : '', 
-            completed: false,
-            isBW: lastSet ? lastSet.isBW : false,
-            side: 'none',
-            isFailure: false,
-            menuOpen: false
+            weight: lastSet ? lastSet.weight : '', reps: lastSet ? lastSet.reps : '', 
+            completed: false, isBW: lastSet ? lastSet.isBW : false,
+            side: 'none', isFailure: false, menuOpen: false
         });
         renderWorkout();
     }
@@ -950,7 +871,6 @@
         renderWorkout();
     }
 
-    // --- Rendering Active Workout ---
     function renderWorkout() {
         const container = document.getElementById('workout-cards');
         container.innerHTML = '';
@@ -964,7 +884,7 @@
             header.innerHTML = `
                 <span>${exercise.name}</span>
                 <button class="icon-btn" style="color: var(--mod-fail);" onclick="removeExercise(${exercise.id})">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             `;
             card.appendChild(header);
@@ -975,18 +895,15 @@
                 
                 let weightPlaceholder = 'lbs';
                 let weightValue = set.weight;
-                if(set.isBW) {
-                    weightPlaceholder = 'BW';
-                    weightValue = 'BW';
-                }
+                if(set.isBW) { weightPlaceholder = 'BW'; weightValue = 'BW'; }
                 
-                let tagsHtml = '';
-                if(set.isBW && !set.menuOpen) tagsHtml += `<div class="d-tag bw" style="margin-top: 4px; display:inline-block;">BW</div>`;
-                if(set.side !== 'none' && !set.menuOpen) tagsHtml += `<div class="d-tag side" style="margin-top: 4px; margin-left:4px; display:inline-block;">${set.side === 'L' ? 'Left' : 'Right'}</div>`;
+                let setNumDisplay = index + 1;
+                if(set.side === 'L') setNumDisplay = 'L';
+                if(set.side === 'R') setNumDisplay = 'R';
                 
                 setContainer.innerHTML = `
                     <div class="set-row">
-                        <div class="set-number">${index + 1}</div>
+                        <div class="set-number ${set.side !== 'none' ? 'side' : ''}">${setNumDisplay}</div>
                         <div class="input-group">
                             <input type="${set.isBW ? 'text' : 'number'}" placeholder="${weightPlaceholder}" value="${weightValue}" class="${set.isBW ? 'bw-active' : ''}" onchange="updateSetData(${exercise.id}, ${index}, 'weight', this.value)" ${set.completed || set.isBW ? 'disabled' : ''}>
                         </div>
@@ -994,24 +911,20 @@
                             <input type="number" placeholder="reps" value="${set.reps}" onchange="updateSetData(${exercise.id}, ${index}, 'reps', this.value)" ${set.completed ? 'disabled' : ''}>
                         </div>
                         <button class="check-btn" onclick="toggleSet(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
                         </button>
                         <button class="icon-btn" onclick="toggleSetMenu(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
                         </button>
                     </div>
-                    ${tagsHtml ? `<div>${tagsHtml}</div>` : ''}
                     
                     ${set.menuOpen ? `
                     <div class="set-drawer">
                         <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">BW</button>
-                        <button class="mod-tag side ${set.side !== 'none' ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">
-                            ${set.side === 'none' ? 'L / R' : set.side}
-                        </button>
-                        <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">Failure</button>
+                        <button class="mod-tag side ${set.side !== 'none' ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">L / R</button>
+                        <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">Fail</button>
                         <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                            Delete
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Delete
                         </button>
                     </div>
                     ` : ''}
@@ -1029,7 +942,6 @@
         });
     }
 
-    // --- View Workout Info / History ---
     function renderHistory() {
         const list = document.getElementById('history-list');
         list.innerHTML = '';
@@ -1043,7 +955,6 @@
             const item = document.createElement('div');
             item.className = 'list-item card';
             item.style.marginBottom = '12px';
-            item.style.padding = '20px';
             item.onclick = () => viewWorkoutInfo(workout.id);
             item.innerHTML = `
                 <div>
@@ -1078,18 +989,18 @@
         exContainer.innerHTML = '';
         
         workout.exercises.forEach(ex => {
-            let html = `<div class="detail-exercise card"><div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 16px;">${ex.name}</div>`;
+            let html = `<div class="detail-exercise card"><div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 12px;">${ex.name}</div>`;
             ex.sets.forEach((set, idx) => {
                 if (set.completed) {
                     let weightStr = set.isBW ? 'BW' : (set.weight || '0');
                     let tagsHtml = '';
                     if (set.isBW) tagsHtml += `<span class="d-tag bw">BW</span>`;
-                    if (set.side === 'L') tagsHtml += `<span class="d-tag side">Left</span>`;
-                    if (set.side === 'R') tagsHtml += `<span class="d-tag side">Right</span>`;
-                    if (set.isFailure) tagsHtml += `<span class="d-tag fail">Failure</span>`;
+                    if (set.side === 'L') tagsHtml += `<span class="d-tag side">L</span>`;
+                    if (set.side === 'R') tagsHtml += `<span class="d-tag side">R</span>`;
+                    if (set.isFailure) tagsHtml += `<span class="d-tag fail">Fail</span>`;
                     
                     html += `
-                        <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.1)' : 'transparent'}; padding: 10px 8px; margin: 0 -8px; border-radius: 8px;">
+                        <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.1)' : 'transparent'}; padding: 8px 12px; margin: 0 -12px; border-radius: 8px;">
                             <div>Set ${idx + 1}</div>
                             <div style="display:flex; align-items:center;">
                                 <span>${weightStr}</span> &nbsp;×&nbsp; <span>${set.reps || 0}</span>
@@ -1112,14 +1023,11 @@
         };
     }
 
-    // --- Weight Functions ---
     function logWeight() {
         const input = document.getElementById('new-weight');
-        const val = input.value;
-        if (!val) return;
-        
+        if (!input.value) return;
         const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        weightHistory.unshift({ id: Date.now(), date: date, weight: val });
+        weightHistory.unshift({ id: Date.now(), date: date, weight: input.value });
         input.value = '';
         renderWeight();
     }
@@ -1138,19 +1046,17 @@
             list.innerHTML = '<div class="empty-state">No weight logged yet.</div>';
             return;
         }
-        
         weightHistory.forEach(entry => {
             const item = document.createElement('div');
             item.className = 'list-item card';
             item.style.marginBottom = '12px';
-            item.style.padding = '20px';
             item.innerHTML = `
                 <div>
                     <div class="list-item-title">${entry.weight} lbs</div>
                     <div class="list-item-sub">${entry.date}</div>
                 </div>
                 <button class="icon-btn" onclick="deleteWeight(${entry.id})" style="color: var(--mod-fail);">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             `;
             list.appendChild(item);
