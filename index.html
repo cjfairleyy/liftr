@@ -1054,6 +1054,15 @@
     
     function toggleSetMenu(exerciseId, setIndex) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        // Close all other menus first
+        currentWorkout.forEach(ex => {
+            ex.sets.forEach((s, i) => {
+                if (!(ex.id === exerciseId && i === setIndex)) {
+                    s.menuOpen = false;
+                }
+            });
+        });
+        // Toggle the clicked menu
         exercise.sets[setIndex].menuOpen = !exercise.sets[setIndex].menuOpen;
         renderWorkout();
     }
@@ -1069,7 +1078,7 @@
         
         if (modType === 'BW') {
             set.isBW = !set.isBW;
-            if (set.isBW) set.weight = 'Bodyweight'; 
+            if (set.isBW) set.weight = 'BW'; 
             else set.weight = '';
         } else if (modType === 'L') {
             set.side = set.side === 'L' ? 'none' : 'L';
@@ -1107,8 +1116,8 @@
                 let weightPlaceholder = 'lbs';
                 let weightValue = set.weight;
                 if(set.isBW) {
-                    weightPlaceholder = 'Bodyweight';
-                    weightValue = 'Bodyweight';
+                    weightPlaceholder = 'BW';
+                    weightValue = 'BW';
                 }
                 
                 let setNumberHtml = `<span class="set-number">${index + 1}</span>`;
@@ -1139,7 +1148,7 @@
                         <button class="mod-tag side ${set.side === 'L' ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'L')">L</button>
                         <button class="mod-tag side ${set.side === 'R' ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'R')">R</button>
                         <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">F</button>
-                        <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${index})">Del</button>
+                        <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${index})">✕</button>
                     </div>
                     ` : ''}
                 `;
@@ -1208,7 +1217,7 @@
             let html = `<div class="detail-exercise card"><div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 14px;">${ex.name}</div>`;
             ex.sets.forEach((set, idx) => {
                 if (set.completed) {
-                    let weightStr = set.isBW ? 'Bodyweight' : (set.weight || '0');
+                    let weightStr = set.isBW ? 'BW' : (set.weight || '0');
                     let tagsHtml = '';
                     if (set.isBW) tagsHtml += `<span class="d-tag bw">BW</span>`;
                     if (set.side === 'L') tagsHtml += `<span class="d-tag side">L</span>`;
