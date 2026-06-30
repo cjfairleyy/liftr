@@ -15,23 +15,22 @@
             --text-muted: #a1a1aa;
             --text-placeholder: #52525b;
             
-            --border: #27272a;
-            --border-light: #3f3f46;
+            --border-light: #27272a;
             
             --btn-primary-bg: #ffffff;
             --btn-primary-text: #000000;
             --btn-primary-hover: #e4e4e7;
             
-            --check-active-bg: #22c55e; /* Green */
+            --check-active-bg: #22c55e;
             --check-active-text: #ffffff;
-            --check-inactive-bg: #27272a;
+            --check-inactive-bg: #1e1e20;
             
-            --tag-bg: #18181b;
+            --tag-bg: #1e1e20;
             
             /* Custom Modifier Colors */
-            --mod-bw: #3b82f6;      /* Blue */
-            --mod-side: #f97316;    /* Orange */
-            --mod-fail: #ef4444;    /* Red */
+            --mod-bw: #3b82f6;      
+            --mod-side: #f97316;    
+            --mod-fail: #ef4444;    
         }
 
         * {
@@ -64,16 +63,15 @@
         
         header {
             padding: 24px 24px 16px;
-            background-color: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             position: sticky;
             top: 0;
             z-index: 10;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid var(--border);
         }
 
         header h1 { font-size: 1.5rem; font-weight: 800; }
@@ -108,7 +106,7 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -118,7 +116,7 @@
             color: var(--btn-primary-text);
             border: none;
             padding: 16px 20px;
-            border-radius: 16px;
+            border-radius: 20px;
             font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
@@ -135,20 +133,19 @@
         .btn-outline {
             background-color: transparent;
             color: var(--text-main);
-            border: 1px dashed var(--border-light);
+            border: 1px solid var(--border-light);
             transition: background-color 0.2s, border-color 0.2s;
         }
         .btn-outline:active {
             background-color: var(--bg-surface-elevated);
-            border-color: var(--text-muted);
         }
 
         /* Cards */
         .card {
             background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px;
+            border: none;
+            border-radius: 24px;
+            padding: 20px;
             margin-bottom: 12px;
         }
 
@@ -169,7 +166,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px;
+            padding: 8px;
             border-radius: 12px;
             transition: background-color 0.2s, color 0.2s;
         }
@@ -177,15 +174,14 @@
 
         /* Active Workout Top Bar */
         .workout-top-bar {
-            background-color: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             position: sticky;
             top: 0;
             z-index: 50;
             padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .workout-name-input {
@@ -213,7 +209,7 @@
 
         .btn-small {
             padding: 8px 16px;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 0.85rem;
             font-weight: 700;
             cursor: pointer;
@@ -222,7 +218,6 @@
         .btn-small.cancel {
             background-color: transparent;
             color: var(--mod-fail);
-            border: 1px solid rgba(239, 68, 68, 0.3);
         }
         .btn-small.finish {
             background-color: var(--btn-primary-bg);
@@ -231,19 +226,17 @@
 
         /* Set Rows & Modifiers */
         .set-container {
-            margin-bottom: 4px;
-            padding: 6px 8px;
-            border-radius: 12px;
-            border: 1px solid transparent;
-            transition: all 0.2s;
+            margin-bottom: 8px;
+            padding: 4px 0;
+            transition: opacity 0.2s;
         }
         .set-container.completed { opacity: 0.5; }
-        .set-container.is-failure { background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
+        .set-container.is-failure { background-color: rgba(239, 68, 68, 0.05); border-radius: 12px; padding: 4px 8px; margin-left: -8px; margin-right: -8px; }
 
         .set-row {
             display: grid;
             grid-template-columns: 24px 1fr 1fr 44px 36px;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
         }
 
@@ -257,24 +250,24 @@
 
         .input-group input {
             width: 100%;
-            padding: 10px;
-            background-color: var(--bg-base);
-            border: 1px solid var(--border);
-            border-radius: 10px;
+            padding: 12px;
+            background-color: var(--bg-surface-elevated);
+            border: 1px solid transparent;
+            border-radius: 12px;
             color: var(--text-main);
             font-size: 1rem;
-            font-weight: 500;
+            font-weight: 600;
             text-align: center;
-            transition: border-color 0.2s;
+            transition: background-color 0.2s;
         }
-        .input-group input:focus { outline: none; border-color: var(--text-muted); }
-        .input-group input:disabled { background-color: var(--bg-surface-elevated); border-color: transparent; }
+        .input-group input:focus { outline: none; background-color: #27272a; }
+        .input-group input:disabled { background-color: var(--bg-base); opacity: 0.8; }
         .input-group input.bw-active:disabled { color: var(--mod-bw); font-weight: 700; }
 
         .check-btn {
             background: var(--check-inactive-bg);
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             width: 44px;
             height: 44px;
             cursor: pointer;
@@ -282,61 +275,59 @@
             justify-content: center;
             align-items: center;
             color: var(--text-muted);
+            transition: background-color 0.2s;
         }
         .set-container.completed .check-btn {
             background: var(--check-active-bg);
             color: var(--check-active-text);
         }
 
-        /* Improved Drawer Menu */
+        /* Simplified Drawer Menu */
         .set-drawer {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr auto;
             gap: 8px;
-            padding-top: 10px;
-            margin-top: 10px;
-            border-top: 1px dashed var(--border-light);
-            padding-left: 34px;
+            padding-top: 12px;
+            padding-left: 36px;
         }
         
         .mod-tag {
             background: var(--tag-bg);
-            border: 1px solid var(--border);
+            border: none;
             color: var(--text-muted);
             padding: 8px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            transition: background-color 0.2s;
         }
-        .mod-tag.bw.active { background: var(--mod-bw); border-color: var(--mod-bw); color: #fff; }
-        .mod-tag.side.active { background: var(--mod-side); border-color: var(--mod-side); color: #fff; }
-        .mod-tag.fail.active { background: var(--mod-fail); border-color: var(--mod-fail); color: #fff; }
-        .mod-tag.delete { color: var(--mod-fail); background: transparent; border-color: rgba(239, 68, 68, 0.3); padding: 8px 12px; }
+        .mod-tag.bw.active { background: var(--mod-bw); color: #fff; }
+        .mod-tag.side.active { background: var(--mod-side); color: #fff; }
+        .mod-tag.fail.active { background: var(--mod-fail); color: #fff; }
+        .mod-tag.delete { color: var(--mod-fail); background: transparent; padding: 8px 12px; }
 
         .add-set-btn {
-            background: var(--tag-bg);
-            border: 1px solid var(--border);
-            color: var(--text-main);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
             font-weight: 600;
             cursor: pointer;
             width: 100%;
             padding: 12px;
             font-size: 0.95rem;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-top: 8px;
-            transition: background-color 0.2s;
+            transition: color 0.2s, background-color 0.2s;
         }
-        .add-set-btn:active { background-color: var(--bg-surface-elevated); }
+        .add-set-btn:active { background-color: var(--bg-surface-elevated); color: var(--text-main); }
 
         /* Filters */
         .filter-section {
             padding: 0 20px 12px;
-            border-bottom: 1px solid var(--border);
             margin-bottom: 12px;
             position: sticky;
             top: 0;
@@ -356,16 +347,16 @@
         
         .filter-pill {
             background: var(--tag-bg);
-            border: 1px solid var(--border);
+            border: none;
             color: var(--text-muted);
-            padding: 8px 16px;
+            padding: 10px 18px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             white-space: nowrap;
         }
-        .filter-pill.active { background: var(--text-main); color: var(--bg-base); border-color: var(--text-main); }
+        .filter-pill.active { background: var(--text-main); color: var(--bg-base); }
 
         /* Lists */
         .list-item {
@@ -373,11 +364,11 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
             cursor: pointer;
+            border-radius: 20px;
+            margin-bottom: 4px;
         }
         .list-item:active { background-color: var(--bg-surface); }
-        .list-item:last-child { border-bottom: none; }
         .list-item-title { font-weight: 600; font-size: 1.05rem; margin-bottom: 4px; }
         .list-item-sub { color: var(--text-muted); font-size: 0.85rem; }
 
@@ -387,10 +378,9 @@
             bottom: 0;
             width: 100%;
             max-width: 480px;
-            background-color: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border);
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: flex;
             justify-content: space-around;
             padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
@@ -410,37 +400,37 @@
             align-items: center;
             gap: 4px;
         }
-        .nav-btn svg { width: 24px; height: 24px; stroke-width: 2; }
+        .nav-btn svg { width: 24px; height: 24px; stroke-width: 2.5; }
         .nav-btn.active { color: var(--text-main); }
 
         /* Inputs */
         .text-input {
             width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: 1px solid var(--border-light);
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
             background-color: var(--bg-surface);
             color: var(--text-main);
             margin-bottom: 16px;
             font-size: 1rem;
+            font-weight: 500;
         }
-        .text-input:focus { outline: none; border-color: var(--text-main); }
+        .text-input:focus { outline: none; background-color: var(--bg-surface-elevated); }
 
-        .empty-state { text-align: center; color: var(--text-muted); margin-top: 60px; font-size: 0.95rem; }
+        .empty-state { text-align: center; color: var(--text-muted); margin-top: 60px; font-size: 0.95rem; font-weight: 500; }
 
         .detail-exercise { margin-bottom: 24px; }
         .detail-set-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
             color: var(--text-muted);
             font-size: 0.95rem;
         }
-        .detail-set-row span { font-weight: 600; color: var(--text-main); }
-        .detail-tags { display: flex; gap: 6px; margin-left: 8px; }
-        .d-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 700; }
+        .detail-set-row span { font-weight: 700; color: var(--text-main); }
+        .detail-tags { display: flex; gap: 6px; margin-left: 12px; }
+        .d-tag { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; color: #fff; font-weight: 700; }
         .d-tag.bw { background: var(--mod-bw); }
         .d-tag.side { background: var(--mod-side); }
         .d-tag.fail { background: var(--mod-fail); }
@@ -452,7 +442,7 @@
     <header id="main-header">
         <h1>liftr</h1>
         <button id="header-action" class="header-btn" style="display:none;" onclick="goBack()">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Back
         </button>
     </header>
@@ -463,27 +453,25 @@
             <p style="color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;">Workouts Completed</p>
         </div>
         <button class="btn" onclick="startWorkout()">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             Start Empty Workout
         </button>
     </div>
 
     <div id="history-screen" class="screen">
         <h2>History</h2>
-        <div class="card" style="padding: 0; border: none; background: transparent;">
-            <div id="history-list">
-                <div class="empty-state">No workouts logged yet.</div>
-            </div>
+        <div id="history-list">
+            <div class="empty-state">No workouts logged yet.</div>
         </div>
     </div>
 
     <div id="workout-detail-screen" class="screen">
         <h2 id="detail-title" style="margin-bottom: 8px;">Workout</h2>
-        <p id="detail-stats" style="color: var(--text-muted); margin-top: 0; margin-bottom: 32px;"></p>
+        <p id="detail-stats" style="color: var(--text-muted); margin-top: 0; margin-bottom: 32px; font-weight: 500;"></p>
         <div id="detail-exercises"></div>
-        <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border);">
-            <button class="btn btn-outline" style="color: var(--mod-fail); border-color: rgba(239, 68, 68, 0.3);" id="delete-workout-btn">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+        <div style="margin-top: 40px; padding-top: 24px;">
+            <button class="btn btn-outline" style="color: var(--mod-fail); border: none; background: rgba(239, 68, 68, 0.1);" id="delete-workout-btn">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
                 Delete Log
             </button>
         </div>
@@ -493,12 +481,10 @@
         <h2>Body Weight</h2>
         <div style="display: flex; gap: 12px; margin-bottom: 32px;">
             <input type="number" id="new-weight" class="text-input" placeholder="Enter weight (lbs)" step="0.1" style="margin-bottom: 0;">
-            <button class="btn" style="width: auto; border-radius: 12px;" onclick="logWeight()">Log</button>
+            <button class="btn" style="width: auto; border-radius: 16px;" onclick="logWeight()">Log</button>
         </div>
-        <div class="card" style="padding: 0; overflow: hidden; border: none; background: transparent;">
-            <div id="weight-list">
-                <div class="empty-state">No weight logged yet.</div>
-            </div>
+        <div id="weight-list">
+            <div class="empty-state">No weight logged yet.</div>
         </div>
     </div>
 
@@ -515,7 +501,7 @@
         <div style="padding: 0 20px;">
             <div id="workout-cards"></div>
             <button class="btn btn-outline" style="margin-bottom: 24px;" onclick="showExerciseModal()">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                 Add Exercise
             </button>
         </div>
@@ -527,10 +513,10 @@
                 <h2 style="margin: 0;">Select Exercise</h2>
                 <button class="header-btn" onclick="hideExerciseModal()">Close</button>
             </div>
-            <input type="text" id="search-exercise" class="text-input" placeholder="Search..." onkeyup="filterExercises()" style="margin-bottom: 12px; padding: 12px;">
+            <input type="text" id="search-exercise" class="text-input" placeholder="Search..." onkeyup="filterExercises()" style="margin-bottom: 16px;">
             
             <div class="filter-row" id="muscle-filters">
-                <button class="filter-pill active" onclick="setCategory('All')">All Muscles</button>
+                <button class="filter-pill active" onclick="setCategory('All')">All</button>
                 <button class="filter-pill" onclick="setCategory('Chest')">Chest</button>
                 <button class="filter-pill" onclick="setCategory('Back')">Back</button>
                 <button class="filter-pill" onclick="setCategory('Legs')">Legs</button>
@@ -540,7 +526,7 @@
             </div>
             
             <div class="filter-row" id="equipment-filters">
-                <button class="filter-pill active" onclick="setEquipment('All')">All Equipment</button>
+                <button class="filter-pill active" onclick="setEquipment('All')">All</button>
                 <button class="filter-pill" onclick="setEquipment('Barbell')">Barbell</button>
                 <button class="filter-pill" onclick="setEquipment('Dumbbell')">Dumbbell</button>
                 <button class="filter-pill" onclick="setEquipment('Machine')">Machine</button>
@@ -763,7 +749,7 @@
     function setCategory(cat) {
         activeCategory = cat;
         document.querySelectorAll('#muscle-filters .filter-pill').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText.includes(cat) || (cat==='All' && btn.innerText==='All Muscles'));
+            btn.classList.toggle('active', btn.innerText === cat || (cat === 'All' && btn.innerText === 'All'));
         });
         filterExercises();
     }
@@ -771,7 +757,7 @@
     function setEquipment(eq) {
         activeEquipment = eq;
         document.querySelectorAll('#equipment-filters .filter-pill').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText.includes(eq) || (eq==='All' && btn.innerText==='All Equipment'));
+            btn.classList.toggle('active', btn.innerText === eq || (eq === 'All' && btn.innerText === 'All'));
         });
         filterExercises();
     }
@@ -796,10 +782,9 @@
             return;
         }
         
-        list.forEach((ex, idx) => {
+        list.forEach(ex => {
             const item = document.createElement('div');
             item.className = 'list-item';
-            if (idx === list.length -1) item.style.borderBottom = 'none';
             item.innerHTML = `<div><div class="list-item-title">${ex.name}</div><div class="list-item-sub">${ex.category}</div></div>`;
             item.onclick = () => addExerciseToWorkout(ex.name);
             container.appendChild(item);
@@ -884,7 +869,7 @@
             header.innerHTML = `
                 <span>${exercise.name}</span>
                 <button class="icon-btn" style="color: var(--mod-fail);" onclick="removeExercise(${exercise.id})">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             `;
             card.appendChild(header);
@@ -911,10 +896,10 @@
                             <input type="number" placeholder="reps" value="${set.reps}" onchange="updateSetData(${exercise.id}, ${index}, 'reps', this.value)" ${set.completed ? 'disabled' : ''}>
                         </div>
                         <button class="check-btn" onclick="toggleSet(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
                         </button>
                         <button class="icon-btn" onclick="toggleSetMenu(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
                         </button>
                     </div>
                     
@@ -922,9 +907,9 @@
                     <div class="set-drawer">
                         <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">BW</button>
                         <button class="mod-tag side ${set.side !== 'none' ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">L / R</button>
-                        <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">Fail</button>
+                        <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">F</button>
                         <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Delete
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                         </button>
                     </div>
                     ` : ''}
@@ -954,7 +939,6 @@
             const exCount = workout.exercises.length;
             const item = document.createElement('div');
             item.className = 'list-item card';
-            item.style.marginBottom = '12px';
             item.onclick = () => viewWorkoutInfo(workout.id);
             item.innerHTML = `
                 <div>
@@ -979,7 +963,7 @@
         document.querySelector('header h1').innerText = 'Summary';
         const backBtn = document.getElementById('header-action');
         backBtn.style.display = 'flex';
-        backBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back`;
+        backBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back`;
         backBtn.onclick = goBack;
 
         document.getElementById('detail-title').innerText = workout.name;
@@ -997,10 +981,10 @@
                     if (set.isBW) tagsHtml += `<span class="d-tag bw">BW</span>`;
                     if (set.side === 'L') tagsHtml += `<span class="d-tag side">L</span>`;
                     if (set.side === 'R') tagsHtml += `<span class="d-tag side">R</span>`;
-                    if (set.isFailure) tagsHtml += `<span class="d-tag fail">Fail</span>`;
+                    if (set.isFailure) tagsHtml += `<span class="d-tag fail">F</span>`;
                     
                     html += `
-                        <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.1)' : 'transparent'}; padding: 8px 12px; margin: 0 -12px; border-radius: 8px;">
+                        <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.05)' : 'transparent'}; padding: 8px 12px; margin: 0 -12px; border-radius: 12px;">
                             <div>Set ${idx + 1}</div>
                             <div style="display:flex; align-items:center;">
                                 <span>${weightStr}</span> &nbsp;×&nbsp; <span>${set.reps || 0}</span>
@@ -1049,14 +1033,13 @@
         weightHistory.forEach(entry => {
             const item = document.createElement('div');
             item.className = 'list-item card';
-            item.style.marginBottom = '12px';
             item.innerHTML = `
                 <div>
                     <div class="list-item-title">${entry.weight} lbs</div>
                     <div class="list-item-sub">${entry.date}</div>
                 </div>
                 <button class="icon-btn" onclick="deleteWeight(${entry.id})" style="color: var(--mod-fail);">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             `;
             list.appendChild(item);
