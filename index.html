@@ -29,7 +29,8 @@
             
             /* Custom Modifier Colors */
             --mod-bw: #3b82f6;      
-            --mod-side: #f97316;    
+            --mod-side-l: #f97316; /* Orange */
+            --mod-side-r: #8b5cf6; /* Purple */   
             --mod-fail: #ef4444;    
         }
 
@@ -231,7 +232,8 @@
             transition: opacity 0.2s;
         }
         .set-container.completed { opacity: 0.5; }
-        .set-container.is-failure { background-color: rgba(239, 68, 68, 0.05); border-radius: 12px; padding: 4px 8px; margin-left: -8px; margin-right: -8px; }
+        /* Increased failure highlight visibility */
+        .set-container.is-failure { background-color: rgba(239, 68, 68, 0.15); border-radius: 12px; padding: 4px 8px; margin-left: -8px; margin-right: -8px; }
 
         .set-row {
             display: grid;
@@ -246,7 +248,8 @@
             font-weight: 700;
             text-align: center;
         }
-        .set-number.side { color: var(--mod-side); }
+        .set-number.side-l { color: var(--mod-side-l); }
+        .set-number.side-r { color: var(--mod-side-r); }
 
         .input-group input {
             width: 100%;
@@ -282,20 +285,19 @@
             color: var(--check-active-text);
         }
 
-        /* Simplified Drawer Menu */
+        /* Aligned Drawer Menu */
         .set-drawer {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
-            gap: 8px;
+            grid-template-columns: 24px 1fr 1fr 44px 36px;
+            gap: 12px;
             padding-top: 12px;
-            padding-left: 36px;
         }
         
         .mod-tag {
             background: var(--tag-bg);
             border: none;
             color: var(--text-muted);
-            padding: 8px;
+            padding: 8px 4px;
             border-radius: 10px;
             font-size: 0.8rem;
             font-weight: 700;
@@ -306,9 +308,10 @@
             transition: background-color 0.2s;
         }
         .mod-tag.bw.active { background: var(--mod-bw); color: #fff; }
-        .mod-tag.side.active { background: var(--mod-side); color: #fff; }
+        .mod-tag.side-l.active { background: var(--mod-side-l); color: #fff; }
+        .mod-tag.side-r.active { background: var(--mod-side-r); color: #fff; }
         .mod-tag.fail.active { background: var(--mod-fail); color: #fff; }
-        .mod-tag.delete { color: var(--mod-fail); background: transparent; padding: 8px 12px; }
+        .mod-tag.delete { color: var(--mod-fail); background: transparent; }
 
         .add-set-btn {
             background: transparent;
@@ -432,7 +435,8 @@
         .detail-tags { display: flex; gap: 6px; margin-left: 12px; }
         .d-tag { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; color: #fff; font-weight: 700; }
         .d-tag.bw { background: var(--mod-bw); }
-        .d-tag.side { background: var(--mod-side); }
+        .d-tag.side-l { background: var(--mod-side-l); }
+        .d-tag.side-r { background: var(--mod-side-r); }
         .d-tag.fail { background: var(--mod-fail); }
     </style>
 </head>
@@ -883,12 +887,18 @@
                 if(set.isBW) { weightPlaceholder = 'BW'; weightValue = 'BW'; }
                 
                 let setNumDisplay = index + 1;
-                if(set.side === 'L') setNumDisplay = 'L';
-                if(set.side === 'R') setNumDisplay = 'R';
+                let sideNumClass = '';
+                if(set.side === 'L') { setNumDisplay = 'L'; sideNumClass = 'side-l'; }
+                if(set.side === 'R') { setNumDisplay = 'R'; sideNumClass = 'side-r'; }
+
+                let sideBtnText = 'L/R';
+                let sideBtnClass = '';
+                if(set.side === 'L') { sideBtnText = 'L'; sideBtnClass = 'side-l active'; }
+                if(set.side === 'R') { sideBtnText = 'R'; sideBtnClass = 'side-r active'; }
                 
                 setContainer.innerHTML = `
                     <div class="set-row">
-                        <div class="set-number ${set.side !== 'none' ? 'side' : ''}">${setNumDisplay}</div>
+                        <div class="set-number ${sideNumClass}">${setNumDisplay}</div>
                         <div class="input-group">
                             <input type="${set.isBW ? 'text' : 'number'}" placeholder="${weightPlaceholder}" value="${weightValue}" class="${set.isBW ? 'bw-active' : ''}" onchange="updateSetData(${exercise.id}, ${index}, 'weight', this.value)" ${set.completed || set.isBW ? 'disabled' : ''}>
                         </div>
@@ -905,9 +915,9 @@
                     
                     ${set.menuOpen ? `
                     <div class="set-drawer">
-                        <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">BW</button>
-                        <button class="mod-tag side ${set.side !== 'none' ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">L / R</button>
+                        <div></div> <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">BW</button>
                         <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">F</button>
+                        <button class="mod-tag ${sideBtnClass}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">${sideBtnText}</button>
                         <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${index})">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                         </button>
@@ -979,12 +989,12 @@
                     let weightStr = set.isBW ? 'BW' : (set.weight || '0');
                     let tagsHtml = '';
                     if (set.isBW) tagsHtml += `<span class="d-tag bw">BW</span>`;
-                    if (set.side === 'L') tagsHtml += `<span class="d-tag side">L</span>`;
-                    if (set.side === 'R') tagsHtml += `<span class="d-tag side">R</span>`;
+                    if (set.side === 'L') tagsHtml += `<span class="d-tag side-l">L</span>`;
+                    if (set.side === 'R') tagsHtml += `<span class="d-tag side-r">R</span>`;
                     if (set.isFailure) tagsHtml += `<span class="d-tag fail">F</span>`;
                     
                     html += `
-                        <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.05)' : 'transparent'}; padding: 8px 12px; margin: 0 -12px; border-radius: 12px;">
+                        <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.15)' : 'transparent'}; padding: 8px 12px; margin: 0 -12px; border-radius: 12px;">
                             <div>Set ${idx + 1}</div>
                             <div style="display:flex; align-items:center;">
                                 <span>${weightStr}</span> &nbsp;×&nbsp; <span>${set.reps || 0}</span>
