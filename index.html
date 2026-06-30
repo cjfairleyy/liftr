@@ -6,10 +6,10 @@
     <title>liftr - Workout Logger</title>
     <style>
         :root {
-            /* Premium Grayscale Dark Mode */
+            /* Premium Dark Mode Palette */
             --bg-base: #000000;
             --bg-surface: #121212;
-            --bg-surface-elevated: #27272a;
+            --bg-surface-elevated: #1e1e20;
             
             --text-main: #ffffff;
             --text-muted: #a1a1aa;
@@ -27,10 +27,11 @@
             --check-inactive-bg: #27272a;
             
             --tag-bg: #18181b;
-            --tag-active-bg: #ffffff;
-            --tag-active-text: #000000;
             
-            --danger: #ef4444;
+            /* Custom Modifier Colors */
+            --mod-bw: #3b82f6;      /* Blue */
+            --mod-side: #f97316;    /* Orange */
+            --mod-fail: #ef4444;    /* Red */
         }
 
         * {
@@ -111,6 +112,12 @@
         .screen.active {
             display: block;
         }
+        
+        #workout-screen.active {
+            padding-top: 0;
+            padding-left: 0;
+            padding-right: 0;
+        }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -142,12 +149,6 @@
             background-color: transparent;
             color: var(--text-main);
             border: 1px solid var(--border-light);
-        }
-        
-        .btn-danger {
-            background-color: transparent;
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
         /* Cards */
@@ -186,6 +187,67 @@
             background-color: var(--bg-surface-elevated);
         }
 
+        /* Active Workout Top Bar */
+        .workout-top-bar {
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .workout-name-input {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.5rem;
+            font-weight: 800;
+            width: 100%;
+            padding: 0;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+        .workout-name-input:focus { outline: none; }
+        .workout-name-input::placeholder { color: var(--text-placeholder); font-weight: 700; }
+
+        .workout-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.1s;
+        }
+        .btn-small:active { transform: scale(0.95); }
+        
+        .btn-small.cancel {
+            background-color: transparent;
+            color: var(--mod-fail);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .btn-small.finish {
+            background-color: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
+        }
+
         /* Set Rows */
         .set-container {
             margin-bottom: 16px;
@@ -205,7 +267,7 @@
             grid-template-columns: 24px 1fr 1fr 44px 24px;
             gap: 12px;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .set-number {
@@ -225,15 +287,17 @@
             font-size: 1rem;
             font-weight: 600;
             text-align: center;
+            transition: border-color 0.2s;
         }
         .input-group input:focus {
             outline: none;
-            border-color: var(--text-main);
+            border-color: var(--text-muted);
         }
         .input-group input:disabled {
             color: var(--text-main);
             opacity: 1;
             background-color: var(--bg-surface-elevated);
+            border-color: transparent;
         }
 
         .check-btn {
@@ -254,29 +318,28 @@
             color: var(--check-active-text);
         }
 
-        /* Set Modifiers (BW, L, R, F) */
+        /* Set Modifiers (Colored) */
         .set-modifiers {
             display: flex;
             gap: 8px;
-            padding-left: 36px; /* Align with inputs */
+            padding-left: 36px;
             padding-right: 36px;
         }
         .mod-tag {
             background: var(--tag-bg);
             border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 8px;
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .mod-tag.active {
-            background: var(--tag-active-bg);
-            color: var(--tag-active-text);
-            border-color: var(--tag-active-bg);
-        }
+        
+        .mod-tag.bw.active { background: var(--mod-bw); border-color: var(--mod-bw); color: #fff; }
+        .mod-tag.side.active { background: var(--mod-side); border-color: var(--mod-side); color: #fff; }
+        .mod-tag.fail.active { background: var(--mod-fail); border-color: var(--mod-fail); color: #fff; }
 
         .add-set-btn {
             background: none;
@@ -357,22 +420,6 @@
         }
         .text-input:focus { outline: none; border-color: var(--text-main); }
         .text-input::placeholder { color: var(--text-placeholder); }
-        
-        .workout-name-input {
-            background: transparent;
-            border: none;
-            border-bottom: 1px dashed var(--border-light);
-            color: var(--text-main);
-            font-size: 1.8rem;
-            font-weight: 700;
-            width: 100%;
-            padding: 8px 0;
-            margin-bottom: 24px;
-            border-radius: 0;
-            letter-spacing: -0.5px;
-        }
-        .workout-name-input:focus { outline: none; border-bottom-color: var(--text-main); }
-        .workout-name-input::placeholder { color: var(--text-placeholder); font-weight: 600; }
 
         .empty-state {
             text-align: center;
@@ -393,9 +440,11 @@
         }
         .detail-set-row span { font-weight: 600; color: var(--text-main); }
         .detail-tags { display: flex; gap: 6px; margin-left: 8px; }
-        .d-tag { font-size: 0.7rem; background: var(--bg-surface-elevated); padding: 2px 6px; border-radius: 4px; color: var(--text-main); }
-        .d-tag.fail { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
-
+        
+        .d-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 700; }
+        .d-tag.bw { background: var(--mod-bw); }
+        .d-tag.side { background: var(--mod-side); }
+        .d-tag.fail { background: var(--mod-fail); }
     </style>
 </head>
 <body>
@@ -436,9 +485,9 @@
         <div id="detail-exercises"></div>
         
         <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border);">
-            <button class="btn btn-danger" id="delete-workout-btn">
+            <button class="btn btn-outline" style="color: var(--mod-fail); border-color: rgba(239, 68, 68, 0.3);" id="delete-workout-btn">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
-                Delete Workout
+                Delete Log
             </button>
         </div>
     </div>
@@ -457,17 +506,22 @@
     </div>
 
     <div id="workout-screen" class="screen">
-        <input type="text" id="workout-name-input" class="workout-name-input" placeholder="Workout Name (Optional)">
-        <div id="workout-timer" style="text-align: center; font-weight: 800; font-size: 1.2rem; margin-bottom: 24px; color: var(--text-muted); font-variant-numeric: tabular-nums;">00:00</div>
+        <div class="workout-top-bar">
+            <input type="text" id="workout-name-input" class="workout-name-input" placeholder="Workout Name...">
+            <div class="workout-controls">
+                <button class="btn-small cancel" onclick="cancelWorkout()">Cancel</button>
+                <div id="workout-timer" class="timer">00:00</div>
+                <button class="btn-small finish" onclick="finishWorkout()">Finish</button>
+            </div>
+        </div>
         
-        <div id="workout-cards"></div>
-
-        <button class="btn btn-outline" style="margin-bottom: 24px;" onclick="showExerciseModal()">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            Add Exercise
-        </button>
-        <button class="btn" style="margin-bottom: 12px;" onclick="finishWorkout()">Finish Workout</button>
-        <button class="btn btn-danger" onclick="cancelWorkout()">Cancel Workout</button>
+        <div style="padding: 0 24px;">
+            <div id="workout-cards"></div>
+            <button class="btn btn-outline" style="margin-bottom: 24px; border-style: dashed;" onclick="showExerciseModal()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                Add Exercise
+            </button>
+        </div>
     </div>
 
     <div id="exercise-modal" class="screen">
@@ -500,18 +554,44 @@
         { name: "Barbell Bench Press", category: "Chest" },
         { name: "Incline Dumbbell Press", category: "Chest" },
         { name: "Push-Ups", category: "Chest" },
+        { name: "Dips", category: "Chest" },
+        { name: "Cable Crossover", category: "Chest" },
+        
         { name: "Barbell Squat", category: "Legs" },
         { name: "Bulgarian Split Squat", category: "Legs" },
         { name: "Romanian Deadlift", category: "Legs" },
+        { name: "Leg Press", category: "Legs" },
+        { name: "Leg Extension", category: "Legs" },
+        { name: "Leg Curl", category: "Legs" },
+        { name: "Calf Raises", category: "Legs" },
+        { name: "Walking Lunges", category: "Legs" },
+        { name: "Hip Thrusts", category: "Legs" },
+        
         { name: "Deadlift", category: "Back" },
         { name: "Pull-Ups", category: "Back" },
+        { name: "Lat Pulldown", category: "Back" },
         { name: "Dumbbell Row", category: "Back" },
+        { name: "Seated Cable Row", category: "Back" },
+        { name: "Barbell Row", category: "Back" },
+        
         { name: "Overhead Press", category: "Shoulders" },
+        { name: "Dumbbell Shoulder Press", category: "Shoulders" },
         { name: "Lateral Raises", category: "Shoulders" },
+        { name: "Front Raises", category: "Shoulders" },
+        { name: "Face Pulls", category: "Shoulders" },
+        { name: "Shrugs", category: "Shoulders" },
+        
         { name: "Barbell Bicep Curl", category: "Arms" },
-        { name: "Tricep Extension", category: "Arms" },
-        { name: "Plank", category: "Core" }
-    ];
+        { name: "Dumbbell Curl", category: "Arms" },
+        { name: "Hammer Curls", category: "Arms" },
+        { name: "Tricep Pushdown", category: "Arms" },
+        { name: "Overhead Tricep Extension", category: "Arms" },
+        
+        { name: "Plank", category: "Core" },
+        { name: "Crunches", category: "Core" },
+        { name: "Hanging Leg Raises", category: "Core" },
+        { name: "Russian Twists", category: "Core" }
+    ].sort((a, b) => a.name.localeCompare(b.name));
 
     let currentWorkout = [];
     let workoutTimerInterval;
@@ -530,6 +610,7 @@
         document.getElementById('nav-' + tab).classList.add('active');
         
         document.getElementById('bottom-nav').style.display = 'flex';
+        document.getElementById('main-header').style.display = 'flex';
         document.getElementById('header-action').style.display = 'none';
         document.querySelector('header h1').innerText = 'liftr';
         
@@ -540,9 +621,9 @@
     function showWorkoutScreen() {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('workout-screen').classList.add('active');
+        
         document.getElementById('bottom-nav').style.display = 'none';
-        document.getElementById('header-action').style.display = 'none';
-        document.querySelector('header h1').innerText = 'Active Workout';
+        document.getElementById('main-header').style.display = 'none'; // Hide main header completely
     }
 
     function goBack() {
@@ -556,7 +637,7 @@
             if (pastEx && pastEx.sets.length > 0) {
                 return pastEx.sets.map(s => ({
                     weight: s.weight, reps: s.reps, completed: false,
-                    isBW: s.isBW || false, side: 'none', isFailure: false // Reset transient states, keep BW
+                    isBW: s.isBW || false, side: 'none', isFailure: false
                 }));
             }
         }
@@ -662,6 +743,7 @@
         document.getElementById('workout-detail-screen').classList.add('active');
         document.getElementById('bottom-nav').style.display = 'none';
         
+        document.getElementById('main-header').style.display = 'flex';
         document.querySelector('header h1').innerText = 'Summary';
         const backBtn = document.getElementById('header-action');
         backBtn.style.display = 'flex';
@@ -680,8 +762,9 @@
                 if (set.completed) {
                     let weightStr = set.isBW ? 'BW' : (set.weight || '0');
                     let tagsHtml = '';
-                    if (set.side === 'L') tagsHtml += `<span class="d-tag">Left</span>`;
-                    if (set.side === 'R') tagsHtml += `<span class="d-tag">Right</span>`;
+                    if (set.isBW) tagsHtml += `<span class="d-tag bw">BW</span>`;
+                    if (set.side === 'L') tagsHtml += `<span class="d-tag side">Left</span>`;
+                    if (set.side === 'R') tagsHtml += `<span class="d-tag side">Right</span>`;
                     if (set.isFailure) tagsHtml += `<span class="d-tag fail">Failure</span>`;
                     
                     html += `
@@ -700,7 +783,7 @@
         });
 
         document.getElementById('delete-workout-btn').onclick = () => {
-            if(confirm("Delete this workout?")) {
+            if(confirm("Delete this workout log?")) {
                 workoutHistory = workoutHistory.filter(w => w.id !== id);
                 document.getElementById('streak-text').innerText = workoutHistory.length;
                 goBack();
@@ -744,7 +827,7 @@
                     <div class="list-item-title">${entry.weight} lbs</div>
                     <div class="list-item-sub">${entry.date}</div>
                 </div>
-                <button class="icon-btn" onclick="deleteWeight(${entry.id})" style="color: var(--danger);">
+                <button class="icon-btn" onclick="deleteWeight(${entry.id})" style="color: var(--mod-fail);">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             `;
@@ -757,8 +840,9 @@
         renderExerciseList(exerciseDatabase);
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('exercise-modal').classList.add('active');
-        document.querySelector('header h1').innerText = 'Exercises';
         
+        document.getElementById('main-header').style.display = 'flex';
+        document.querySelector('header h1').innerText = 'Exercises';
         const cancelBtn = document.getElementById('header-action');
         cancelBtn.style.display = 'flex';
         cancelBtn.innerText = 'Cancel';
@@ -861,7 +945,7 @@
             header.className = 'exercise-header';
             header.innerHTML = `
                 <span>${exercise.name}</span>
-                <button class="icon-btn" style="color: var(--danger);" onclick="removeExercise(${exercise.id})">
+                <button class="icon-btn" style="color: var(--mod-fail);" onclick="removeExercise(${exercise.id})">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             `;
@@ -890,11 +974,11 @@
                         </button>
                     </div>
                     <div class="set-modifiers">
-                        <button class="mod-tag ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">BW</button>
-                        <button class="mod-tag ${set.side !== 'none' ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">
+                        <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">BW</button>
+                        <button class="mod-tag side ${set.side !== 'none' ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">
                             ${set.side === 'none' ? 'L / R' : set.side}
                         </button>
-                        <button class="mod-tag ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">Failure</button>
+                        <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">Failure</button>
                     </div>
                 `;
                 card.appendChild(setContainer);
