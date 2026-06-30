@@ -24,6 +24,9 @@
             --mod-bw: #3b82f6;
             --mod-side: #f97316;
             --mod-fail: #ef4444;
+            --superset: #ec4899;
+            --superset-bg: rgba(236, 72, 153, 0.1);
+            --superset-border: rgba(236, 72, 153, 0.3);
         }
 
         * {
@@ -157,6 +160,47 @@
             margin-bottom: 12px;
         }
 
+        /* Superset card styling */
+        .card.superset {
+            border-color: var(--superset-border);
+            background: var(--superset-bg);
+            position: relative;
+        }
+        
+        .superset-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--superset);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        
+        .superset-divider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+            color: var(--superset);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .superset-divider::before,
+        .superset-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--superset-border);
+        }
+
         .exercise-header {
             display: flex;
             justify-content: space-between;
@@ -164,6 +208,12 @@
             margin-bottom: 14px;
             font-weight: 700;
             font-size: 1.05rem;
+        }
+        
+        .exercise-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 2px;
         }
 
         .icon-btn {
@@ -182,6 +232,13 @@
         .icon-btn:hover {
             color: var(--text-main);
             background-color: var(--bg-surface-elevated);
+        }
+        
+        .icon-btn.drag-handle {
+            cursor: grab;
+        }
+        .icon-btn.drag-handle:active {
+            cursor: grabbing;
         }
 
         .workout-top-bar {
@@ -380,6 +437,8 @@
         .mod-tag.bw.active { background: var(--mod-bw); border-color: var(--mod-bw); color: #fff; }
         .mod-tag.side.active { background: var(--mod-side); border-color: var(--mod-side); color: #fff; }
         .mod-tag.fail.active { background: var(--mod-fail); border-color: var(--mod-fail); color: #fff; }
+        .mod-tag.superset-tag { color: var(--superset); border-color: var(--superset-border); }
+        .mod-tag.superset-tag.active { background: var(--superset); border-color: var(--superset); color: #fff; }
         
         .set-drawer .mod-tag.delete { 
             color: var(--mod-fail); 
@@ -406,6 +465,29 @@
             background-color: var(--bg-surface-elevated);
             color: var(--text-main);
             border-color: var(--text-muted);
+        }
+
+        /* Drag and drop styles */
+        .card.dragging {
+            opacity: 0.4;
+        }
+        .card.drag-over {
+            border-color: var(--text-main);
+            border-style: dashed;
+        }
+        
+        /* Reorder mode */
+        .reorder-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: var(--bg-surface-elevated);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
         }
 
         .filter-section {
@@ -538,6 +620,7 @@
         .d-tag.bw { background: var(--mod-bw); }
         .d-tag.side { background: var(--mod-side); }
         .d-tag.fail { background: var(--mod-fail); }
+        .d-tag.superset { background: var(--superset); }
     </style>
 </head>
 <body>
@@ -790,7 +873,8 @@
     let activeCategory = 'All';
     let activeEquipment = 'All';
     let workoutHistory = []; 
-    let weightHistory = [];  
+    let weightHistory = [];
+    let draggedExerciseIndex = null;
 
     function navigate(tab) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -884,6 +968,7 @@
     function calculateTotalVolume() {
         let vol = 0;
         currentWorkout.forEach(ex => {
+            if (ex.isSupersetDivider) return;
             ex.sets.forEach(set => {
                 if(set.completed && !set.isBW && set.weight && set.reps) {
                     vol += (parseFloat(set.weight) * parseInt(set.reps));
@@ -954,20 +1039,26 @@
     }
 
     function addExerciseToWorkout(exerciseName) {
-        currentWorkout.push({ id: Date.now(), name: exerciseName, sets: getPreviousExerciseData(exerciseName) });
+        currentWorkout.push({ id: Date.now(), name: exerciseName, sets: getPreviousExerciseData(exerciseName), supersetGroup: null });
         hideExerciseModal();
         renderWorkout();
     }
 
     function removeExercise(exerciseId) {
         if(confirm("Remove this exercise?")) {
-            currentWorkout = currentWorkout.filter(ex => ex.id !== exerciseId);
+            currentWorkout = currentWorkout.filter(ex => {
+                if (ex.id === exerciseId || ex.supersetGroup === exerciseId) return false;
+                return true;
+            });
+            // Clean up superset dividers
+            cleanupSupersets();
             renderWorkout();
         }
     }
 
     function addSet(exerciseId) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        if (!exercise || exercise.isSupersetDivider) return;
         const lastSet = exercise.sets[exercise.sets.length - 1];
         exercise.sets.push({ 
             weight: lastSet ? lastSet.weight : '', 
@@ -983,29 +1074,34 @@
     
     function removeSet(exerciseId, setIndex) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        if (!exercise) return;
         exercise.sets.splice(setIndex, 1);
         renderWorkout();
     }
 
     function toggleSet(exerciseId, setIndex) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        if (!exercise) return;
         exercise.sets[setIndex].completed = !exercise.sets[setIndex].completed;
         renderWorkout();
     }
     
     function toggleSetMenu(exerciseId, setIndex) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        if (!exercise) return;
         exercise.sets[setIndex].menuOpen = !exercise.sets[setIndex].menuOpen;
         renderWorkout();
     }
 
     function updateSetData(exerciseId, setIndex, field, value) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        if (!exercise) return;
         exercise.sets[setIndex][field] = value;
     }
 
     function toggleMod(exerciseId, setIndex, modType) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
+        if (!exercise) return;
         const set = exercise.sets[setIndex];
         if (modType === 'BW') {
             set.isBW = !set.isBW;
@@ -1021,34 +1117,233 @@
         renderWorkout();
     }
 
+    // --- Superset Functions ---
+    function createSuperset(exerciseId) {
+        const exIndex = currentWorkout.findIndex(ex => ex.id === exerciseId);
+        if (exIndex === -1 || exIndex >= currentWorkout.length - 1) return;
+        
+        const nextEx = currentWorkout[exIndex + 1];
+        if (nextEx.isSupersetDivider) return;
+        
+        // Create superset group ID (use the first exercise's ID)
+        const groupId = currentWorkout[exIndex].id;
+        currentWorkout[exIndex].supersetGroup = groupId;
+        nextEx.supersetGroup = groupId;
+        
+        // Insert a superset divider between them
+        currentWorkout.splice(exIndex + 1, 0, {
+            id: Date.now() + Math.random(),
+            isSupersetDivider: true,
+            supersetGroup: groupId
+        });
+        
+        renderWorkout();
+    }
+
+    function addToSuperset(exerciseId) {
+        const exIndex = currentWorkout.findIndex(ex => ex.id === exerciseId);
+        if (exIndex === -1) return;
+        
+        // Find the superset group
+        let groupId = currentWorkout[exIndex].supersetGroup;
+        if (!groupId) return;
+        
+        // Find the last exercise in this superset
+        let lastInGroup = exIndex;
+        for (let i = exIndex + 1; i < currentWorkout.length; i++) {
+            if (currentWorkout[i].supersetGroup === groupId) {
+                lastInGroup = i;
+            } else {
+                break;
+            }
+        }
+        
+        // Add a new exercise after the last in group
+        const newEx = {
+            id: Date.now(),
+            name: 'New Exercise',
+            sets: [{ weight: '', reps: '', completed: false, isBW: false, side: 'none', isFailure: false, menuOpen: false }],
+            supersetGroup: groupId
+        };
+        
+        currentWorkout.splice(lastInGroup + 1, 0, newEx);
+        renderWorkout();
+    }
+
+    function removeFromSuperset(exerciseId) {
+        const exIndex = currentWorkout.findIndex(ex => ex.id === exerciseId);
+        if (exIndex === -1) return;
+        
+        currentWorkout[exIndex].supersetGroup = null;
+        cleanupSupersets();
+        renderWorkout();
+    }
+
+    function cleanupSupersets() {
+        // Remove dividers that no longer have a superset
+        for (let i = currentWorkout.length - 1; i >= 0; i--) {
+            if (currentWorkout[i].isSupersetDivider) {
+                const groupId = currentWorkout[i].supersetGroup;
+                const hasMembers = currentWorkout.some(ex => ex.supersetGroup === groupId && !ex.isSupersetDivider);
+                if (!hasMembers) {
+                    currentWorkout.splice(i, 1);
+                }
+            }
+        }
+        
+        // If a group has only one member, remove the group
+        const groupCounts = {};
+        currentWorkout.forEach(ex => {
+            if (ex.supersetGroup) {
+                groupCounts[ex.supersetGroup] = (groupCounts[ex.supersetGroup] || 0) + 1;
+            }
+        });
+        
+        for (const [groupId, count] of Object.entries(groupCounts)) {
+            if (count <= 1) {
+                currentWorkout.forEach(ex => {
+                    if (ex.supersetGroup == groupId) ex.supersetGroup = null;
+                });
+                // Remove associated dividers
+                for (let i = currentWorkout.length - 1; i >= 0; i--) {
+                    if (currentWorkout[i].isSupersetDivider && currentWorkout[i].supersetGroup == groupId) {
+                        currentWorkout.splice(i, 1);
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Drag and Drop ---
+    function moveExercise(fromIndex, toIndex) {
+        if (fromIndex === toIndex) return;
+        const exercise = currentWorkout.splice(fromIndex, 1)[0];
+        currentWorkout.splice(toIndex, 0, exercise);
+        renderWorkout();
+    }
+
     function renderWorkout() {
         const container = document.getElementById('workout-cards');
         container.innerHTML = '';
-        currentWorkout.forEach(exercise => {
+
+        let currentSupersetGroup = null;
+        let isInSuperset = false;
+
+        currentWorkout.forEach((exercise, globalIndex) => {
+            if (exercise.isSupersetDivider) {
+                // Create a visual divider
+                const divider = document.createElement('div');
+                divider.className = 'superset-divider';
+                divider.innerHTML = '&nbsp;Superset&nbsp;';
+                container.appendChild(divider);
+                isInSuperset = true;
+                return;
+            }
+            
+            // Check if this exercise starts or continues a superset
+            if (exercise.supersetGroup && !isInSuperset) {
+                isInSuperset = true;
+                currentSupersetGroup = exercise.supersetGroup;
+            } else if (!exercise.supersetGroup) {
+                isInSuperset = false;
+                currentSupersetGroup = null;
+            }
+
             const card = document.createElement('div');
             card.className = 'card';
+            if (exercise.supersetGroup) {
+                card.classList.add('superset');
+            }
+            card.draggable = true;
+            card.dataset.index = globalIndex;
+
+            // Drag events
+            card.addEventListener('dragstart', (e) => {
+                draggedExerciseIndex = globalIndex;
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            card.addEventListener('dragend', (e) => {
+                card.classList.remove('dragging');
+                document.querySelectorAll('.card.drag-over').forEach(c => c.classList.remove('drag-over'));
+                draggedExerciseIndex = null;
+            });
+
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (draggedExerciseIndex !== null && draggedExerciseIndex !== globalIndex) {
+                    e.dataTransfer.dropEffect = 'move';
+                    card.classList.add('drag-over');
+                }
+            });
+
+            card.addEventListener('dragleave', () => {
+                card.classList.remove('drag-over');
+            });
+
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('drag-over');
+                if (draggedExerciseIndex !== null && draggedExerciseIndex !== globalIndex) {
+                    moveExercise(draggedExerciseIndex, globalIndex);
+                }
+            });
+
+            // Superset label
+            if (exercise.supersetGroup && currentSupersetGroup === exercise.supersetGroup) {
+                const label = document.createElement('div');
+                label.className = 'superset-label';
+                label.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    Superset
+                `;
+                card.appendChild(label);
+                currentSupersetGroup = null; // Only show label once per group
+            }
+
+            // Header
             const header = document.createElement('div');
             header.className = 'exercise-header';
             header.innerHTML = `
                 <span>${exercise.name}</span>
-                <button class="icon-btn" style="color: var(--mod-fail);" onclick="removeExercise(${exercise.id})">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
+                <div class="exercise-header-controls">
+                    <button class="icon-btn drag-handle" title="Drag to reorder">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+                    </button>
+                    ${!exercise.supersetGroup ? `
+                    <button class="icon-btn" title="Create Superset" onclick="createSuperset(${exercise.id})" style="color: var(--superset);">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </button>
+                    ` : `
+                    <button class="icon-btn" title="Remove from Superset" onclick="removeFromSuperset(${exercise.id})" style="color: var(--superset);">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                    `}
+                    <button class="icon-btn" style="color: var(--mod-fail);" onclick="removeExercise(${exercise.id})">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
             `;
             card.appendChild(header);
+
+            // Sets
             exercise.sets.forEach((set, index) => {
                 const setContainer = document.createElement('div');
                 setContainer.className = `set-container ${set.completed ? 'completed' : ''} ${set.isFailure ? 'is-failure' : ''}`;
+                
                 let weightPlaceholder = 'lbs';
                 let weightValue = set.weight;
                 if(set.isBW) {
                     weightPlaceholder = 'BW';
                     weightValue = 'BW';
                 }
+                
                 let setNumberHtml = `<span class="set-number">${index + 1}</span>`;
                 if (set.side !== 'none') {
                     setNumberHtml = `<span class="set-number side-indicator">${set.side === 'L' ? 'L' : 'R'}</span>`;
                 }
+                
                 setContainer.innerHTML = `
                     <div class="set-row">
                         ${setNumberHtml}
@@ -1077,11 +1372,13 @@
                 `;
                 card.appendChild(setContainer);
             });
+
             const addSetBtn = document.createElement('button');
             addSetBtn.className = 'add-set-btn';
             addSetBtn.innerText = '+ Add Set';
             addSetBtn.onclick = () => addSet(exercise.id);
             card.appendChild(addSetBtn);
+
             container.appendChild(card);
         });
     }
@@ -1094,7 +1391,7 @@
             return;
         }
         workoutHistory.forEach(workout => {
-            const exCount = workout.exercises.length;
+            const exCount = workout.exercises.filter(ex => !ex.isSupersetDivider).length;
             const item = document.createElement('div');
             item.className = 'list-item card';
             item.style.marginBottom = '10px';
@@ -1127,8 +1424,13 @@
         document.getElementById('detail-stats').innerText = `${workout.date} • ${workout.duration} • ${workout.volume} lbs Vol`;
         const exContainer = document.getElementById('detail-exercises');
         exContainer.innerHTML = '';
+        
         workout.exercises.forEach(ex => {
-            let html = `<div class="detail-exercise card"><div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 14px;">${ex.name}</div>`;
+            if (ex.isSupersetDivider) {
+                exContainer.innerHTML += '<div class="superset-divider">&nbsp;Superset&nbsp;</div>';
+                return;
+            }
+            let html = `<div class="detail-exercise card" style="${ex.supersetGroup ? 'border-color: var(--superset-border); background: var(--superset-bg);' : ''}"><div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 14px;">${ex.name}</div>`;
             ex.sets.forEach((set, idx) => {
                 if (set.completed) {
                     let weightStr = set.isBW ? 'BW' : (set.weight || '0');
@@ -1137,6 +1439,7 @@
                     if (set.side === 'L') tagsHtml += `<span class="d-tag side">L</span>`;
                     if (set.side === 'R') tagsHtml += `<span class="d-tag side">R</span>`;
                     if (set.isFailure) tagsHtml += `<span class="d-tag fail">F</span>`;
+                    if (ex.supersetGroup) tagsHtml += `<span class="d-tag superset">SS</span>`;
                     html += `
                         <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.08)' : 'transparent'}; padding: 8px 6px; margin: 0 -6px; border-radius: 6px;">
                             <div>Set ${idx + 1}</div>
