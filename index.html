@@ -6,14 +6,24 @@
     <title>liftr - Workout Logger</title>
     <style>
         :root {
-            --bg-color: #f4f4f5;
-            --card-bg: #ffffff;
-            --text-main: #18181b;
-            --text-muted: #71717a;
-            --accent: #2563eb;
-            --accent-hover: #1d4ed8;
-            --success: #22c55e;
-            --border: #e4e4e7;
+            /* Strict Grayscale Dark Mode Palette */
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --border: #3f3f46;
+            
+            --btn-primary-bg: #ffffff;
+            --btn-primary-text: #000000;
+            --btn-primary-hover: #e4e4e7;
+            
+            --btn-secondary-bg: #27272a;
+            --btn-secondary-text: #ffffff;
+            
+            --set-completed-bg: #27272a;
+            --check-active-bg: #ffffff;
+            --check-active-text: #000000;
+            --check-inactive-bg: #3f3f46;
         }
 
         * {
@@ -33,28 +43,35 @@
         #app-container {
             width: 100%;
             max-width: 480px;
-            background-color: var(--card-bg);
+            background-color: var(--bg-color);
             min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
+            padding: 24px;
             text-align: center;
+            border-bottom: 1px solid var(--border);
+            background-color: var(--bg-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         header h1 {
             margin: 0;
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
         .screen {
             display: none;
-            padding: 20px;
-            padding-bottom: 80px;
+            padding: 24px;
+            padding-bottom: 100px; /* Space for bottom nav */
+            flex-grow: 1;
         }
 
         .screen.active {
@@ -63,74 +80,113 @@
 
         /* Buttons */
         .btn {
-            background-color: var(--accent);
-            color: white;
+            background-color: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
             border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
+            padding: 16px 20px;
+            border-radius: 20px; /* More rounded */
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             width: 100%;
             transition: background 0.2s;
         }
 
-        .btn:hover { background-color: var(--accent-hover); }
+        .btn:hover { background-color: var(--btn-primary-hover); }
+        
         .btn-outline {
             background-color: transparent;
-            color: var(--accent);
-            border: 2px solid var(--accent);
-            margin-top: 10px;
+            color: var(--text-main);
+            border: 2px solid var(--border);
+            margin-top: 12px;
+        }
+        
+        .btn-danger {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 2px solid var(--border);
+            margin-top: 12px;
+        }
+
+        /* Bottom Navigation */
+        #bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 16px 0 calc(16px + env(safe-area-inset-bottom));
+            z-index: 20;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            color: var(--text-main);
+            background-color: var(--border);
         }
 
         /* Cards */
-        .exercise-card {
+        .card {
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
+            border-radius: 24px; /* More rounded */
+            padding: 20px;
+            margin-bottom: 20px;
             background: var(--card-bg);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
         .exercise-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
-            font-weight: 600;
-            font-size: 1.1rem;
+            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 1.2rem;
         }
 
         .delete-btn {
-            color: #ef4444;
+            color: var(--text-muted);
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
+            line-height: 1;
         }
 
         /* Set Rows */
         .set-row {
             display: grid;
-            grid-template-columns: 40px 1fr 1fr 40px;
-            gap: 10px;
+            grid-template-columns: 40px 1fr 1fr 44px;
+            gap: 12px;
             align-items: center;
-            margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 16px; /* More rounded */
             transition: background 0.2s;
         }
 
         .set-row.completed {
-            background-color: #dcfce7;
+            background-color: var(--set-completed-bg);
         }
 
         .set-number {
             font-size: 0.9rem;
             color: var(--text-muted);
             text-align: center;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .input-group {
@@ -139,67 +195,126 @@
         }
 
         .input-group label {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
-            margin-bottom: 2px;
+            margin-bottom: 4px;
+            text-align: center;
         }
 
         .input-group input {
             width: 100%;
-            padding: 8px;
+            padding: 12px 8px;
+            background-color: var(--bg-color);
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 12px;
+            color: var(--text-main);
             font-size: 1rem;
             text-align: center;
         }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--text-main);
+        }
 
         .check-btn {
-            background: #e4e4e7;
+            background: var(--check-inactive-bg);
             border: none;
-            border-radius: 6px;
-            width: 32px;
-            height: 32px;
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
+            color: transparent;
             font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.2s;
         }
 
         .set-row.completed .check-btn {
-            background: var(--success);
+            background: var(--check-active-bg);
+            color: var(--check-active-text);
         }
 
         .add-set-btn {
             background: none;
             border: none;
-            color: var(--accent);
+            color: var(--text-muted);
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             text-align: center;
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+        
+        .add-set-btn:hover {
+            background-color: var(--border);
+            color: var(--text-main);
         }
 
         /* Exercise List Modal */
-        .exercise-list-item {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
+        #search-exercise {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            margin-bottom: 16px;
+            font-size: 1rem;
         }
 
-        .exercise-list-item:hover {
-            background-color: var(--bg-color);
+        .exercise-list-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 500;
         }
 
         .exercise-category {
             font-size: 0.8rem;
             color: var(--text-muted);
-            margin-top: 15px;
-            margin-bottom: 5px;
+            margin-top: 24px;
+            margin-bottom: 8px;
             text-transform: uppercase;
-            font-weight: 700;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        
+        /* History & Weight Styles */
+        .history-item, .weight-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .weight-input-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        
+        .weight-input-container input {
+            flex-grow: 1;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 40px;
         }
     </style>
 </head>
@@ -211,28 +326,55 @@
     </header>
 
     <div id="home-screen" class="screen active">
-        <div style="text-align: center; margin-top: 50px; margin-bottom: 50px;">
-            <p style="color: var(--text-muted);">Ready to lift?</p>
-            <h2 id="streak-text">0 Workouts Completed</h2>
+        <div style="text-align: center; margin-top: 60px; margin-bottom: 60px;">
+            <h2 id="streak-text" style="font-size: 2.5rem; margin-bottom: 8px;">0</h2>
+            <p style="color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Workouts</p>
         </div>
-        <button class="btn" onclick="startWorkout()">Start Empty Workout</button>
+        <button class="btn" onclick="startWorkout()">Start Workout</button>
+    </div>
+
+    <div id="history-screen" class="screen">
+        <h2 style="margin-top: 0;">Past Workouts</h2>
+        <div id="history-list">
+            <div class="empty-state">No workouts logged yet.</div>
+        </div>
+    </div>
+
+    <div id="weight-screen" class="screen">
+        <h2 style="margin-top: 0;">Body Weight</h2>
+        <div class="weight-input-container">
+            <input type="number" id="new-weight" placeholder="lbs" step="0.1">
+            <button class="btn" style="width: auto;" onclick="logWeight()">Log</button>
+        </div>
+        <div class="card" style="padding: 0; overflow: hidden; border: none;">
+            <div id="weight-list">
+                <div class="empty-state" style="margin-top: 20px; padding-bottom: 20px;">No weight logged yet.</div>
+            </div>
+        </div>
     </div>
 
     <div id="workout-screen" class="screen">
-        <div id="workout-timer" style="text-align: center; font-weight: bold; margin-bottom: 20px; color: var(--accent);">00:00</div>
+        <div id="workout-timer" style="text-align: center; font-weight: 800; font-size: 1.5rem; margin-bottom: 24px; color: var(--text-main);">00:00</div>
         
         <div id="workout-cards"></div>
 
         <button class="btn btn-outline" onclick="showExerciseModal()">+ Add Exercise</button>
-        <button class="btn" style="margin-top: 20px; background-color: var(--success);" onclick="finishWorkout()">Finish Workout</button>
+        <button class="btn" style="margin-top: 24px;" onclick="finishWorkout()">Finish Workout</button>
+        <button class="btn btn-danger" onclick="cancelWorkout()">Cancel Workout</button>
     </div>
 
     <div id="exercise-modal" class="screen">
-        <h2>Select Exercise</h2>
-        <input type="text" id="search-exercise" placeholder="Search exercises..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px;" onkeyup="filterExercises()">
-        <div id="exercise-list"></div>
+        <h2 style="margin-top: 0;">Select Exercise</h2>
+        <input type="text" id="search-exercise" placeholder="Search exercises..." onkeyup="filterExercises()">
+        <div id="exercise-list" style="margin-bottom: 24px;"></div>
         <button class="btn btn-outline" onclick="hideExerciseModal()">Cancel</button>
     </div>
+
+    <nav id="bottom-nav">
+        <button class="nav-btn active" id="nav-home" onclick="navigate('home')">Workout</button>
+        <button class="nav-btn" id="nav-history" onclick="navigate('history')">History</button>
+        <button class="nav-btn" id="nav-weight" onclick="navigate('weight')">Weight</button>
+    </nav>
 </div>
 
 <script>
@@ -261,12 +403,34 @@
     let currentWorkout = [];
     let workoutTimerInterval;
     let secondsElapsed = 0;
-    let workoutsCompleted = 0;
+    
+    // Persistent Data (simulated with arrays)
+    let workoutHistory = [];
+    let weightHistory = [];
 
     // --- Navigation Functions ---
-    function showScreen(screenId) {
+    function navigate(tab) {
+        // Hide all screens
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
+        
+        // Show selected screen
+        document.getElementById(tab + '-screen').classList.add('active');
+        
+        // Update nav buttons
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('nav-' + tab).classList.add('active');
+        
+        // Ensure bottom nav is visible
+        document.getElementById('bottom-nav').style.display = 'flex';
+        
+        if (tab === 'history') renderHistory();
+        if (tab === 'weight') renderWeight();
+    }
+
+    function showWorkoutScreen() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('workout-screen').classList.add('active');
+        document.getElementById('bottom-nav').style.display = 'none'; // Hide nav during workout
     }
 
     // --- Workout Functions ---
@@ -279,7 +443,7 @@
             secondsElapsed++;
             updateTimerDisplay();
         }, 1000);
-        showScreen('workout-screen');
+        showWorkoutScreen();
     }
 
     function updateTimerDisplay() {
@@ -289,21 +453,114 @@
     }
 
     function finishWorkout() {
+        if (currentWorkout.length === 0) {
+            alert("Add some exercises before finishing!");
+            return;
+        }
+        
         clearInterval(workoutTimerInterval);
-        workoutsCompleted++;
-        document.getElementById('streak-text').innerText = `${workoutsCompleted} Workouts Completed`;
-        alert("Workout saved successfully!");
-        showScreen('home-screen');
+        
+        // Save to history
+        const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const volume = calculateTotalVolume();
+        
+        workoutHistory.unshift({
+            date: date,
+            duration: document.getElementById('workout-timer').innerText,
+            exercises: currentWorkout.length,
+            volume: volume
+        });
+
+        document.getElementById('streak-text').innerText = workoutHistory.length;
+        navigate('home');
+    }
+    
+    function cancelWorkout() {
+        if(confirm("Are you sure you want to cancel? This workout will not be saved.")) {
+            clearInterval(workoutTimerInterval);
+            navigate('home');
+        }
+    }
+    
+    function calculateTotalVolume() {
+        let vol = 0;
+        currentWorkout.forEach(ex => {
+            ex.sets.forEach(set => {
+                if(set.completed && set.weight && set.reps) {
+                    vol += (parseFloat(set.weight) * parseInt(set.reps));
+                }
+            });
+        });
+        return vol;
+    }
+
+    // --- History & Weight Functions ---
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        list.innerHTML = '';
+        
+        if(workoutHistory.length === 0) {
+            list.innerHTML = '<div class="empty-state">No workouts logged yet.</div>';
+            return;
+        }
+        
+        workoutHistory.forEach(workout => {
+            const item = document.createElement('div');
+            item.className = 'card';
+            item.innerHTML = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <strong>${workout.date}</strong>
+                    <span style="color: var(--text-muted);">${workout.duration}</span>
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.9rem;">
+                    ${workout.exercises} Exercises • ${workout.volume} lbs Volume
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }
+    
+    function logWeight() {
+        const input = document.getElementById('new-weight');
+        const val = input.value;
+        if (!val) return;
+        
+        const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        weightHistory.unshift({ date: date, weight: val });
+        
+        input.value = '';
+        renderWeight();
+    }
+    
+    function renderWeight() {
+        const list = document.getElementById('weight-list');
+        list.innerHTML = '';
+        
+        if(weightHistory.length === 0) {
+            list.innerHTML = '<div class="empty-state" style="margin-top: 20px; padding-bottom: 20px;">No weight logged yet.</div>';
+            return;
+        }
+        
+        weightHistory.forEach(entry => {
+            const item = document.createElement('div');
+            item.className = 'weight-item';
+            item.innerHTML = `
+                <span style="color: var(--text-muted);">${entry.date}</span>
+                <strong>${entry.weight} lbs</strong>
+            `;
+            list.appendChild(item);
+        });
     }
 
     // --- Exercise Modal Functions ---
     function showExerciseModal() {
         renderExerciseList(exerciseDatabase);
-        showScreen('exercise-modal');
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('exercise-modal').classList.add('active');
     }
 
     function hideExerciseModal() {
-        showScreen('workout-screen');
+        showWorkoutScreen();
     }
 
     function renderExerciseList(list) {
@@ -351,7 +608,6 @@
 
     function addSet(exerciseId) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
-        // Copy weight and reps from previous set if it exists
         const lastSet = exercise.sets[exercise.sets.length - 1];
         exercise.sets.push({ 
             weight: lastSet ? lastSet.weight : '', 
@@ -379,7 +635,7 @@
 
         currentWorkout.forEach(exercise => {
             const card = document.createElement('div');
-            card.className = 'exercise-card';
+            card.className = 'card';
 
             // Card Header
             const header = document.createElement('div');
