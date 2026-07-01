@@ -966,12 +966,10 @@ function completeSupersetLink(targetId) {
     const sourceEx = currentWorkout[sourceIndex];
     const targetEx = currentWorkout[targetIndex];
 
-    // Connects items under a single shared group structural key
     const sharedId = sourceEx.supersetId || targetEx.supersetId || 'ss_' + Date.now();
     sourceEx.supersetId = sharedId;
     targetEx.supersetId = sharedId;
 
-    // Pulls the items into an adjacent matching block layout automatically
     const [movedItem] = currentWorkout.splice(targetIndex, 1);
     const newSourceIndex = currentWorkout.findIndex(ex => ex.id === supersetSourceId);
     currentWorkout.splice(newSourceIndex + 1, 0, movedItem);
@@ -979,8 +977,6 @@ function completeSupersetLink(targetId) {
     supersetSourceId = null;
     renderWorkout();
 }
-
-
     function removeFromSuperset(exerciseId) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
         if (!exercise) return;
@@ -997,7 +993,7 @@ function completeSupersetLink(targetId) {
         renderWorkout();
     }
 
-    function renderWorkout() {
+function renderWorkout() {
     const container = document.getElementById('workout-cards');
     container.innerHTML = '';
 
@@ -1007,7 +1003,6 @@ function completeSupersetLink(targetId) {
         const isLinkingMode = supersetSourceId !== null;
         const isSource = supersetSourceId === exercise.id;
         
-        // Treat an entire existing superset group as a single combined item target click
         const belongsToSameActiveGroup = isLinkingMode && exercise.supersetId && 
             currentWorkout.find(e => e.id === supersetSourceId)?.supersetId === exercise.supersetId;
 
@@ -1055,103 +1050,65 @@ function completeSupersetLink(targetId) {
         `;
         card.appendChild(header);
 
-            }
-
-            const header = document.createElement('div');
-            header.className = 'exercise-header';
+        exercise.sets.forEach((set, index) => {
+            const setContainer = document.createElement('div');
+            setContainer.className = `set-container ${set.completed ? 'completed' : ''} ${set.isFailure ? 'is-failure' : ''}`;
             
-            let supersetHeaderHtml = '';
-            if (exercise.supersetId) {
-                supersetHeaderHtml = `<div class="superset-badge">${getSupersetLabel(exercise.supersetId)}</div>`;
-            }
+            let weightPlaceholder = 'lbs';
+            let weightValue = set.weight;
+            if(set.isBW) { weightPlaceholder = 'BW'; weightValue = 'BW'; }
+            
+            let setNumDisplay = index + 1;
+            let sideNumClass = '';
+            if(set.side === 'L') { setNumDisplay = 'L'; sideNumClass = 'side-l'; }
+            if(set.side === 'R') { setNumDisplay = 'R'; sideNumClass = 'side-r'; }
 
-            header.innerHTML = `
-                <div style="flex-grow: 1; min-width: 0; padding-right: 8px;">
-                    ${supersetHeaderHtml}
-                    <div style="font-weight: 700; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        ${isLinkingMode && !isSource ? `👉 Link with ${exercise.name}` : exercise.name}
+            let sideBtnText = 'L/R';
+            let sideBtnClass = '';
+            if(set.side === 'L') { sideBtnText = 'L'; sideBtnClass = 'side-l active'; }
+            if(set.side === 'R') { sideBtnText = 'R'; sideBtnClass = 'side-r active'; }
+            
+            setContainer.innerHTML = `
+                <div class="set-row">
+                    <div class="set-number ${sideNumClass}">${setNumDisplay}</div>
+                    <div class="input-group">
+                        <input type="${set.isBW ? 'text' : 'number'}" placeholder="${weightPlaceholder}" value="${weightValue}" class="${set.isBW ? 'bw-active' : ''}" onchange="updateSetData(${exercise.id}, ${index}, 'weight', this.value)" ${set.completed || set.isBW ? 'disabled' : ''}>
                     </div>
-                </div>
-                
-                <div style="position: relative; display: flex; align-items: center;">
-                    <button class="icon-btn" onclick="event.stopPropagation(); toggleExerciseMenu(${exercise.id})">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
+                    <div class="input-group">
+                        <input type="number" placeholder="reps" value="${set.reps}" onchange="updateSetData(${exercise.id}, ${index}, 'reps', this.value)" ${set.completed ? 'disabled' : ''}>
+                    </div>
+                    <button class="check-btn" onclick="toggleSet(${exercise.id}, ${index})">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
                     </button>
-                    
-                    ${activeMenuExerciseId === exercise.id ? `
-                        <div class="action-menu-popup" onclick="event.stopPropagation();">
-                            ${!exercise.supersetId ? `
-                                <button class="menu-item" onclick="startSupersetLink(${exercise.id})">🔗 Superset Existing</button>
-                            ` : `
-                                <button class="menu-item danger" onclick="removeFromSuperset(${exercise.id})">🔓 Remove Superset</button>
-                            `}
-                            <button class="menu-item danger" onclick="removeExercise(${exercise.id})">❌ Remove Exercise</button>
-                        </div>
-                    ` : ''}
+                    <button class="icon-btn" onclick="toggleSetMenu(${exercise.id}, ${index})">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
+                    </button>
                 </div>
+                
+                ${set.menuOpen ? `
+                <div class="set-drawer">
+                    <div></div>
+                    <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">BW</button>
+                    <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">F</button>
+                    <button class="mod-tag ${sideBtnClass}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">${sideBtnText}</button>
+                    <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${index})">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                ` : ''}
             `;
-            card.appendChild(header);
-
-            exercise.sets.forEach((set, index) => {
-                const setContainer = document.createElement('div');
-                setContainer.className = `set-container ${set.completed ? 'completed' : ''} ${set.isFailure ? 'is-failure' : ''}`;
-                
-                let weightPlaceholder = 'lbs';
-                let weightValue = set.weight;
-                if(set.isBW) { weightPlaceholder = 'BW'; weightValue = 'BW'; }
-                
-                let setNumDisplay = index + 1;
-                let sideNumClass = '';
-                if(set.side === 'L') { setNumDisplay = 'L'; sideNumClass = 'side-l'; }
-                if(set.side === 'R') { setNumDisplay = 'R'; sideNumClass = 'side-r'; }
-
-                let sideBtnText = 'L/R';
-                let sideBtnClass = '';
-                if(set.side === 'L') { sideBtnText = 'L'; sideBtnClass = 'side-l active'; }
-                if(set.side === 'R') { sideBtnText = 'R'; sideBtnClass = 'side-r active'; }
-                
-                setContainer.innerHTML = `
-                    <div class="set-row">
-                        <div class="set-number ${sideNumClass}">${setNumDisplay}</div>
-                        <div class="input-group">
-                            <input type="${set.isBW ? 'text' : 'number'}" placeholder="${weightPlaceholder}" value="${weightValue}" class="${set.isBW ? 'bw-active' : ''}" onchange="updateSetData(${exercise.id}, ${index}, 'weight', this.value)" ${set.completed || set.isBW ? 'disabled' : ''}>
-                        </div>
-                        <div class="input-group">
-                            <input type="number" placeholder="reps" value="${set.reps}" onchange="updateSetData(${exercise.id}, ${index}, 'reps', this.value)" ${set.completed ? 'disabled' : ''}>
-                        </div>
-                        <button class="check-btn" onclick="toggleSet(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
-                        </button>
-                        <button class="icon-btn" onclick="toggleSetMenu(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                        </button>
-                    </div>
-                    
-                    ${set.menuOpen ? `
-                    <div class="set-drawer">
-                        <div></div>
-                        <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'BW')">BW</button>
-                        <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${index}, 'Fail')">F</button>
-                        <button class="mod-tag ${sideBtnClass}" onclick="toggleMod(${exercise.id}, ${index}, 'Side')">${sideBtnText}</button>
-                        <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${index})">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                        </button>
-                    </div>
-                    ` : ''}
-                `;
-                card.appendChild(setContainer);
-            });
-
-            const addSetBtn = document.createElement('button');
-            addSetBtn.className = 'add-set-btn';
-            addSetBtn.innerText = '+ Add Set';
-            addSetBtn.onclick = () => addSet(exercise.id);
-            card.appendChild(addSetBtn);
-
-            container.appendChild(card);
+            card.appendChild(setContainer);
         });
-    }
 
+        const addSetBtn = document.createElement('button');
+        addSetBtn.className = 'add-set-btn';
+        addSetBtn.innerText = '+ Add Set';
+        addSetBtn.onclick = () => addSet(exercise.id);
+        card.appendChild(addSetBtn);
+
+        container.appendChild(card);
+    });
+}
     function renderHistory() {
         const list = document.getElementById('history-list');
         list.innerHTML = '';
