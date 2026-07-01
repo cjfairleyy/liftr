@@ -152,18 +152,20 @@
             transition: border 0.2s, background-color 0.2s;
         }
 
-        .card.in-superset {
-            border-left: 4px solid var(--mod-superset) !important;
-            border-top: 1px solid rgba(236, 72, 153, 0.2) !important;
-            border-right: 1px solid rgba(236, 72, 153, 0.2) !important;
-            border-bottom: 1px solid rgba(236, 72, 153, 0.2) !important;
-        }
+/* Unifies superset exercises inside a clean, combined container look */
+.card.in-superset {
+    border: 1px solid var(--mod-superset) !important;
+    background: rgba(236, 72, 153, 0.02) !important;
+    border-radius: 24px;
+    box-shadow: 0 0 12px rgba(236, 72, 153, 0.05);
+}
 
-        .card.linking-target {
-            border: 2px dashed var(--mod-superset) !important;
-            background: rgba(236, 72, 153, 0.04) !important;
-            cursor: pointer;
-        }
+/* Cleaner connection target during selection mode */
+.card.linking-target {
+    border: 1px dashed var(--mod-superset) !important;
+    background: rgba(236, 72, 153, 0.05) !important;
+    cursor: pointer;
+}
 
         .superset-badge {
             font-size: 0.7rem;
@@ -953,28 +955,31 @@
         renderWorkout();
     }
 
-    function completeSupersetLink(targetId) {
-        if (!supersetSourceId || supersetSourceId === targetId) return;
+function completeSupersetLink(targetId) {
+    if (!supersetSourceId || supersetSourceId === targetId) return;
 
-        const sourceIndex = currentWorkout.findIndex(ex => ex.id === supersetSourceId);
-        const targetIndex = currentWorkout.findIndex(ex => ex.id === targetId);
-        
-        if (sourceIndex === -1 || targetIndex === -1) return;
+    const sourceIndex = currentWorkout.findIndex(ex => ex.id === supersetSourceId);
+    const targetIndex = currentWorkout.findIndex(ex => ex.id === targetId);
+    
+    if (sourceIndex === -1 || targetIndex === -1) return;
 
-        const sourceEx = currentWorkout[sourceIndex];
-        const targetEx = currentWorkout[targetIndex];
+    const sourceEx = currentWorkout[sourceIndex];
+    const targetEx = currentWorkout[targetIndex];
 
-        const sharedId = sourceEx.supersetId || targetEx.supersetId || 'ss_' + Date.now();
-        sourceEx.supersetId = sharedId;
-        targetEx.supersetId = sharedId;
+    // Connects items under a single shared group structural key
+    const sharedId = sourceEx.supersetId || targetEx.supersetId || 'ss_' + Date.now();
+    sourceEx.supersetId = sharedId;
+    targetEx.supersetId = sharedId;
 
-        const [movedItem] = currentWorkout.splice(targetIndex, 1);
-        const newSourceIndex = currentWorkout.findIndex(ex => ex.id === supersetSourceId);
-        currentWorkout.splice(newSourceIndex + 1, 0, movedItem);
+    // Pulls the items into an adjacent matching block layout automatically
+    const [movedItem] = currentWorkout.splice(targetIndex, 1);
+    const newSourceIndex = currentWorkout.findIndex(ex => ex.id === supersetSourceId);
+    currentWorkout.splice(newSourceIndex + 1, 0, movedItem);
 
-        supersetSourceId = null;
-        renderWorkout();
-    }
+    supersetSourceId = null;
+    renderWorkout();
+}
+
 
     function removeFromSuperset(exerciseId) {
         const exercise = currentWorkout.find(ex => ex.id === exerciseId);
@@ -993,22 +998,63 @@
     }
 
     function renderWorkout() {
-        const container = document.getElementById('workout-cards');
-        container.innerHTML = '';
+    const container = document.getElementById('workout-cards');
+    container.innerHTML = '';
 
-        currentWorkout.forEach(exercise => {
-            const card = document.createElement('div');
+    currentWorkout.forEach(exercise => {
+        const card = document.createElement('div');
+        
+        const isLinkingMode = supersetSourceId !== null;
+        const isSource = supersetSourceId === exercise.id;
+        
+        // Treat an entire existing superset group as a single combined item target click
+        const belongsToSameActiveGroup = isLinkingMode && exercise.supersetId && 
+            currentWorkout.find(e => e.id === supersetSourceId)?.supersetId === exercise.supersetId;
+
+        card.className = `card ${exercise.supersetId ? 'in-superset' : ''} ${isLinkingMode && !isSource && !belongsToSameActiveGroup ? 'linking-target' : ''}`;
+        
+        if (isLinkingMode && !isSource && !belongsToSameActiveGroup) {
+            card.onclick = (e) => {
+                e.stopPropagation();
+                completeSupersetLink(exercise.id);
+            };
+        }
+
+        const header = document.createElement('div');
+        header.className = 'exercise-header';
+        
+        let supersetHeaderHtml = '';
+        if (exercise.supersetId) {
+            supersetHeaderHtml = `<div class="superset-badge">${getSupersetLabel(exercise.supersetId)}</div>`;
+        }
+
+        header.innerHTML = `
+            <div style="flex-grow: 1; min-width: 0; padding-right: 8px;">
+                ${supersetHeaderHtml}
+                <div style="font-weight: 700; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${isLinkingMode && !isSource ? `Link ${exercise.name}` : exercise.name}
+                </div>
+            </div>
             
-            const isLinkingMode = supersetSourceId !== null;
-            const isSource = supersetSourceId === exercise.id;
-            
-            card.className = `card ${exercise.supersetId ? 'in-superset' : ''} ${isLinkingMode && !isSource ? 'linking-target' : ''}`;
-            
-            if (isLinkingMode && !isSource) {
-                card.onclick = (e) => {
-                    e.stopPropagation();
-                    completeSupersetLink(exercise.id);
-                };
+            <div style="position: relative; display: flex; align-items: center;">
+                <button class="icon-btn" onclick="event.stopPropagation(); toggleExerciseMenu(${exercise.id})">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
+                </button>
+                
+                ${activeMenuExerciseId === exercise.id ? `
+                    <div class="action-menu-popup" onclick="event.stopPropagation();">
+                        ${!exercise.supersetId ? `
+                            <button class="menu-item" onclick="startSupersetLink(${exercise.id})">Superset</button>
+                        ` : `
+                            <button class="menu-item danger" onclick="removeFromSuperset(${exercise.id})">Remove Superset</button>
+                        `}
+                        <button class="menu-item danger" onclick="removeExercise(${exercise.id})">Remove Exercise</button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        card.appendChild(header);
+
             }
 
             const header = document.createElement('div');
