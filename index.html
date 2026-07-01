@@ -501,7 +501,8 @@
         .d-tag.fail { background: var(--mod-fail); }
     </style>
 </head>
-<body onclick="activeMenuExerciseId = null; renderWorkout();">
+<body>
+
 
 <div id="app-container">
     <header id="main-header">
@@ -1231,7 +1232,15 @@ function renderWorkout() {
             list.appendChild(item);
         });
     }
+    // Smart click listener that closes menus without breaking input focus
+    document.addEventListener('click', (e) => {
+        if (activeMenuExerciseId !== null && e.target.tagName !== 'INPUT') {
+            activeMenuExerciseId = null;
+            renderWorkout();
+        }
+    });
 </script>
+
 
 </body>
 </html>
