@@ -562,7 +562,7 @@
         <p id="detail-stats" style="color: var(--text-muted); margin-top: 0; margin-bottom: 32px; font-weight: 500;"></p>
         <div id="detail-exercises"></div>
         <div style="margin-top: 40px; padding-top: 24px;">
-            <button class="btn btn-outline" style="color: var(--mod-fail); border: none; background: rgba(239, 68, 68, 0.1); font-weight:700;" id="delete-workout-btn">
+            <button class="btn btn-outline" style="color: var(--mod-fail); border: none; background: rgba(239, 68, 68, 0.1); font-weight:700;" id="delete-workout-btn" onclick="deleteWorkoutFromHistory()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
                 Delete Log
             </button>
@@ -582,7 +582,7 @@
 
     <div id="workout-screen" class="screen">
         <div class="workout-top-bar">
-            <input type="text" id="workout-name-input" class="workout-name-input" placeholder="Workout Name...">
+            <input type="text" id="workout-name-input" class="workout-name-input" placeholder="Workout Name..." oninput="workoutName = this.value" onchange="saveApp()">
             <div class="workout-controls">
                 <button class="btn-small cancel" onclick="cancelWorkout()">Cancel</button>
                 <div id="workout-timer" class="timer">00:00</div>
@@ -718,8 +718,15 @@
 // --- CORE TRACKING VARIABLES ---
 let currentWorkout = [];
 let workoutHistory = [];
+let weightHistory = [];
+let workoutName = '';
+let workoutStartTime = null;
 let supersetSourceId = null;
 let activeMenuExerciseId = null;
+let currentCategory = 'All';
+let currentEquipment = 'All';
+let currentDetailIndex = null;
+let timerInterval = null;
 
 // Load saved data immediately when the app opens
 try {
@@ -727,6 +734,9 @@ try {
     if (savedData) {
         currentWorkout = savedData.currentWorkout || [];
         workoutHistory = savedData.workoutHistory || [];
+        weightHistory = savedData.weightHistory || [];
+        workoutName = savedData.workoutName || '';
+        workoutStartTime = savedData.workoutStartTime || null;
     }
 } catch (e) {
     console.error("No saved data found or error loading data.");
@@ -736,13 +746,123 @@ try {
 function saveApp() {
     localStorage.setItem('myWorkoutApp_data', JSON.stringify({
         currentWorkout: currentWorkout,
-        workoutHistory: workoutHistory
+        workoutHistory: workoutHistory,
+        weightHistory: weightHistory,
+        workoutName: workoutName,
+        workoutStartTime: workoutStartTime
     }));
 }
 
-function getSupersetLabel(supersetId) {
+// --- SCREEN NAVIGATION ---
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function navigate(tab) {
+    document.getElementById('bottom-nav').style.display = 'flex';
+    document.getElementById('header-action').style.display = 'none';
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+    if (tab === 'home') {
+        showScreen('home-screen');
+        document.getElementById('nav-home').classList.add('active');
+        updateStreak();
+    } else if (tab === 'history') {
+        showScreen('history-screen');
+        document.getElementById('nav-history').classList.add('active');
+        renderHistory();
+    } else if (tab === 'weight') {
+        showScreen('weight-screen');
+        document.getElementById('nav-weight').classList.add('active');
+        renderWeight();
+    }
+}
+
+function goBack() {
+    document.getElementById('header-action').style.display = 'none';
+    navigate('history');
+}
+
+function updateStreak() {
+    document.getElementById('streak-text').textContent = workoutHistory.length;
+}
+
+// --- WORKOUT LIFECYCLE ---
+function startWorkout() {
+    if (!workoutStartTime) workoutStartTime = Date.now();
+    document.getElementById('workout-name-input').value = workoutName;
+    document.getElementById('bottom-nav').style.display = 'none';
+    showScreen('workout-screen');
+    renderWorkout();
+    startTimer();
+    saveApp();
+}
+
+function cancelWorkout() {
+    if (currentWorkout.length > 0) {
+        const confirmCancel = confirm('Discard this workout? This cannot be undone.');
+        if (!confirmCancel) return;
+    }
+    stopTimer();
+    currentWorkout = [];
+    workoutName = '';
+    workoutStartTime = null;
+    document.getElementById('workout-name-input').value = '';
+    saveApp();
+    navigate('home');
+}
+
+function finishWorkout() {
+    if (currentWorkout.length === 0) {
+        cancelWorkout();
+        return;
+    }
+    stopTimer();
+    const durationSeconds = workoutStartTime ? Math.floor((Date.now() - workoutStartTime) / 1000) : 0;
+
+    workoutHistory.unshift({
+        date: new Date().toISOString(),
+        name: workoutName || 'Workout',
+        durationSeconds: durationSeconds,
+        exercises: JSON.parse(JSON.stringify(currentWorkout))
+    });
+
+    currentWorkout = [];
+    workoutName = '';
+    workoutStartTime = null;
+    document.getElementById('workout-name-input').value = '';
+    saveApp();
+    navigate('home');
+}
+
+// --- TIMER ---
+function startTimer() {
+    stopTimer();
+    updateTimerDisplay();
+    timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+function updateTimerDisplay() {
+    if (!workoutStartTime) return;
+    const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
+    const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const secs = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('workout-timer').textContent = `${mins}:${secs}`;
+}
+
+// --- SUPERSETS ---
+function getSupersetLabel(supersetId, exercisesArray) {
     if (!supersetId) return '';
-    const activeSupersets = [...new Set(currentWorkout.map(e => e.supersetId).filter(Boolean))];
+    const source = exercisesArray || currentWorkout;
+    const activeSupersets = [...new Set(source.map(e => e.supersetId).filter(Boolean))];
     const index = activeSupersets.indexOf(supersetId);
     return index !== -1 ? `Superset ${String.fromCharCode(65 + index)}` : 'Superset';
 }
@@ -849,6 +969,7 @@ function moveGroup(exerciseId, direction) {
     }, 150);
 }
 
+// --- EXERCISE / SET MANAGEMENT ---
 function addExercise(name) {
     if (!name) return;
     currentWorkout.push({
@@ -932,19 +1053,6 @@ function toggleMod(exerciseId, setIndex, type) {
     renderWorkout();
 }
 
-function logWorkout() {
-    if (currentWorkout.length === 0) return;
-    
-    workoutHistory.unshift({
-        date: new Date().toISOString(),
-        exercises: JSON.parse(JSON.stringify(currentWorkout))
-    });
-    
-    currentWorkout = [];
-    renderWorkout();
-    renderHistory();
-}
-
 function renderWorkout() {
     saveApp();
     const container = document.getElementById('workout-cards');
@@ -987,7 +1095,7 @@ function renderWorkout() {
         
         let supersetHeaderHtml = '';
         if (exercise.supersetId && (superClass === 'superset-start' || superClass === 'superset-single')) {
-            supersetHeaderHtml = `<div class="superset-badge">${getSupersetLabel(exercise.supersetId)}</div>`;
+            supersetHeaderHtml = `<div class="superset-badge">${getSupersetLabel(exercise.supersetId, currentWorkout)}</div>`;
         }
 
         header.innerHTML = `
@@ -1080,77 +1188,235 @@ function renderWorkout() {
     });
 }
 
-function renderHistory() {
-    saveApp();
-    const container = document.getElementById('history-container');
-    container.innerHTML = '';
+// --- EXERCISE PICKER MODAL ---
+function showExerciseModal() {
+    document.getElementById('search-exercise').value = '';
+    currentCategory = 'All';
+    currentEquipment = 'All';
+    document.querySelectorAll('#muscle-filters .filter-pill').forEach(p => {
+        p.classList.toggle('active', p.textContent.trim() === 'All');
+    });
+    document.querySelectorAll('#equipment-filters .filter-pill').forEach(p => {
+        p.classList.toggle('active', p.textContent.trim() === 'All');
+    });
+    showScreen('exercise-modal');
+    renderExerciseList();
+}
 
-    if (workoutHistory.length === 0) {
-        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); margin-top: 40px;">No workouts logged yet.</div>';
+function hideExerciseModal() {
+    showScreen('workout-screen');
+}
+
+function setCategory(cat) {
+    currentCategory = cat;
+    document.querySelectorAll('#muscle-filters .filter-pill').forEach(p => {
+        p.classList.toggle('active', p.textContent.trim() === cat);
+    });
+    renderExerciseList();
+}
+
+function setEquipment(eq) {
+    currentEquipment = eq;
+    document.querySelectorAll('#equipment-filters .filter-pill').forEach(p => {
+        p.classList.toggle('active', p.textContent.trim() === eq);
+    });
+    renderExerciseList();
+}
+
+function filterExercises() {
+    renderExerciseList();
+}
+
+function renderExerciseList() {
+    const search = document.getElementById('search-exercise').value.toLowerCase().trim();
+    const list = document.getElementById('exercise-list');
+    list.innerHTML = '';
+
+    const filtered = exerciseDatabase.filter(ex => {
+        const matchesSearch = ex.name.toLowerCase().includes(search);
+        const matchesCategory = currentCategory === 'All' || ex.category === currentCategory;
+        const matchesEquipment = currentEquipment === 'All' || ex.equipment === currentEquipment;
+        return matchesSearch && matchesCategory && matchesEquipment;
+    });
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state">No exercises found.</div>';
         return;
     }
 
-    workoutHistory.forEach(session => {
-        const sessionCard = document.createElement('div');
-        sessionCard.className = 'history-card';
-        
-        const dateObj = new Date(session.date);
-        const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-
-        sessionCard.innerHTML = `
-            <div class="history-header">
-                <div class="history-date">${dateString}</div>
+    filtered.forEach(ex => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+            <div>
+                <div class="list-item-title">${ex.name}</div>
+                <div class="list-item-sub">${ex.category} &middot; ${ex.equipment}</div>
             </div>
         `;
-
-        session.exercises.forEach((exercise, index) => {
-            const exDiv = document.createElement('div');
-            
-            let superClass = '';
-            if (exercise.supersetId) {
-                const prev = session.exercises[index - 1];
-                const next = session.exercises[index + 1];
-                const samePrev = prev && prev.supersetId === exercise.supersetId;
-                const sameNext = next && next.supersetId === exercise.supersetId;
-                
-                if (!samePrev && sameNext) superClass = 'superset-start';
-                else if (samePrev && sameNext) superClass = 'superset-middle';
-                else if (samePrev && !sameNext) superClass = 'superset-end';
-                else superClass = 'superset-single';
-            }
-
-            exDiv.className = `card ${exercise.supersetId ? 'in-superset' : ''} ${superClass}`;
-            exDiv.style.marginBottom = superClass === 'superset-end' || superClass === 'superset-single' || !exercise.supersetId ? '12px' : '0';
-
-            let supersetBadge = '';
-            if (exercise.supersetId && (superClass === 'superset-start' || superClass === 'superset-single')) {
-                supersetBadge = `<div class="superset-badge">${getSupersetLabel(exercise.supersetId)}</div>`;
-            }
-
-            let setsHtml = exercise.sets.map((set, sIdx) => {
-                let weightStr = set.isBW ? 'BW' : `${set.weight} lbs`;
-                let sideStr = set.side ? ` (${set.side})` : '';
-                let failStr = set.isFailure ? ' <span style="color:var(--mod-fail); font-size:0.8rem;">[F]</span>' : '';
-                return `
-                    <div style="display: flex; justify-content: space-between; padding: 4px 0; color: var(--text-secondary); font-size: 0.95rem;">
-                        <span>Set ${sIdx + 1}${sideStr}</span>
-                        <span>${weightStr} × ${set.reps}${failStr}</span>
-                    </div>
-                `;
-            }).join('');
-
-            exDiv.innerHTML = `
-                ${supersetBadge}
-                <div style="font-weight: 600; margin-bottom: 8px;">${exercise.name}</div>
-                ${setsHtml}
-            `;
-            sessionCard.appendChild(exDiv);
-        });
-
-        container.appendChild(sessionCard);
+        item.onclick = () => selectExercise(ex.name);
+        list.appendChild(item);
     });
 }
 
+function selectExercise(name) {
+    addExercise(name);
+    hideExerciseModal();
+}
+
+// --- HISTORY ---
+function renderHistory() {
+    const container = document.getElementById('history-list');
+    container.innerHTML = '';
+
+    if (workoutHistory.length === 0) {
+        container.innerHTML = '<div class="empty-state">No workouts logged yet.</div>';
+        return;
+    }
+
+    workoutHistory.forEach((session, index) => {
+        const dateObj = new Date(session.date);
+        const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        const totalSets = session.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+            <div>
+                <div class="list-item-title">${session.name || 'Workout'}</div>
+                <div class="list-item-sub">${dateString} &middot; ${session.exercises.length} exercises &middot; ${totalSets} sets</div>
+            </div>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        `;
+        item.onclick = () => viewWorkoutDetail(index);
+        container.appendChild(item);
+    });
+}
+
+function viewWorkoutDetail(index) {
+    currentDetailIndex = index;
+    const session = workoutHistory[index];
+    if (!session) return;
+
+    document.getElementById('detail-title').textContent = session.name || 'Workout';
+
+    const dateObj = new Date(session.date);
+    const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+    const totalSets = session.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+    let durationStr = '';
+    if (session.durationSeconds) {
+        const mins = Math.round(session.durationSeconds / 60);
+        durationStr = ` &middot; ${mins} min`;
+    }
+    document.getElementById('detail-stats').innerHTML = `${dateString} &middot; ${session.exercises.length} exercises &middot; ${totalSets} sets${durationStr}`;
+
+    const exContainer = document.getElementById('detail-exercises');
+    exContainer.innerHTML = '';
+
+    session.exercises.forEach((exercise, exIndex) => {
+        const exDiv = document.createElement('div');
+        exDiv.className = 'detail-exercise';
+
+        let supersetBadge = '';
+        if (exercise.supersetId) {
+            const prev = session.exercises[exIndex - 1];
+            const samePrev = prev && prev.supersetId === exercise.supersetId;
+            if (!samePrev) {
+                supersetBadge = `<div class="superset-badge">${getSupersetLabel(exercise.supersetId, session.exercises)}</div>`;
+            }
+        }
+
+        const setsHtml = exercise.sets.map((set, sIdx) => {
+            const weightStr = set.isBW ? 'BW' : `${set.weight || 0} lbs`;
+            let tags = '';
+            if (set.isBW) tags += `<span class="d-tag bw">BW</span>`;
+            if (set.side === 'L') tags += `<span class="d-tag side-l">L</span>`;
+            if (set.side === 'R') tags += `<span class="d-tag side-r">R</span>`;
+            if (set.isFailure) tags += `<span class="d-tag fail">F</span>`;
+            return `
+                <div class="detail-set-row">
+                    <span>Set ${sIdx + 1}</span>
+                    <div style="display:flex; align-items:center;">
+                        ${weightStr} &times; ${set.reps || 0}
+                        <div class="detail-tags">${tags}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        exDiv.innerHTML = `
+            ${supersetBadge}
+            <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">${exercise.name}</div>
+            ${setsHtml}
+        `;
+        exContainer.appendChild(exDiv);
+    });
+
+    document.getElementById('bottom-nav').style.display = 'none';
+    document.getElementById('header-action').style.display = 'flex';
+    showScreen('workout-detail-screen');
+}
+
+function deleteWorkoutFromHistory() {
+    if (currentDetailIndex === null) return;
+    const confirmDelete = confirm('Delete this workout log? This cannot be undone.');
+    if (!confirmDelete) return;
+
+    workoutHistory.splice(currentDetailIndex, 1);
+    currentDetailIndex = null;
+    saveApp();
+    goBack();
+}
+
+// --- BODY WEIGHT ---
+function logWeight() {
+    const input = document.getElementById('new-weight');
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val <= 0) return;
+
+    weightHistory.unshift({
+        date: new Date().toISOString(),
+        weight: val
+    });
+
+    input.value = '';
+    saveApp();
+    renderWeight();
+}
+
+function deleteWeight(index) {
+    weightHistory.splice(index, 1);
+    saveApp();
+    renderWeight();
+}
+
+function renderWeight() {
+    const container = document.getElementById('weight-list');
+    container.innerHTML = '';
+
+    if (weightHistory.length === 0) {
+        container.innerHTML = '<div class="empty-state">No weight logged yet.</div>';
+        return;
+    }
+
+    weightHistory.forEach((entry, index) => {
+        const dateObj = new Date(entry.date);
+        const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+            <div>
+                <div class="list-item-title">${entry.weight} lbs</div>
+                <div class="list-item-sub">${dateString}</div>
+            </div>
+            <button class="icon-btn" onclick="event.stopPropagation(); deleteWeight(${index})">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        `;
+        container.appendChild(item);
+    });
+}
+
+// --- GLOBAL LISTENERS & BOOT ---
 document.addEventListener('click', (e) => {
     if (activeMenuExerciseId !== null && e.target.tagName !== 'INPUT') {
         activeMenuExerciseId = null;
@@ -1158,9 +1424,11 @@ document.addEventListener('click', (e) => {
     }
 });
 
-renderWorkout();
-if(document.getElementById('history-container')) {
-    renderHistory();
+// Boot: resume an in-progress workout if one exists, otherwise show Home
+if (currentWorkout.length > 0) {
+    startWorkout();
+} else {
+    navigate('home');
 }
 </script>
 
