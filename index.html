@@ -740,271 +740,18 @@ function saveApp() {
     }));
 }
 
+function getSupersetLabel(supersetId) {
+    if (!supersetId) return '';
+    const activeSupersets = [...new Set(currentWorkout.map(e => e.supersetId).filter(Boolean))];
+    const index = activeSupersets.indexOf(supersetId);
+    return index !== -1 ? `Superset ${String.fromCharCode(65 + index)}` : 'Superset';
+}
 
-    let workoutTimerInterval;
-    let secondsElapsed = 0;
-    
-    let activeCategory = 'All';
-    let activeEquipment = 'All';
-
-    let weightHistory = [];  
-
-    // Menu and Link Target States
-    let activeMenuExerciseId = null;
-    let supersetSourceId = null;
-
-    function navigate(tab) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(tab + '-screen').classList.add('active');
-        
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('nav-' + tab).classList.add('active');
-        
-        document.getElementById('bottom-nav').style.display = 'flex';
-        document.getElementById('main-header').style.display = 'flex';
-        document.getElementById('header-action').style.display = 'none';
-        document.querySelector('header h1').innerText = 'liftr';
-        
-        if (tab === 'history') renderHistory();
-        if (tab === 'weight') renderWeight();
-    }
-
-    function showWorkoutScreen() {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('workout-screen').classList.add('active');
-        document.getElementById('bottom-nav').style.display = 'none';
-        document.getElementById('main-header').style.display = 'none';
-    }
-
-    function goBack() { navigate('history'); }
-
-    function getPreviousExerciseData(exerciseName) {
-        for (let i = 0; i < workoutHistory.length; i++) {
-            const pastEx = workoutHistory[i].exercises.find(e => e.name === exerciseName);
-            if (pastEx && pastEx.sets.length > 0) {
-                return pastEx.sets.map(s => ({
-                    weight: s.weight, reps: s.reps, completed: false,
-                    isBW: s.isBW || false, side: 'none', isFailure: false, menuOpen: false
-                }));
-            }
-        }
-        return [{ weight: '', reps: '', completed: false, isBW: false, side: 'none', isFailure: false, menuOpen: false }];
-    }
-
-    function startWorkout() {
-        currentWorkout = [];
-        secondsElapsed = 0;
-        activeMenuExerciseId = null;
-        supersetSourceId = null;
-        document.getElementById('workout-name-input').value = '';
-        document.getElementById('workout-cards').innerHTML = '';
-        updateTimerDisplay();
-        workoutTimerInterval = setInterval(() => {
-            secondsElapsed++;
-            updateTimerDisplay();
-        }, 1000);
-        showWorkoutScreen();
-    }
-
-    function updateTimerDisplay() {
-        const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
-        const secs = (secondsElapsed % 60).toString().padStart(2, '0');
-        document.getElementById('workout-timer').innerText = `${mins}:${secs}`;
-    }
-
-    function finishWorkout() {
-        if (currentWorkout.length === 0) {
-            alert("Add some exercises before finishing!");
-            return;
-        }
-        clearInterval(workoutTimerInterval);
-        
-        let customName = document.getElementById('workout-name-input').value.trim();
-        if (!customName) customName = "Workout";
-
-        const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-        const volume = calculateTotalVolume();
-        
-        const savedExercises = JSON.parse(JSON.stringify(currentWorkout)).map(ex => {
-            ex.sets.forEach(s => delete s.menuOpen);
-            return ex;
-        });
-
-        workoutHistory.unshift({
-            id: Date.now(), name: customName, date: dateStr,
-            duration: document.getElementById('workout-timer').innerText,
-            volume: volume, exercises: savedExercises
-        });
-
-        document.getElementById('streak-text').innerText = workoutHistory.length;
-        navigate('home');
-    }
-    
-    function cancelWorkout() {
-        if(confirm("Cancel workout? No data will be saved.")) {
-            clearInterval(workoutTimerInterval);
-            navigate('home');
-        }
-    }
-    
-    function calculateTotalVolume() {
-        let vol = 0;
-        currentWorkout.forEach(ex => {
-            ex.sets.forEach(set => {
-                if(set.completed && !set.isBW && set.weight && set.reps) {
-                    vol += (parseFloat(set.weight) * parseInt(set.reps));
-                }
-            });
-        });
-        return vol;
-    }
-
-    function showExerciseModal() {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('exercise-modal').classList.add('active');
-        document.getElementById('main-header').style.display = 'none';
-        filterExercises();
-    }
-
-    function hideExerciseModal() { showWorkoutScreen(); }
-    
-    function setCategory(cat) {
-        activeCategory = cat;
-        document.querySelectorAll('#muscle-filters .filter-pill').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText === cat || (cat === 'All' && btn.innerText === 'All'));
-        });
-        filterExercises();
-    }
-    
-    function setEquipment(eq) {
-        activeEquipment = eq;
-        document.querySelectorAll('#equipment-filters .filter-pill').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText === eq || (eq === 'All' && btn.innerText === 'All'));
-        });
-        filterExercises();
-    }
-
-    function filterExercises() {
-        const query = document.getElementById('search-exercise').value.toLowerCase();
-        const filtered = exerciseDatabase.filter(ex => {
-            const matchesText = ex.name.toLowerCase().includes(query);
-            const matchesCat = activeCategory === 'All' || ex.category === activeCategory;
-            const matchesEq = activeEquipment === 'All' || ex.equipment === activeEquipment;
-            return matchesText && matchesCat && matchesEq;
-        });
-        renderExerciseList(filtered);
-    }
-
-    function renderExerciseList(list) {
-        const container = document.getElementById('exercise-list');
-        container.innerHTML = '';
-        
-        if(list.length === 0) {
-            container.innerHTML = '<div class="empty-state">No exercises found.</div>';
-            return;
-        }
-        
-        list.forEach(ex => {
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            item.innerHTML = `<div><div class="list-item-title">${ex.name}</div><div class="list-item-sub">${ex.category}</div></div>`;
-            item.onclick = () => addExerciseToWorkout(ex.name);
-            container.appendChild(item);
-        });
-    }
-
-    function addExerciseToWorkout(exerciseName) {
-        const newExercise = { 
-            id: Date.now(), 
-            name: exerciseName, 
-            sets: getPreviousExerciseData(exerciseName),
-            supersetId: null 
-        };
-
-        currentWorkout.push(newExercise);
-        hideExerciseModal();
-        renderWorkout();
-    }
-
-    function removeExercise(exerciseId) {
-        if(confirm("Remove this exercise?")) {
-            removeFromSuperset(exerciseId);
-            currentWorkout = currentWorkout.filter(ex => ex.id !== exerciseId);
-            renderWorkout();
-        }
-    }
-
-    function addSet(exerciseId) {
-        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
-        const lastSet = exercise.sets[exercise.sets.length - 1];
-        exercise.sets.push({ 
-            weight: lastSet ? lastSet.weight : '', reps: lastSet ? lastSet.reps : '', 
-            completed: false, isBW: lastSet ? lastSet.isBW : false,
-            side: 'none', isFailure: false, menuOpen: false
-        });
-        renderWorkout();
-    }
-    
-    function removeSet(exerciseId, setIndex) {
-        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
-        exercise.sets.splice(setIndex, 1);
-        renderWorkout();
-    }
-
-    function toggleSet(exerciseId, setIndex) {
-        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
-        exercise.sets[setIndex].completed = !exercise.sets[setIndex].completed;
-        renderWorkout();
-    }
-    
-    function toggleSetMenu(exerciseId, setIndex) {
-        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
-        exercise.sets[setIndex].menuOpen = !exercise.sets[setIndex].menuOpen;
-        renderWorkout();
-    }
-
-    function updateSetData(exerciseId, setIndex, field, value) {
-        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
-        exercise.sets[setIndex][field] = value;
-    }
-
-    function toggleMod(exerciseId, setIndex, modType) {
-        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
-        const set = exercise.sets[setIndex];
-        
-        if (modType === 'BW') {
-            set.isBW = !set.isBW;
-            if (set.isBW) set.weight = 'BW'; 
-            else set.weight = '';
-        } else if (modType === 'Side') {
-            if (set.side === 'none') set.side = 'L';
-            else if (set.side === 'L') set.side = 'R';
-            else set.side = 'none';
-        } else if (modType === 'Fail') {
-            set.isFailure = !set.isFailure;
-        }
-        renderWorkout();
-    }
-
-    // Dynamic Alpha Clustering Utilities
-    function getSupersetLabel(supersetId) {
-        if (!supersetId) return '';
-        const uniqueIds = [...new Set(currentWorkout.map(ex => ex.supersetId).filter(Boolean))];
-        const index = uniqueIds.indexOf(supersetId);
-        const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-        return `Superset ${letters[index % letters.length] || index + 1}`;
-    }
-
-    function toggleExerciseMenu(exerciseId) {
-        activeMenuExerciseId = (activeMenuExerciseId === exerciseId) ? null : exerciseId;
-        renderWorkout();
-    }
-
-    function startSupersetLink(exerciseId) {
-        supersetSourceId = exerciseId;
-        activeMenuExerciseId = null;
-        renderWorkout();
-    }
+function startSupersetLink(exerciseId) {
+    supersetSourceId = exerciseId;
+    activeMenuExerciseId = null;
+    renderWorkout();
+}
 
 function completeSupersetLink(targetId) {
     if (!supersetSourceId || supersetSourceId === targetId) return;
@@ -1028,23 +775,24 @@ function completeSupersetLink(targetId) {
     supersetSourceId = null;
     renderWorkout();
 }
-    function removeFromSuperset(exerciseId) {
-        const exercise = currentWorkout.find(ex => ex.id === exerciseId);
-        if (!exercise) return;
 
-        const oldSupersetId = exercise.supersetId;
-        exercise.supersetId = null;
-
-        const remaining = currentWorkout.filter(ex => ex.supersetId === oldSupersetId);
-        if (remaining.length === 1) {
-            remaining[0].supersetId = null;
+function removeFromSuperset(exerciseId) {
+    const ex = currentWorkout.find(e => e.id === exerciseId);
+    if (ex) {
+        const oldId = ex.supersetId;
+        ex.supersetId = null;
+        
+        const remaining = currentWorkout.filter(e => e.supersetId === oldId);
+        if (remaining.length < 2) {
+            remaining.forEach(e => e.supersetId = null);
         }
-
-        activeMenuExerciseId = null;
-        renderWorkout();
     }
+    activeMenuExerciseId = null;
+    renderWorkout();
+}
+
 function moveGroup(exerciseId, direction) {
-    activeMenuExerciseId = null; // Close menu immediately
+    activeMenuExerciseId = null;
     
     const index = currentWorkout.findIndex(ex => ex.id === exerciseId);
     if (index === -1) return;
@@ -1053,7 +801,6 @@ function moveGroup(exerciseId, direction) {
     let endIdx = index;
     const targetEx = currentWorkout[index];
 
-    // Expand selection if it is part of a superset group
     if (targetEx.supersetId) {
         while(startIdx > 0 && currentWorkout[startIdx - 1].supersetId === targetEx.supersetId) startIdx--;
         while(endIdx < currentWorkout.length - 1 && currentWorkout[endIdx + 1].supersetId === targetEx.supersetId) endIdx++;
@@ -1063,7 +810,6 @@ function moveGroup(exerciseId, direction) {
     let swapStartIdx = -1;
     let swapEndIdx = -1;
 
-    // Determine boundaries of the block we are swapping with
     if (direction === 'up' && startIdx > 0) {
         swapEndIdx = startIdx - 1;
         swapStartIdx = swapEndIdx;
@@ -1077,16 +823,14 @@ function moveGroup(exerciseId, direction) {
             while(swapEndIdx < currentWorkout.length - 1 && currentWorkout[swapEndIdx + 1].supersetId === currentWorkout[swapStartIdx].supersetId) swapEndIdx++;
         }
     } else {
-        return; // Already at the top or bottom
+        return;
     }
 
-    // Fade out moving cards slightly
     for(let i = startIdx; i <= endIdx; i++) {
         const cardEl = document.getElementById(`card-${currentWorkout[i].id}`);
         if(cardEl) cardEl.style.opacity = '0';
     }
 
-    // Wait a split second, reorder array, then pop them back in
     setTimeout(() => {
         const movingBlock = currentWorkout.splice(startIdx, blockSize);
         const actualInsert = direction === 'up' ? swapStartIdx : swapEndIdx - blockSize + 1;
@@ -1105,10 +849,104 @@ function moveGroup(exerciseId, direction) {
     }, 150);
 }
 
-function renderWorkout() {
-    // Auto-save any time the workout screen updates
-    saveApp();
+function addExercise(name) {
+    if (!name) return;
+    currentWorkout.push({
+        id: Date.now() + Math.random(),
+        name: name,
+        supersetId: null,
+        sets: [{ weight: '', reps: '', completed: false, isBW: false, isFailure: false, side: '', menuOpen: false }]
+    });
+    renderWorkout();
+}
 
+function removeExercise(id) {
+    currentWorkout = currentWorkout.filter(ex => ex.id !== id);
+    activeMenuExerciseId = null;
+    renderWorkout();
+}
+
+function addSet(exerciseId) {
+    const ex = currentWorkout.find(e => e.id === exerciseId);
+    if (ex) {
+        ex.sets.push({ weight: '', reps: '', completed: false, isBW: false, isFailure: false, side: '', menuOpen: false });
+    }
+    renderWorkout();
+}
+
+function removeSet(exerciseId, setIndex) {
+    const ex = currentWorkout.find(e => e.id === exerciseId);
+    if (ex) {
+        ex.sets.splice(setIndex, 1);
+        if (ex.sets.length === 0) {
+            ex.sets.push({ weight: '', reps: '', completed: false, isBW: false, isFailure: false, side: '', menuOpen: false });
+        }
+    }
+    renderWorkout();
+}
+
+function toggleSet(exerciseId, setIndex) {
+    const ex = currentWorkout.find(e => e.id === exerciseId);
+    if (ex) {
+        ex.sets[setIndex].completed = !ex.sets[setIndex].completed;
+    }
+    renderWorkout();
+}
+
+function updateSetData(exerciseId, setIndex, field, value) {
+    const ex = currentWorkout.find(e => e.id === exerciseId);
+    if (ex) {
+        ex.sets[setIndex][field] = value;
+    }
+    saveApp();
+}
+
+function toggleExerciseMenu(id) {
+    activeMenuExerciseId = activeMenuExerciseId === id ? null : id;
+    renderWorkout();
+}
+
+function toggleSetMenu(exerciseId, setIndex) {
+    const ex = currentWorkout.find(e => e.id === exerciseId);
+    if (ex) {
+        ex.sets[setIndex].menuOpen = !ex.sets[setIndex].menuOpen;
+    }
+    renderWorkout();
+}
+
+function toggleMod(exerciseId, setIndex, type) {
+    const ex = currentWorkout.find(e => e.id === exerciseId);
+    if (!ex) return;
+    const set = ex.sets[setIndex];
+    
+    if (type === 'BW') {
+        set.isBW = !set.isBW;
+        set.weight = set.isBW ? 'BW' : '';
+    } else if (type === 'Fail') {
+        set.isFailure = !set.isFailure;
+    } else if (type === 'Side') {
+        if (!set.side) set.side = 'L';
+        else if (set.side === 'L') set.side = 'R';
+        else set.side = '';
+    }
+    renderWorkout();
+}
+
+function logWorkout() {
+    if (currentWorkout.length === 0) return;
+    
+    workoutHistory.unshift({
+        date: new Date().toISOString(),
+        exercises: JSON.parse(JSON.stringify(currentWorkout))
+    });
+    
+    currentWorkout = [];
+    renderWorkout();
+    renderHistory();
+}
+
+function renderWorkout() {
+    saveApp();
     const container = document.getElementById('workout-cards');
     container.innerHTML = '';
 
@@ -1241,10 +1079,9 @@ function renderWorkout() {
         container.appendChild(card);
     });
 }
-function renderHistory() {
-    // Auto-save history updates
-    saveApp();
 
+function renderHistory() {
+    saveApp();
     const container = document.getElementById('history-container');
     container.innerHTML = '';
 
@@ -1259,18 +1096,16 @@ function renderHistory() {
         
         const dateObj = new Date(session.date);
         const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-        const durationString = session.duration ? ` • ${session.duration}` : '';
 
         sessionCard.innerHTML = `
             <div class="history-header">
-                <div class="history-date">${dateString}${durationString}</div>
+                <div class="history-date">${dateString}</div>
             </div>
         `;
 
         session.exercises.forEach((exercise, index) => {
             const exDiv = document.createElement('div');
             
-            // Re-apply the superset stitching logic for history
             let superClass = '';
             if (exercise.supersetId) {
                 const prev = session.exercises[index - 1];
@@ -1316,128 +1151,19 @@ function renderHistory() {
     });
 }
 
-        workoutHistory.forEach(workout => {
-            const exCount = workout.exercises.length;
-            const item = document.createElement('div');
-            item.className = 'list-item card';
-            item.onclick = () => viewWorkoutInfo(workout.id);
-            item.innerHTML = `
-                <div>
-                    <div class="list-item-title">${workout.name}</div>
-                    <div class="list-item-sub">${workout.date} • ${exCount} Exercises</div>
-                </div>
-                <div style="color: var(--text-muted); font-weight: 600;">${workout.duration}</div>
-            `;
-            list.appendChild(item);
-        });
+document.addEventListener('click', (e) => {
+    if (activeMenuExerciseId !== null && e.target.tagName !== 'INPUT') {
+        activeMenuExerciseId = null;
+        renderWorkout();
     }
+});
 
-    function viewWorkoutInfo(id) {
-        const workout = workoutHistory.find(w => w.id === id);
-        if (!workout) return;
-        
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('workout-detail-screen').classList.add('active');
-        document.getElementById('bottom-nav').style.display = 'none';
-        
-        document.getElementById('main-header').style.display = 'flex';
-        document.querySelector('header h1').innerText = 'Summary';
-        const backBtn = document.getElementById('header-action');
-        backBtn.style.display = 'flex';
-        backBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back`;
-        backBtn.onclick = goBack;
-
-        document.getElementById('detail-title').innerText = workout.name;
-        document.getElementById('detail-stats').innerText = `${workout.date} • ${workout.duration} • ${workout.volume} lbs Vol`;
-        
-        const exContainer = document.getElementById('detail-exercises');
-        exContainer.innerHTML = '';
-        
-        workout.exercises.forEach(ex => {
-            let html = `<div class="detail-exercise card ${ex.supersetId ? 'in-superset' : ''}">`;
-            if (ex.supersetId) {
-                html += `<div class="superset-badge">${getSupersetLabel(ex.supersetId)}</div>`;
-            }
-            html += `<div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 12px;">${ex.name}</div>`;
-            ex.sets.forEach((set, idx) => {
-                if (set.completed) {
-                    let weightStr = set.isBW ? 'BW' : (set.weight || '0');
-                    let tagsHtml = '';
-                    if (set.isBW) tagsHtml += `<span class="d-tag bw">BW</span>`;
-                    if (set.side === 'L') tagsHtml += `<span class="d-tag side-l">L</span>`;
-                    if (set.side === 'R') tagsHtml += `<span class="d-tag side-r">R</span>`;
-                    if (set.isFailure) tagsHtml += `<span class="d-tag fail">F</span>`;
-                    
-                    html += `
-                        <div class="detail-set-row" style="background: ${set.isFailure ? 'rgba(239, 68, 68, 0.15)' : 'transparent'}; padding: 8px 12px; margin: 0 -12px; border-radius: 12px;">
-                            <div>Set ${idx + 1}</div>
-                            <div style="display:flex; align-items:center;">
-                                <span>${weightStr}</span> &nbsp;×&nbsp; <span>${set.reps || 0}</span>
-                                <div class="detail-tags">${tagsHtml}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-            html += `</div>`;
-            exContainer.innerHTML += html;
-        });
-
-        document.getElementById('delete-workout-btn').onclick = () => {
-            if(confirm("Delete this workout log?")) {
-                workoutHistory = workoutHistory.filter(w => w.id !== id);
-                document.getElementById('streak-text').innerText = workoutHistory.length;
-                goBack();
-            }
-        };
-    }
-
-    function logWeight() {
-        const input = document.getElementById('new-weight');
-        if (!input.value) return;
-        const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        weightHistory.unshift({ id: Date.now(), date: date, weight: input.value });
-        input.value = '';
-        renderWeight();
-    }
-    
-    function deleteWeight(id) {
-        if(confirm("Delete this entry?")) {
-            weightHistory = weightHistory.filter(w => w.id !== id);
-            renderWeight();
-        }
-    }
-    
-    function renderWeight() {
-        const list = document.getElementById('weight-list');
-        list.innerHTML = '';
-        if(weightHistory.length === 0) {
-            list.innerHTML = '<div class="empty-state">No weight logged yet.</div>';
-            return;
-        }
-        weightHistory.forEach(entry => {
-            const item = document.createElement('div');
-            item.className = 'list-item card';
-            item.innerHTML = `
-                <div>
-                    <div class="list-item-title">${entry.weight} lbs</div>
-                    <div class="list-item-sub">${entry.date}</div>
-                </div>
-                <button class="icon-btn" onclick="deleteWeight(${entry.id})" style="color: var(--mod-fail);">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
-            `;
-            list.appendChild(item);
-        });
-    }
-    // Smart click listener that closes menus without breaking input focus
-    document.addEventListener('click', (e) => {
-        if (activeMenuExerciseId !== null && e.target.tagName !== 'INPUT') {
-            activeMenuExerciseId = null;
-            renderWorkout();
-        }
-    });
+renderWorkout();
+if(document.getElementById('history-container')) {
+    renderHistory();
+}
 </script>
+
 
 
 </body>
