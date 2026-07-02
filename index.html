@@ -152,46 +152,46 @@
             transition: border 0.2s, background-color 0.2s;
         }
 
-/* Unifies superset exercises into a single connected block */
-.card.in-superset {
-    border: 1px solid var(--mod-superset) !important;
-    background: rgba(236, 72, 153, 0.02) !important;
-    margin-bottom: 0; 
-    border-radius: 0;
-    border-bottom: none !important;
-}
-.card.superset-start {
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-}
-.card.superset-end {
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
-    border-bottom: 1px solid var(--mod-superset) !important;
-    margin-bottom: 12px; /* Restores the gap below the group */
-}
-.card.superset-single { /* Fallback if only 1 item is left */
-    border-radius: 20px;
-    border-bottom: 1px solid var(--mod-superset) !important;
-    margin-bottom: 12px;
-}
+        /* Unifies superset exercises into a single connected block */
+        .card.in-superset {
+            border: 1px solid var(--mod-superset) !important;
+            background: rgba(236, 72, 153, 0.02) !important;
+            margin-bottom: 0; 
+            border-radius: 0;
+            border-bottom: none !important;
+        }
+        .card.superset-start {
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+        .card.superset-end {
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            border-bottom: 1px solid var(--mod-superset) !important;
+            margin-bottom: 12px; /* Restores the gap below the group */
+        }
+        .card.superset-single { /* Fallback if only 1 item is left */
+            border-radius: 20px;
+            border-bottom: 1px solid var(--mod-superset) !important;
+            margin-bottom: 12px;
+        }
 
-/* Cleaner connection target during selection mode */
-.card.linking-target {
-    border: 1px dashed var(--mod-superset) !important;
-    background: rgba(236, 72, 153, 0.05) !important;
-    cursor: pointer;
-}
+        /* Cleaner connection target during selection mode */
+        .card.linking-target {
+            border: 1px dashed var(--mod-superset) !important;
+            background: rgba(236, 72, 153, 0.05) !important;
+            cursor: pointer;
+        }
 
-/* Move Animation Classes */
-.card { transition: opacity 0.2s ease; }
-.card.just-moved { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        /* Move Animation Classes */
+        .card { transition: opacity 0.2s ease; }
+        .card.just-moved { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-@keyframes popIn {
-    0% { transform: translateY(15px) scale(0.98); opacity: 0; background: var(--bg-surface-elevated); }
-    70% { transform: translateY(-4px) scale(1.02); opacity: 1; }
-    100% { transform: translateY(0) scale(1); opacity: 1; }
-}
+        @keyframes popIn {
+            0% { transform: translateY(15px) scale(0.98); opacity: 0; background: var(--bg-surface-elevated); }
+            70% { transform: translateY(-4px) scale(1.02); opacity: 1; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
 
         .superset-badge {
             font-size: 0.7rem;
@@ -280,7 +280,7 @@
             margin-bottom: 12px;
             letter-spacing: -0.5px;
         }
-        .workout-name-input:focus { outline: none; }
+        .workout-name-input:focus { outline: none; background-color: transparent !important; }
         .workout-name-input::placeholder { color: var(--text-placeholder); }
 
         .workout-controls { display: flex; justify-content: space-between; align-items: center; }
@@ -562,7 +562,6 @@
 </head>
 <body>
 
-
 <div id="app-container">
     <header id="main-header">
         <h1>liftr</h1>
@@ -604,10 +603,17 @@
 
     <div id="weight-screen" class="screen">
         <h2>Body Weight</h2>
-        <div style="display: flex; gap: 12px; margin-bottom: 32px;">
+        <div style="display: flex; gap: 12px; margin-bottom: 24px; margin-top: 12px;">
             <input type="number" id="new-weight" class="text-input" placeholder="Enter weight (lbs)" step="0.1" style="margin-bottom: 0;">
             <button class="btn" style="width: auto; border-radius: 16px;" onclick="logWeight()">Log</button>
         </div>
+        
+        <div id="weight-trend-section" style="margin-top: 36px; margin-bottom: 36px; display: none;">
+            <h3 class="section-title">Weight Trend</h3>
+            <div id="weight-trend-chart" class="card"></div>
+        </div>
+
+        <h3 class="section-title" style="margin-top: 24px;">History Log</h3>
         <div id="weight-list">
             <div class="empty-state">No weight logged yet.</div>
         </div>
@@ -618,26 +624,21 @@
 
         <div class="stat-grid" id="stats-overview"></div>
 
-        <div style="margin-top: 8px;">
-            <h3 class="section-title">Body Weight Trend</h3>
-            <div id="weight-trend-chart" class="card"></div>
-        </div>
-
-        <div style="margin-top: 32px;">
+        <div style="margin-top: 48px;">
             <h3 class="section-title">Exercise Progress</h3>
             <select id="progress-exercise-select" class="text-input" onchange="renderExerciseProgress()"></select>
             <div id="exercise-progress-chart" class="card"></div>
             <div id="exercise-progress-pr"></div>
         </div>
 
-        <div style="margin-top: 32px;">
-            <h3 class="section-title">Personal Records</h3>
-            <div id="pr-list"></div>
-        </div>
-
-        <div style="margin-top: 32px;">
+        <div style="margin-top: 48px;">
             <h3 class="section-title">Muscle Group Balance <span style="color: var(--text-muted); font-weight: 500; font-size: 0.75rem; text-transform: none; letter-spacing: 0;">&middot; Last 30 Days</span></h3>
             <div id="muscle-balance-list"></div>
+        </div>
+
+        <div style="margin-top: 48px;">
+            <h3 class="section-title">Personal Records</h3>
+            <div id="pr-list"></div>
         </div>
     </div>
 
@@ -939,6 +940,7 @@ function stopTimer() {
     }
 }
 
+// --- SUPERSETS ---
 function updateTimerDisplay() {
     if (!workoutStartTime) return;
     const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
@@ -947,7 +949,6 @@ function updateTimerDisplay() {
     document.getElementById('workout-timer').textContent = `${mins}:${secs}`;
 }
 
-// --- SUPERSETS ---
 function getSupersetLabel(supersetId, exercisesArray) {
     if (!supersetId) return '';
     const source = exercisesArray || currentWorkout;
@@ -1404,9 +1405,6 @@ function viewWorkoutDetail(index) {
     session.exercises.forEach((exercise, exIndex) => {
         const exDiv = document.createElement('div');
 
-        // Compute the same start/middle/end/single position as the active
-        // workout screen so supersetted exercises render as one visually
-        // joined block instead of just carrying a text badge.
         let superClass = '';
         if (exercise.supersetId) {
             const prev = session.exercises[exIndex - 1];
@@ -1469,8 +1467,6 @@ function deleteWorkoutFromHistory() {
 }
 
 // --- CUSTOM CONFIRM MODAL ---
-// Native confirm()/alert() are unreliable inside sandboxed previews (they can
-// silently no-op), so destructive actions route through this in-app modal instead.
 function showConfirmModal(message, confirmLabel, onConfirm) {
     document.getElementById('confirm-modal-message').textContent = message;
     document.getElementById('confirm-modal-confirm-btn').textContent = confirmLabel || 'Confirm';
@@ -1508,6 +1504,8 @@ function deleteWeight(index) {
 }
 
 function renderWeight() {
+    renderWeightTrend();
+
     const container = document.getElementById('weight-list');
     container.innerHTML = '';
 
@@ -1534,6 +1532,44 @@ function renderWeight() {
     });
 }
 
+function renderWeightTrend() {
+    const el = document.getElementById('weight-trend-chart');
+    const section = document.getElementById('weight-trend-section');
+    
+    if (weightHistory.length < 2) {
+        section.style.display = 'block';
+        el.innerHTML = `<div class="empty-state" style="margin-top:0; padding: 20px 0;">Log at least 2 weigh-ins to see your trend here.</div>`;
+        return;
+    }
+    
+    section.style.display = 'block';
+    const chronological = [...weightHistory].reverse();
+    const points = chronological.map(w => ({ value: w.weight }));
+    const first = chronological[0];
+    const last = chronological[chronological.length - 1];
+    const diff = last.weight - first.weight;
+    
+    // Custom color indicators: green for losing weight, red for gaining weight
+    let trendColor = 'var(--text-muted)';
+    let diffStr = 'No change';
+    if (diff < 0) {
+        trendColor = '#22c55e'; // Green for losing weight
+        diffStr = `${Math.abs(diff).toFixed(1)} lbs lost`;
+    } else if (diff > 0) {
+        trendColor = '#ef4444'; // Red for gaining weight
+        diffStr = `+${diff.toFixed(1)} lbs gained`;
+    }
+
+    el.innerHTML = `
+        ${buildLineChartSVG(points, 'weightGradient', trendColor)}
+        <div style="display:flex; justify-content:space-between; margin-top:10px; color:var(--text-muted); font-size:0.8rem; font-weight:600;">
+            <span>${new Date(first.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+            <span style="color: ${trendColor}; font-weight:800; font-size:0.9rem;">${diffStr}</span>
+            <span>${new Date(last.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+        </div>
+    `;
+}
+
 // --- STATS & PROGRESS ---
 function getMonday(date) {
     const d = new Date(date);
@@ -1553,7 +1589,6 @@ function calculateWeekStreak() {
 
     let streak = 0;
     let cursor = getMonday(new Date());
-    // Don't break the streak just because the current week isn't logged yet
     if (!weeksWithWorkout.has(cursor.toDateString())) {
         cursor.setDate(cursor.getDate() - 7);
     }
@@ -1582,7 +1617,6 @@ function getAllSets() {
     return sets;
 }
 
-// Epley formula: standard way to compare lifts done at different rep ranges
 function estimate1RM(weight, reps) {
     if (reps <= 0 || weight <= 0) return 0;
     if (reps === 1) return weight;
@@ -1594,7 +1628,7 @@ function formatVolume(num) {
     return Math.round(num).toString();
 }
 
-function buildLineChartSVG(points, gradientId) {
+function buildLineChartSVG(points, gradientId, strokeColor = '#22c55e') {
     const width = 300;
     const height = 110;
     const padding = 8;
@@ -1615,18 +1649,18 @@ function buildLineChartSVG(points, gradientId) {
 
     const linePath = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
     const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${height - padding} L ${coords[0].x.toFixed(1)} ${height - padding} Z`;
-    const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="#22c55e" stroke="#000000" stroke-width="1.5" />`).join('');
+    const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="${strokeColor}" stroke="#000000" stroke-width="1.5" />`).join('');
 
     return `
         <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:110px; display:block; overflow:visible;">
             <defs>
                 <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#22c55e" stop-opacity="0.25"/>
-                    <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+                    <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="${strokeColor}" stop-opacity="0"/>
                 </linearGradient>
             </defs>
             <path d="${areaPath}" fill="url(#${gradientId})"></path>
-            <path d="${linePath}" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="${linePath}" fill="none" stroke="${strokeColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
             ${dots}
         </svg>
     `;
@@ -1655,33 +1689,9 @@ function renderStats() {
         </div>
     `;
 
-    renderWeightTrend();
     renderProgressExercisePicker(allSets);
-    renderPersonalRecords(allSets);
     renderMuscleBalance();
-}
-
-function renderWeightTrend() {
-    const el = document.getElementById('weight-trend-chart');
-    if (weightHistory.length < 2) {
-        el.innerHTML = `<div class="empty-state" style="margin-top:0; padding: 20px 0;">Log at least 2 weigh-ins to see your trend.</div>`;
-        return;
-    }
-    const chronological = [...weightHistory].reverse();
-    const points = chronological.map(w => ({ value: w.weight }));
-    const first = chronological[0];
-    const last = chronological[chronological.length - 1];
-    const diff = last.weight - first.weight;
-    const diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(1);
-
-    el.innerHTML = `
-        ${buildLineChartSVG(points, 'weightGradient')}
-        <div style="display:flex; justify-content:space-between; margin-top:10px; color:var(--text-muted); font-size:0.8rem; font-weight:600;">
-            <span>${new Date(first.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-            <span style="color: var(--text-main); font-weight:800;">${diffStr} lbs</span>
-            <span>${new Date(last.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-        </div>
-    `;
+    renderPersonalRecords(allSets);
 }
 
 function renderProgressExercisePicker(allSets) {
@@ -1741,7 +1751,7 @@ function renderExerciseProgress() {
         const diff = last.weight - first.weight;
         const diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(0);
         chartEl.innerHTML = `
-            ${buildLineChartSVG(points, 'exerciseGradient')}
+            ${buildLineChartSVG(points, 'exerciseGradient', '#22c55e')}
             <div style="display:flex; justify-content:space-between; margin-top:10px; color:var(--text-muted); font-size:0.8rem; font-weight:600;">
                 <span>${new Date(first.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                 <span style="color: var(--text-main); font-weight:800;">${diffStr} lbs</span>
@@ -1856,8 +1866,6 @@ if (currentWorkout.length > 0) {
     navigate('home');
 }
 </script>
-
-
 
 </body>
 </html>
