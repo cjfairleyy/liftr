@@ -715,8 +715,11 @@
         { name: "Machine Ab Wheel Rollout", category: "Core", equipment: "Machine" }
     ].sort((a, b) => a.name.localeCompare(b.name));
 
+// --- CORE TRACKING VARIABLES ---
 let currentWorkout = [];
 let workoutHistory = [];
+let supersetSourceId = null;
+let activeMenuExerciseId = null;
 
 // Load saved data immediately when the app opens
 try {
@@ -729,12 +732,14 @@ try {
     console.error("No saved data found or error loading data.");
 }
 
+// Save data to device storage
 function saveApp() {
     localStorage.setItem('myWorkoutApp_data', JSON.stringify({
         currentWorkout: currentWorkout,
         workoutHistory: workoutHistory
     }));
 }
+
 
     let workoutTimerInterval;
     let secondsElapsed = 0;
