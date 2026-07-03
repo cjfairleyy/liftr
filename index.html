@@ -99,14 +99,16 @@
 
         h2 { font-size: 1.6rem; margin-bottom: 20px; }
 
-        /* Screens */
-        .screen {
-            display: none;
-            padding: 20px 20px 120px;
-            flex-grow: 1;
-            animation: fadeIn 0.3s ease;
-        }
-        .screen.active { display: block; }
+.screen {
+    display: none; /* Hides all screens by default */
+    padding: 20px;
+    margin-bottom: 80px;
+}
+
+.screen.active {
+    display: block; /* Only shows the screen if it has the 'active' class */
+}
+
         
         #workout-screen.active, #exercise-modal.active {
             padding-top: 0;
@@ -863,11 +865,19 @@ function saveApp() {
 }
 
 
-// --- SCREEN NAVIGATION ---
-function showScreen(id) {
+function showScreen(screenId) {
+    // Hide all screens
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    
+    // Show the requested screen
+    const target = document.getElementById(screenId);
+    if (target) {
+        target.classList.add('active');
+    } else {
+        console.error("Screen not found: " + screenId);
+    }
 }
+
 
 function navigate(tab) {
     const headerEl = document.getElementById('main-header');
@@ -1990,6 +2000,13 @@ function renderPersonalRecords(allSets) {
     `).join('');
 }
 
+function estimate1RM(weight, reps) {
+    if (reps === 1) return weight;
+    // Brzycki formula for estimating 1-Rep Max
+    return weight / (1.0278 - (0.0278 * reps));
+}
+
+    
 function renderMuscleBalance() {
     const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const counts = {};
