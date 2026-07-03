@@ -966,63 +966,172 @@ function updateStreak() {
 }
 
 
-function finishWorkout() {
-    if (currentWorkout.length === 0) {
-        cancelWorkout();
-        return;
+// Safe helper to grab all sets from history if missing elsewhere
+function safeGetAllSets() {
+    if (typeof getAllSets === 'function') {
+        try { return getAllSets(); } catch(e) {}
     }
-    stopTimer();
-    const durationSeconds = workoutStartTime ? Math.floor((Date.now() - workoutStartTime) / 1000) : 0;
-
-    const completedSession = {
-        date: new Date().toISOString(),
-        name: workoutName || 'Workout',
-        durationSeconds: durationSeconds,
-        exercises: JSON.parse(JSON.stringify(currentWorkout))
-    };
-
-    // Evaluate old PR ceiling state before recording this log profile
-    const historicalSets = getAllSets();
-    const recordsCeiling = {};
-    historicalSets.forEach(s => {
-        if (s.isBW || s.weight <= 0 || s.reps <= 0) return;
-        const est = estimate1RM(s.weight, s.reps);
-        if (!recordsCeiling[s.exerciseName] || est > recordsCeiling[s.exerciseName]) {
-            recordsCeiling[s.exerciseName] = est;
-        }
+    const sets = [];
+    if (!workoutHistory) return sets;
+    workoutHistory.forEach(w => {
+        if (!w.exercises) return;
+        w.exercises.forEach(ex => {
+            if (!ex.sets) return;
+            ex.sets.forEach(s => {
+                sets.push({
+                    exerciseName: ex.name,
+                    weight: parseFloat(s.weight) || 0,
+                    reps: parseInt(s.reps) || 0,
+                    isBW: !!s.isBW
+                });
+            });
+        });
     });
+    return sets;
+}
 
-    workoutHistory.unshift(completedSession);
+// Safe helper for 1RM calculation
+function safeEstimate1RM(weight, reps) {
+    if (reps === 1) return weight;
+    if (reps <= 0) return 0;
+    return weight / (1.0278 - (0.0278 * reps));
+}
 
-    currentWorkout = [];
-    workoutName = '';
-    workoutStartTime = null;
-    document.getElementById('workout-name-input').value = '';
-    saveApp();
-    
-    renderPostWorkout(completedSession, recordsCeiling);
+function finishWorkout() {
+    try {
+        if (!currentWorkout || currentWorkout.length === 0) {
+            cancelWorkout();
+            return;
+        }
+        stopTimer();
+        const durationSeconds = workoutStartTime ? Math.floor((Date.now() - workoutStartTime) / 1000) : 0;
+
+        const completedSession = {
+            date: new Date().toISOString(),
+            name: workoutName || 'Workout',
+            durationSeconds: durationSeconds,
+            exercises: JSON.parse(JSON.stringify(currentWorkout))
+        };
+
+        // Track historical bests safely
+        const historicalSets = safeGetAllSets();
+        const recordsCeiling = {};
+        historicalSets.forEach(s => {
+            if (s.isBW || s.weight <= 0 || s.reps <= 0) return;
+            const est = safeEstimate1RM(s.weight, s.reps);
+            if (!recordsCeiling[s.exerciseName] || est > recordsCeiling[s.exerciseName]) {
+                recordsCeiling[s.exerciseName] = est;
+            }
+        });
+
+        workoutHistory.unshift(completedSession);
+
+        // Reset tracking states safely
+        currentWorkout = [];
+        workoutName = '';
+        workoutStartTime = null;
+        const nameInput = document.getElementById('workout-name-input');
+        if (nameInput) nameInput.value = '';
+        
+        if (typeof saveApp === 'function') saveApp();
+        
+        renderPostWorkout(completedSession, recordsCeiling);
+    } catch (error) {
+        console.error("Crash inside finishWorkout:", error);
+        alert("An error occurred during save. Check the developer console.");
+    }
 }
 
 function renderPostWorkout(session, recordsCeiling) {
-    document.getElementById('bottom-nav').style.display = 'none';
-    const headerEl = document.getElementById('main-header');
-    if (headerEl) headerEl.classList.remove('has-content');
+    try {
+        const bottomNav = document.getElementById('bottom-nav');
+        if (bottomNav) bottomNav.style.display = 'none';
+        
+        const headerEl = document.getElementById('main-header');
+        if (headerEl) headerEl.classList.remove('has-content');
 
-    const mins = Math.round(session.durationSeconds / 60) || 1;
-    let totalVolume = 0;
-    let totalSets = 0;
-    const groupsHit = new Set();
+        const mins = Math.round(session.durationSeconds / 60) || 1;
+        let totalSets = 0;
+        const groupsHit = new Set();
 
-    session.exercises.forEach(ex => {
-        const cat = exerciseCategoryMap[ex.name] || 'Other';
-        groupsHit.add(cat);
-        ex.sets.forEach(s => {
-            totalSets++;
-            if (!s.isBW) {
-                totalVolume += (parseFloat(s.weight) || 0) * (parseFloat(s.reps) || 0);
-            }
+        session.exercises.forEach(ex => {
+            const cat = (typeof exerciseCategoryMap !== 'undefined' ? exerciseCategoryMap[ex.name] : null) || 'Other';
+            groupsHit.add(cat);
+            if (ex.sets) totalSets += ex.sets.length;
         });
-    });
+
+        const statsContainer = document.getElementById('post-workout-stats');
+        if (statsContainer) {
+            statsContainer.innerHTML = `
+                <div class="stat-tile">
+                    <div class="stat-value">${mins}</div>
+                    <div class="stat-label">Minutes</div>
+                </div>
+                <div class="stat-tile">
+                    <div class="stat-value">${totalSets}</div>
+                    <div class="stat-label">Sets Logged</div>
+                </div>
+                <div class="stat-tile" style="grid-column: span 2;">
+                    <div class="stat-value" style="font-size:1.1rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        ${Array.from(groupsHit).join(', ') || 'None'}
+                    </div>
+                    <div class="stat-label">Muscles Targeted</div>
+                </div>
+            `;
+        }
+
+        const summaryContainer = document.getElementById('post-workout-exercises');
+        if (!summaryContainer) return;
+        summaryContainer.innerHTML = '';
+
+        session.exercises.forEach(exercise => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.style.marginBottom = '12px';
+
+            let exercisePrHit = false;
+            if (exercise.sets) {
+                exercise.sets.forEach(s => {
+                    if (s.isBW || !s.weight || !s.reps) return;
+                    const currentEst = safeEstimate1RM(parseFloat(s.weight), parseFloat(s.reps));
+                    const oldRecord = recordsCeiling[exercise.name] || 0;
+                    if (currentEst > oldRecord) {
+                        exercisePrHit = true;
+                    }
+                });
+            }
+
+            const setsListHtml = exercise.sets ? exercise.sets.map((set, sIdx) => {
+                const weightStr = set.isBW ? 'BW' : `${set.weight || 0} lbs`;
+                return `
+                    <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:0.9rem; color:var(--text-muted);">
+                        <span>Set ${sIdx + 1}</span>
+                        <span>${weightStr} &times; ${set.reps || 0}</span>
+                    </div>
+                `;
+            }).join('') : '';
+
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="font-weight: 700;">${exercise.name}</div>
+                    ${exercisePrHit ? `<span style="background:#eab308; color:#000; font-size:0.65rem; font-weight:900; padding:2px 6px; border-radius:4px; text-transform:uppercase;">🔥 New PR</span>` : ''}
+                </div>
+                ${setsListHtml}
+            `;
+            summaryContainer.appendChild(div);
+        });
+
+        if (typeof showScreen === 'function') {
+            showScreen('post-workout-screen');
+        } else {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const postScreen = document.getElementById('post-workout-screen');
+            if (postScreen) postScreen.classList.add('active');
+        }
+    } catch (error) {
+        console.error("Crash inside renderPostWorkout:", error);
+    }
+}
 
     document.getElementById('post-workout-subtitle').textContent = session.name;
     document.getElementById('post-workout-stats').innerHTML = `
