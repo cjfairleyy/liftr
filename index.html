@@ -1333,6 +1333,18 @@ function filterExercises() {
     renderExerciseList();
 }
 
+function toggleFavorite(name, event) {
+    if (event) event.stopPropagation(); // Prevents adding exercise when star is tapped
+    const idx = favoriteExercises.indexOf(name);
+    if (idx > -1) {
+        favoriteExercises.splice(idx, 1);
+    } else {
+        favoriteExercises.push(name);
+    }
+    saveApp();
+    renderExerciseList();
+}
+
 function renderExerciseList() {
     const search = document.getElementById('search-exercise').value.toLowerCase().trim();
     const list = document.getElementById('exercise-list');
@@ -1340,7 +1352,15 @@ function renderExerciseList() {
 
     const filtered = exerciseDatabase.filter(ex => {
         const matchesSearch = ex.name.toLowerCase().includes(search);
-        const matchesCategory = currentCategory === 'All' || ex.category === currentCategory;
+        
+        // Handle favorite classification logic
+        let matchesCategory = false;
+        if (currentCategory === 'Favs') {
+            matchesCategory = favoriteExercises.includes(ex.name);
+        } else {
+            matchesCategory = currentCategory === 'All' || ex.category === currentCategory;
+        }
+        
         const matchesEquipment = currentEquipment === 'All' || ex.equipment === currentEquipment;
         return matchesSearch && matchesCategory && matchesEquipment;
     });
@@ -1351,13 +1371,23 @@ function renderExerciseList() {
     }
 
     filtered.forEach(ex => {
+        const isFav = favoriteExercises.includes(ex.name);
         const item = document.createElement('div');
         item.className = 'list-item';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        
         item.innerHTML = `
-            <div>
+            <div style="flex-grow: 1;">
                 <div class="list-item-title">${ex.name}</div>
                 <div class="list-item-sub">${ex.category} &middot; ${ex.equipment}</div>
             </div>
+            <button class="icon-btn" onclick="toggleFavorite('${ex.name.replace(/'/g, "\\'")}', event)" style="color: ${isFav ? '#eab308' : 'var(--text-placeholder)'}; padding: 12px;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="${isFav ? '#eab308' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+            </button>
         `;
         item.onclick = () => selectExercise(ex.name);
         list.appendChild(item);
