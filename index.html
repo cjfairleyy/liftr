@@ -64,19 +64,26 @@
         h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.5px; }
         
         header {
-            padding: 24px 24px 16px;
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            padding: 0;
+            background-color: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
             position: sticky;
             top: 0;
             z-index: 10;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            transition: padding 0.2s, background-color 0.2s;
         }
+        header.has-content {
+            padding: 24px 24px 16px;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        header h1 { font-size: 1.5rem; font-weight: 800; display: none; }
 
-        header h1 { font-size: 1.5rem; font-weight: 800; }
         
         .header-btn {
             background: none;
@@ -651,7 +658,21 @@
                 <button class="btn-small finish" onclick="finishWorkout()">Finish</button>
             </div>
         </div>
-        
+            <div id="post-workout-screen" class="screen">
+        <div style="text-align: center; margin-top: 24px; margin-bottom: 32px;">
+            <div style="font-size: 3rem;">🎉</div>
+            <h2 style="margin-bottom: 4px; margin-top: 12px;">Workout Complete!</h2>
+            <p id="post-workout-subtitle" style="color: var(--text-muted); margin: 0; font-weight: 500;"></p>
+        </div>
+
+        <div class="stat-grid" id="post-workout-stats"></div>
+
+        <h3 class="section-title" style="margin-top: 32px;">Workout Summary</h3>
+        <div id="post-workout-exercises"></div>
+
+        <button class="btn" style="margin-top: 32px;" onclick="navigate('home')">Great Work</button>
+    </div>
+
         <div style="padding: 0 20px;">
             <div id="workout-cards"></div>
             <button class="btn btn-outline" style="margin-bottom: 24px;" onclick="showExerciseModal()">
@@ -671,7 +692,7 @@
             
             <div class="filter-row" id="muscle-filters">
                 <button class="filter-pill active" onclick="setCategory('All')">All</button>
-                <button class="filter-pill" onclick="setCategory('Favs')" style="color: #eab308;">★ Favs</button>
+                <button class="filter-pill" onclick="setCategory('Favorites')">Favorites</button>
                 <button class="filter-pill" onclick="setCategory('Chest')">Chest</button>
                 <button class="filter-pill" onclick="setCategory('Back')">Back</button>
                 <button class="filter-pill" onclick="setCategory('Legs')">Legs</button>
@@ -679,6 +700,7 @@
                 <button class="filter-pill" onclick="setCategory('Arms')">Arms</button>
                 <button class="filter-pill" onclick="setCategory('Core')">Core</button>
             </div>
+
             
             <div class="filter-row" id="equipment-filters">
                 <button class="filter-pill active" onclick="setEquipment('All')">All</button>
@@ -848,18 +870,21 @@ function showScreen(id) {
 }
 
 function navigate(tab) {
+    const headerEl = document.getElementById('main-header');
+    const titleEl = document.getElementById('app-title');
+    
     document.getElementById('bottom-nav').style.display = 'flex';
     document.getElementById('header-action').style.display = 'none';
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
 
-    // Only show the liftr header title on the home screen tab
-    const titleEl = document.getElementById('app-title');
     if (tab === 'home') {
+        if (headerEl) headerEl.classList.add('has-content');
         if (titleEl) titleEl.style.display = 'block';
         showScreen('home-screen');
         document.getElementById('nav-home').classList.add('active');
         updateStreak();
     } else {
+        if (headerEl) headerEl.classList.remove('has-content');
         if (titleEl) titleEl.style.display = 'none';
         
         if (tab === 'history') {
@@ -878,26 +903,28 @@ function navigate(tab) {
     }
 }
 
-function goBack() {
-    document.getElementById('header-action').style.display = 'none';
-    navigate('history');
-}
-
-function updateStreak() {
-    document.getElementById('streak-text').textContent = workoutHistory.length;
-}
-
-// --- WORKOUT LIFECYCLE ---
 function startWorkout() {
     if (!workoutStartTime) workoutStartTime = Date.now();
     document.getElementById('workout-name-input').value = workoutName;
     document.getElementById('bottom-nav').style.display = 'none';
+    
+    const headerEl = document.getElementById('main-header');
     const titleEl = document.getElementById('app-title');
-    if (titleEl) titleEl.style.display = 'none'; // Hide title when workout active
+    if (headerEl) headerEl.classList.remove('has-content');
+    if (titleEl) titleEl.style.display = 'none';
+    
     showScreen('workout-screen');
     renderWorkout();
     startTimer();
     saveApp();
+}
+
+function setCategory(cat) {
+    currentCategory = cat;
+    document.querySelectorAll('#muscle-filters .filter-pill').forEach(p => {
+        p.classList.toggle('active', p.textContent.trim() === cat);
+    });
+    renderExerciseList();
 }
 
 
@@ -919,6 +946,16 @@ function performCancelWorkout() {
     navigate('home');
 }
 
+function goBack() {
+    document.getElementById('header-action').style.display = 'none';
+    navigate('history');
+}
+
+function updateStreak() {
+    document.getElementById('streak-text').textContent = workoutHistory.length;
+}
+
+
 function finishWorkout() {
     if (currentWorkout.length === 0) {
         cancelWorkout();
@@ -927,19 +964,112 @@ function finishWorkout() {
     stopTimer();
     const durationSeconds = workoutStartTime ? Math.floor((Date.now() - workoutStartTime) / 1000) : 0;
 
-    workoutHistory.unshift({
+    const completedSession = {
         date: new Date().toISOString(),
         name: workoutName || 'Workout',
         durationSeconds: durationSeconds,
         exercises: JSON.parse(JSON.stringify(currentWorkout))
+    };
+
+    // Evaluate old PR ceiling state before recording this log profile
+    const historicalSets = getAllSets();
+    const recordsCeiling = {};
+    historicalSets.forEach(s => {
+        if (s.isBW || s.weight <= 0 || s.reps <= 0) return;
+        const est = estimate1RM(s.weight, s.reps);
+        if (!recordsCeiling[s.exerciseName] || est > recordsCeiling[s.exerciseName]) {
+            recordsCeiling[s.exerciseName] = est;
+        }
     });
+
+    workoutHistory.unshift(completedSession);
 
     currentWorkout = [];
     workoutName = '';
     workoutStartTime = null;
     document.getElementById('workout-name-input').value = '';
     saveApp();
-    navigate('home');
+    
+    renderPostWorkout(completedSession, recordsCeiling);
+}
+
+function renderPostWorkout(session, recordsCeiling) {
+    document.getElementById('bottom-nav').style.display = 'none';
+    const headerEl = document.getElementById('main-header');
+    if (headerEl) headerEl.classList.remove('has-content');
+
+    const mins = Math.round(session.durationSeconds / 60) || 1;
+    let totalVolume = 0;
+    let totalSets = 0;
+    const groupsHit = new Set();
+
+    session.exercises.forEach(ex => {
+        const cat = exerciseCategoryMap[ex.name] || 'Other';
+        groupsHit.add(cat);
+        ex.sets.forEach(s => {
+            totalSets++;
+            if (!s.isBW) {
+                totalVolume += (parseFloat(s.weight) || 0) * (parseFloat(s.reps) || 0);
+            }
+        });
+    });
+
+    document.getElementById('post-workout-subtitle').textContent = session.name;
+    document.getElementById('post-workout-stats').innerHTML = `
+        <div class="stat-tile">
+            <div class="stat-value">${mins}</div>
+            <div class="stat-label">Minutes</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-value">${totalSets}</div>
+            <div class="stat-label">Sets Logged</div>
+        </div>
+        <div class="stat-tile" style="grid-column: span 2;">
+            <div class="stat-value" style="font-size:1.4rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${Array.from(groupsHit).join(', ') || 'None'}
+            </div>
+            <div class="stat-label">Muscles Targeted</div>
+        </div>
+    `;
+
+    const summaryContainer = document.getElementById('post-workout-exercises');
+    summaryContainer.innerHTML = '';
+
+    session.exercises.forEach(exercise => {
+        const div = document.createElement('div');
+        div.className = 'card';
+
+        let exercisePrHit = false;
+        exercise.sets.forEach(s => {
+            if (s.isBW || !s.weight || !s.reps) return;
+            const currentEst = estimate1RM(parseFloat(s.weight), parseFloat(s.reps));
+            const oldRecord = recordsCeiling[exercise.name] || 0;
+            if (currentEst > oldRecord) {
+                exercisePrHit = true;
+            }
+        });
+
+        const setsListHtml = exercise.sets.map((set, sIdx) => {
+            const weightStr = set.isBW ? 'BW' : `${set.weight || 0} lbs`;
+            return `
+                <div class="detail-set-row">
+                    <span>Set ${sIdx + 1}</span>
+                    <span>${weightStr} &times; ${set.reps || 0}</span>
+                </div>
+            `;
+        }).join('');
+
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                <div style="font-weight: 700; font-size: 1.05rem;">${exercise.name}</div>
+                ${exercisePrHit ? `<span style="background:#eab308; color:#000; font-size:0.65rem; font-weight:900; padding:3px 6px; border-radius:6px; text-transform:uppercase; letter-spacing:0.5px;">🔥 New PR</span>` : ''}
+            </div>
+            ${setsListHtml}
+        `;
+        summaryContainer.appendChild(div);
+    });
+
+    showScreen('post-workout-screen');
 }
 
 // --- TIMER ---
@@ -1353,13 +1483,14 @@ function renderExerciseList() {
     const filtered = exerciseDatabase.filter(ex => {
         const matchesSearch = ex.name.toLowerCase().includes(search);
         
-        // Handle favorite classification logic
+        // Handle favorites lookup matches smoothly
         let matchesCategory = false;
-        if (currentCategory === 'Favs') {
+        if (currentCategory === 'Favorites') {
             matchesCategory = favoriteExercises.includes(ex.name);
         } else {
             matchesCategory = currentCategory === 'All' || ex.category === currentCategory;
         }
+
         
         const matchesEquipment = currentEquipment === 'All' || ex.equipment === currentEquipment;
         return matchesSearch && matchesCategory && matchesEquipment;
