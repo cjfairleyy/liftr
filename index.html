@@ -564,7 +564,7 @@
 
 <div id="app-container">
     <header id="main-header">
-        <h1>liftr</h1>
+        <h1 id="app-title">liftr</h1>
         <button id="header-action" class="header-btn" style="display:none;" onclick="goBack()">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Back
@@ -671,6 +671,7 @@
             
             <div class="filter-row" id="muscle-filters">
                 <button class="filter-pill active" onclick="setCategory('All')">All</button>
+                <button class="filter-pill" onclick="setCategory('Favs')" style="color: #eab308;">★ Favs</button>
                 <button class="filter-pill" onclick="setCategory('Chest')">Chest</button>
                 <button class="filter-pill" onclick="setCategory('Back')">Back</button>
                 <button class="filter-pill" onclick="setCategory('Legs')">Legs</button>
@@ -688,6 +689,7 @@
                 <button class="filter-pill" onclick="setEquipment('Bodyweight')">Bodyweight</button>
             </div>
         </div>
+
 
         <div id="exercise-list"></div>
     </div>
@@ -795,6 +797,7 @@
 let currentWorkout = [];
 let workoutHistory = [];
 let weightHistory = [];
+let favoriteExercises = []; // New array to store favorite names
 let workoutName = '';
 let workoutStartTime = null;
 let supersetSourceId = null;
@@ -817,6 +820,7 @@ try {
         currentWorkout = savedData.currentWorkout || [];
         workoutHistory = savedData.workoutHistory || [];
         weightHistory = savedData.weightHistory || [];
+        favoriteExercises = savedData.favoriteExercises || []; // Load favorites
         workoutName = savedData.workoutName || '';
         workoutStartTime = savedData.workoutStartTime || null;
     }
@@ -830,10 +834,12 @@ function saveApp() {
         currentWorkout: currentWorkout,
         workoutHistory: workoutHistory,
         weightHistory: weightHistory,
+        favoriteExercises: favoriteExercises, // Save favorites
         workoutName: workoutName,
         workoutStartTime: workoutStartTime
     }));
 }
+
 
 // --- SCREEN NAVIGATION ---
 function showScreen(id) {
@@ -846,22 +852,29 @@ function navigate(tab) {
     document.getElementById('header-action').style.display = 'none';
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
 
+    // Only show the liftr header title on the home screen tab
+    const titleEl = document.getElementById('app-title');
     if (tab === 'home') {
+        if (titleEl) titleEl.style.display = 'block';
         showScreen('home-screen');
         document.getElementById('nav-home').classList.add('active');
         updateStreak();
-    } else if (tab === 'history') {
-        showScreen('history-screen');
-        document.getElementById('nav-history').classList.add('active');
-        renderHistory();
-    } else if (tab === 'weight') {
-        showScreen('weight-screen');
-        document.getElementById('nav-weight').classList.add('active');
-        renderWeight();
-    } else if (tab === 'stats') {
-        showScreen('stats-screen');
-        document.getElementById('nav-stats').classList.add('active');
-        renderStats();
+    } else {
+        if (titleEl) titleEl.style.display = 'none';
+        
+        if (tab === 'history') {
+            showScreen('history-screen');
+            document.getElementById('nav-history').classList.add('active');
+            renderHistory();
+        } else if (tab === 'weight') {
+            showScreen('weight-screen');
+            document.getElementById('nav-weight').classList.add('active');
+            renderWeight();
+        } else if (tab === 'stats') {
+            showScreen('stats-screen');
+            document.getElementById('nav-stats').classList.add('active');
+            renderStats();
+        }
     }
 }
 
@@ -879,11 +892,14 @@ function startWorkout() {
     if (!workoutStartTime) workoutStartTime = Date.now();
     document.getElementById('workout-name-input').value = workoutName;
     document.getElementById('bottom-nav').style.display = 'none';
+    const titleEl = document.getElementById('app-title');
+    if (titleEl) titleEl.style.display = 'none'; // Hide title when workout active
     showScreen('workout-screen');
     renderWorkout();
     startTimer();
     saveApp();
 }
+
 
 function cancelWorkout() {
     if (currentWorkout.length > 0) {
