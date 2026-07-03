@@ -1017,13 +1017,17 @@ function renderPostWorkout(session, recordsCeiling) {
 
     const mins = Math.round(session.durationSeconds / 60) || 1;
     let totalSets = 0;
+    let totalVolume = 0;
     const groupsHit = new Set();
 
     session.exercises.forEach(ex => {
         const cat = exerciseCategoryMap[ex.name] || 'Other';
         groupsHit.add(cat);
-        ex.sets.forEach(() => {
+        ex.sets.forEach(s => {
             totalSets++;
+            if (!s.isBW) {
+                totalVolume += (parseFloat(s.weight) || 0) * (parseFloat(s.reps) || 0);
+            }
         });
     });
 
@@ -1087,6 +1091,16 @@ function renderPostWorkout(session, recordsCeiling) {
             `;
             summaryContainer.appendChild(div);
         });
+
+        // Appends a safe home escape button at the bottom of the summary container to go back home smoothly
+        const homeBtnDiv = document.createElement('div');
+        homeBtnDiv.style.margin = '24px 0 16px 0';
+        homeBtnDiv.innerHTML = `
+            <button class="add-set-btn" style="background: #22c55e; color: #fff; font-weight: 700; padding: 14px; border-radius: 10px; width: 100%; border: none;" onclick="navigate('home')">
+                Finish & Go Home
+            </button>
+        `;
+        summaryContainer.appendChild(homeBtnDiv);
     }
 
     showScreen('post-workout-screen');
@@ -1191,7 +1205,6 @@ function moveGroup(exerciseId, direction) {
         swapEndIdx = startIdx - 1;
         swapStartIdx = swapEndIdx;
         if (currentWorkout[swapEndIdx].supersetId) {
-            while(swapStartIdx > 0 && currentWorkout[swapStartIdx - 1].supersetId === currentWorkout[swapEndIdx].supersetId) startIdx--; // altered assignment line error protection
             swapStartIdx = currentWorkout.findIndex(ex => ex.id === currentWorkout[swapEndIdx].id);
             if (currentWorkout[swapStartIdx].supersetId) {
                 while (swapStartIdx > 0 && currentWorkout[swapStartIdx - 1].supersetId === currentWorkout[swapEndIdx].supersetId) swapStartIdx--;
@@ -1275,7 +1288,6 @@ function toggleSet(exerciseId, setIndex) {
     renderWorkout();
 }
 
-// Fixed onchange update hook reference binding
 function updateSetData(exerciseId, setIndex, field, value) {
     const ex = currentWorkout.find(e => e.id === exerciseId);
     if (ex) {
@@ -1515,7 +1527,6 @@ function renderExerciseList() {
     const filtered = exerciseDatabase.filter(ex => {
         const matchesSearch = ex.name.toLowerCase().includes(search);
         
-        // Handle favorites lookup matches smoothly
         let matchesCategory = false;
         if (currentCategory === 'Favorites') {
             matchesCategory = favoriteExercises.includes(ex.name);
@@ -1776,14 +1787,13 @@ function renderWeightTrend() {
     const last = chronological[chronological.length - 1];
     const diff = last.weight - first.weight;
     
-    // Custom color indicators: green for losing weight, red for gaining weight
     let trendColor = 'var(--text-muted)';
     let diffStr = 'No change';
     if (diff < 0) {
-        trendColor = '#22c55e'; // Green for losing weight
+        trendColor = '#22c55e';
         diffStr = `${Math.abs(diff).toFixed(1)} lbs lost`;
     } else if (diff > 0) {
-        trendColor = '#ef4444'; // Red for gaining weight
+        trendColor = '#ef4444';
         diffStr = `+${diff.toFixed(1)} lbs gained`;
     }
 
@@ -1844,11 +1854,9 @@ function getAllSets() {
     return sets;
 }
 
-// Single explicit standard declaration for calculations
 function estimate1RM(weight, reps) {
     if (reps <= 0 || weight <= 0) return 0;
     if (reps === 1) return weight;
-    // Brzycki formula for estimating 1-Rep Max
     return weight / (1.0278 - (0.0278 * reps));
 }
 
@@ -2099,7 +2107,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// App Boot Up Routing Engine Initialization Execution
 window.onload = function() {
     if (currentWorkout.length > 0) {
         startWorkout();
