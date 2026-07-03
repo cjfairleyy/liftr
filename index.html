@@ -818,6 +818,7 @@
     ].sort((a, b) => a.name.localeCompare(b.name));
 
 // --- CORE TRACKING VARIABLES ---
+// --- CORE TRACKING VARIABLES ---
 let currentWorkout = [];
 let workoutHistory = [];
 let weightHistory = [];
@@ -870,7 +871,10 @@ window.onload = function() {
     const selectEl = document.getElementById('progress-exercise-select');
     if (selectEl) {
         selectEl.innerHTML = exerciseDatabase.map(ex => `<option value="${ex.name}">${ex.name}</option>`).join('');
-        if (exerciseDatabase.length > 0) selectedProgressExercise = exerciseDatabase[0].name;
+        if (exerciseDatabase.length > 0) {
+            selectedProgressExercise = exerciseDatabase[0].name;
+            selectEl.value = selectedProgressExercise;
+        }
     }
     
     // Go to home screen instantly on startup
@@ -1009,10 +1013,10 @@ function setCategory(cat) {
 }
 
 function setEquipment(eq) {
-    currentEquipment = eq;
     document.querySelectorAll('#equipment-filters .filter-pill').forEach(p => {
         p.classList.toggle('active', p.textContent.trim() === eq || (eq === 'All' && p.textContent.trim() === 'All'));
     });
+    currentEquipment = eq;
     renderExerciseList();
 }
 
@@ -1083,7 +1087,6 @@ function renderExerciseList() {
 }
 
 function selectExercise(name) {
-    // Prevent adding duplicates into current running card list
     if (!currentWorkout.some(e => e.name === name)) {
         currentWorkout.push({
             id: Date.now() + Math.random().toString(36).substr(2, 5),
@@ -1413,6 +1416,7 @@ function renderWeight() {
 
     if (!weightHistory || weightHistory.length === 0) {
         list.innerHTML = '<div class="empty-state">No weight logs recorded yet.</div>';
+        updateWeightChart();
         return;
     }
 
@@ -1432,6 +1436,8 @@ function renderWeight() {
         `;
         list.appendChild(div);
     });
+    
+    updateWeightChart();
 }
 
 function logWeight() {
@@ -1455,6 +1461,40 @@ function deleteWeight(idx) {
     renderWeight();
 }
 
+function updateWeightChart() {
+    const section = document.getElementById('weight-trend-section');
+    const container = document.getElementById('weight-trend-chart');
+    if (!section || !container) return;
+
+    if (weightHistory.length < 2) {
+        section.style.display = 'none';
+        return;
+    }
+    section.style.display = 'block';
+
+    const sorted = [...weightHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const weights = sorted.map(w => w.weight);
+    const minW = Math.min(...weights) - 2;
+    const maxW = Math.max(...weights) + 2;
+    const range = maxW - minW || 1;
+
+    let points = sorted.map((w, i) => {
+        const x = (i / (sorted.length - 1)) * 100;
+        const y = 100 - ((w.weight - minW) / range) * 100;
+        return `${x},${y}`;
+    }).join(' ');
+
+    container.innerHTML = `
+        <svg viewBox="0 0 100 100" class="chart-svg" preserveAspectRatio="none">
+            <polyline fill="none" stroke="var(--mod-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${points}"/>
+        </svg>
+        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.75rem; color:var(--text-muted);">
+            <span>${new Date(sorted[0].date).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</span>
+            <span>${new Date(sorted[sorted.length-1].date).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</span>
+        </div>
+    `;
+}
+
 // --- STATS VIEW VISUALIZATIONS ---
 function renderStats() {
     const overview = document.getElementById('stats-overview');
@@ -1470,7 +1510,118 @@ function renderStats() {
             </div>
         `;
     }
+    
+    // Auto-update selection references
+    const selectEl = document.getElementById('progress-exercise-select');
+    if (selectEl && !selectedProgressExercise && exerciseDatabase.length > 0) {
+        selectedProgressExercise = selectEl.value;
+    }
+    
+    renderMuscleBalance();
+    renderExerciseProgress();
     renderPRList();
+}
+
+function renderMuscleBalance() {
+    const container = document.getElementById('muscle-balance-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const sets = getAllSets();
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // Last 30 days
+    const counts = { Chest: 0, Back: 0, Legs: 0, Shoulders: 0, Arms: 0, Core: 0 };
+
+    sets.forEach(s => {
+        if (new Date(s.date).getTime() > cutoff) {
+            const cat = exerciseCategoryMap[s.exerciseName];
+            if (cat && counts[cat] !== undefined) counts[cat]++;
+        }
+    });
+
+    const maxCount = Math.max(...Object.values(counts)) || 1;
+
+    Object.keys(counts).forEach(cat => {
+        const pct = (counts[cat] / maxCount) * 100;
+        const row = document.createElement('div');
+        row.style.marginBottom = '14px';
+        row.innerHTML = `
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600; margin-bottom:4px;">
+                <span>${cat}</span>
+                <span style="color:var(--text-muted);">${counts[cat]} sets</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+function renderExerciseProgress() {
+    const selectEl = document.getElementById('progress-exercise-select');
+    if (selectEl) selectedProgressExercise = selectEl.value;
+    
+    const container = document.getElementById('exercise-progress-chart');
+    const prEl = document.getElementById('exercise-progress-pr');
+    if (!container || !prEl) return;
+
+    container.innerHTML = '';
+    prEl.innerHTML = '';
+
+    if (!selectedProgressExercise) return;
+
+    const sets = getAllSets().filter(s => s.exerciseName === selectedProgressExercise);
+    if (sets.length === 0) {
+        container.innerHTML = '<div class="empty-state">No tracking data history found for this exercise.</div>';
+        return;
+    }
+
+    // Group milestones by workout day timeline mapping
+    const historyMap = {};
+    sets.forEach(s => {
+        const dStr = new Date(s.date).toLocaleDateString();
+        const est = estimate1RM(s.weight, s.reps);
+        if (!historyMap[dStr] || est > historyMap[dStr].est) {
+            historyMap[dStr] = { est: est, weight: s.weight, reps: s.reps };
+        }
+    });
+
+    const sortedDays = Object.keys(historyMap).sort((a, b) => new Date(a) - new Date(b));
+    const estMaxes = sortedDays.map(d => historyMap[d].est);
+    const absoluteMax = Math.max(...estMaxes);
+    const absoluteRecord = sets.reduce((best, cur) => (cur.weight > best.weight ? cur : best), {weight:0, reps:0});
+
+    prEl.innerHTML = `
+        <div class="card" style="margin-top:16px; border-left: 4px solid #eab308;">
+            <div style="font-size:0.75rem; text-transform:uppercase; font-weight:700; color:var(--text-muted); letter-spacing:1px;">Heavy Record Set</div>
+            <div style="font-size:1.3rem; font-weight:800; margin-top:2px;">${absoluteRecord.weight} lbs &times; ${absoluteRecord.reps}</div>
+        </div>
+    `;
+
+    if (sortedDays.length < 2) {
+        container.innerHTML = '<div class="empty-state">Log multiple sessions across distinct days to map a progress trend line.</div>';
+        return;
+    }
+
+    const minV = Math.min(...estMaxes) * 0.95;
+    const maxV = Math.max(...estMaxes) * 1.05;
+    const delta = maxV - minV || 1;
+
+    let points = sortedDays.map((d, i) => {
+        const x = (i / (sortedDays.length - 1)) * 100;
+        const y = 100 - ((historyMap[d].est - minV) / delta) * 100;
+        return `${x},${y}`;
+    }).join(' ');
+
+    container.innerHTML = `
+        <svg viewBox="0 0 100 100" class="chart-svg" preserveAspectRatio="none">
+            <polyline fill="none" stroke="#eab308" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${points}"/>
+        </svg>
+        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.75rem; color:var(--text-muted);">
+            <span>${sortedDays[0]}</span>
+            <span>${sortedDays[sortedDays.length-1]}</span>
+        </div>
+    `;
 }
 
 function renderPRList() {
@@ -1510,11 +1661,6 @@ function renderPRList() {
         list.appendChild(item);
     });
 }
-
-function renderExerciseProgress() {
-    // Left empty for compatibility layout purposes
-}
-
 </script>
 
 </body>
