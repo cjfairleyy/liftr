@@ -821,7 +821,7 @@
 let currentWorkout = [];
 let workoutHistory = [];
 let weightHistory = [];
-let favoriteExercises = []; // New array to store favorite names
+let favoriteExercises = []; // Stores favorite exercise names
 let workoutName = '';
 let workoutStartTime = null;
 let supersetSourceId = null;
@@ -844,7 +844,7 @@ try {
         currentWorkout = savedData.currentWorkout || [];
         workoutHistory = savedData.workoutHistory || [];
         weightHistory = savedData.weightHistory || [];
-        favoriteExercises = savedData.favoriteExercises || []; // Load favorites
+        favoriteExercises = savedData.favoriteExercises || [];
         workoutName = savedData.workoutName || '';
         workoutStartTime = savedData.workoutStartTime || null;
     }
@@ -858,40 +858,52 @@ function saveApp() {
         currentWorkout: currentWorkout,
         workoutHistory: workoutHistory,
         weightHistory: weightHistory,
-        favoriteExercises: favoriteExercises, // Save favorites
+        favoriteExercises: favoriteExercises,
         workoutName: workoutName,
         workoutStartTime: workoutStartTime
     }));
 }
 
-
-function showScreen(screenId) {
-    // Hide all screens
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+// --- APP INITIALIZATION ---
+window.onload = function() {
+    // Populate the dropdown filter in the stats view
+    const selectEl = document.getElementById('progress-exercise-select');
+    if (selectEl) {
+        selectEl.innerHTML = exerciseDatabase.map(ex => `<option value="${ex.name}">${ex.name}</option>`).join('');
+        if (exerciseDatabase.length > 0) selectedProgressExercise = exerciseDatabase[0].name;
+    }
     
-    // Show the requested screen
+    // Go to home screen instantly on startup
+    navigate('home');
+};
+
+// --- NAVIGATION CORE ---
+function showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(screenId);
     if (target) {
         target.classList.add('active');
-    } else {
-        console.error("Screen not found: " + screenId);
     }
 }
-
 
 function navigate(tab) {
     const headerEl = document.getElementById('main-header');
     const titleEl = document.getElementById('app-title');
     
-    document.getElementById('bottom-nav').style.display = 'flex';
-    document.getElementById('header-action').style.display = 'none';
+    const bottomNav = document.getElementById('bottom-nav');
+    if (bottomNav) bottomNav.style.display = 'flex';
+    
+    const backBtn = document.getElementById('header-action');
+    if (backBtn) backBtn.style.display = 'none';
+    
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
 
     if (tab === 'home') {
         if (headerEl) headerEl.classList.add('has-content');
         if (titleEl) titleEl.style.display = 'block';
         showScreen('home-screen');
-        document.getElementById('nav-home').classList.add('active');
+        const navHome = document.getElementById('nav-home');
+        if (navHome) navHome.classList.add('active');
         updateStreak();
     } else {
         if (headerEl) headerEl.classList.remove('has-content');
@@ -899,24 +911,37 @@ function navigate(tab) {
         
         if (tab === 'history') {
             showScreen('history-screen');
-            document.getElementById('nav-history').classList.add('active');
+            const navHist = document.getElementById('nav-history');
+            if (navHist) navHist.classList.add('active');
             renderHistory();
         } else if (tab === 'weight') {
             showScreen('weight-screen');
-            document.getElementById('nav-weight').classList.add('active');
+            const navWeight = document.getElementById('nav-weight');
+            if (navWeight) navWeight.classList.add('active');
             renderWeight();
         } else if (tab === 'stats') {
             showScreen('stats-screen');
-            document.getElementById('nav-stats').classList.add('active');
+            const navStats = document.getElementById('nav-stats');
+            if (navStats) navStats.classList.add('active');
             renderStats();
         }
     }
 }
 
+function updateStreak() {
+    const streakEl = document.getElementById('streak-text');
+    if (streakEl) streakEl.textContent = workoutHistory ? workoutHistory.length : 0;
+}
+
+// --- WORKOUT ACTIVE SESSION CONTROL ---
 function startWorkout() {
     if (!workoutStartTime) workoutStartTime = Date.now();
-    document.getElementById('workout-name-input').value = workoutName;
-    document.getElementById('bottom-nav').style.display = 'none';
+    
+    const nameInput = document.getElementById('workout-name-input');
+    if (nameInput) nameInput.value = workoutName;
+    
+    const bottomNav = document.getElementById('bottom-nav');
+    if (bottomNav) bottomNav.style.display = 'none';
     
     const headerEl = document.getElementById('main-header');
     const titleEl = document.getElementById('app-title');
@@ -929,6 +954,52 @@ function startWorkout() {
     saveApp();
 }
 
+function cancelWorkout() {
+    stopTimer();
+    currentWorkout = [];
+    workoutName = '';
+    workoutStartTime = null;
+    const nameInput = document.getElementById('workout-name-input');
+    if (nameInput) nameInput.value = '';
+    saveApp();
+    navigate('home');
+}
+
+// --- TIMER CONTROLS ---
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (!workoutStartTime) return;
+        const diff = Math.floor((Date.now() - workoutStartTime) / 1000);
+        const hrs = Math.floor(diff / 3600);
+        const mins = Math.floor((diff % 3600) / 60);
+        const secs = diff % 60;
+        const formatted = [
+            hrs > 0 ? String(hrs).padStart(2, '0') : null,
+            String(mins).padStart(2, '0'),
+            String(secs).padStart(2, '0')
+        ].filter(Boolean).join(':');
+        const timerEl = document.getElementById('workout-timer');
+        if (timerEl) timerEl.textContent = formatted;
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+}
+
+// --- EXERCISE MODAL SELECTION & FAVORITES ---
+function showExerciseModal() {
+    const modal = document.getElementById('exercise-modal');
+    if (modal) modal.classList.add('active');
+    renderExerciseList();
+}
+
+function hideExerciseModal() {
+    const modal = document.getElementById('exercise-modal');
+    if (modal) modal.classList.remove('active');
+}
+
 function setCategory(cat) {
     currentCategory = cat;
     document.querySelectorAll('#muscle-filters .filter-pill').forEach(p => {
@@ -937,40 +1008,165 @@ function setCategory(cat) {
     renderExerciseList();
 }
 
+function setEquipment(eq) {
+    currentEquipment = eq;
+    document.querySelectorAll('#equipment-filters .filter-pill').forEach(p => {
+        p.classList.toggle('active', p.textContent.trim() === eq || (eq === 'All' && p.textContent.trim() === 'All'));
+    });
+    renderExerciseList();
+}
 
-function cancelWorkout() {
-    if (currentWorkout.length > 0) {
-        showConfirmModal('Discard this workout? This cannot be undone.', 'Discard', performCancelWorkout);
+function filterExercises() {
+    renderExerciseList();
+}
+
+function toggleFavorite(name, event) {
+    if (event) event.stopPropagation();
+    const idx = favoriteExercises.indexOf(name);
+    if (idx > -1) {
+        favoriteExercises.splice(idx, 1);
     } else {
-        performCancelWorkout();
+        favoriteExercises.push(name);
     }
-}
-
-function performCancelWorkout() {
-    stopTimer();
-    currentWorkout = [];
-    workoutName = '';
-    workoutStartTime = null;
-    document.getElementById('workout-name-input').value = '';
     saveApp();
-    navigate('home');
+    renderExerciseList();
 }
 
-function goBack() {
-    document.getElementById('header-action').style.display = 'none';
-    navigate('history');
-}
+function renderExerciseList() {
+    const searchEl = document.getElementById('search-exercise');
+    const search = searchEl ? searchEl.value.toLowerCase().trim() : '';
+    const list = document.getElementById('exercise-list');
+    if (!list) return;
+    list.innerHTML = '';
 
-function updateStreak() {
-    document.getElementById('streak-text').textContent = workoutHistory.length;
-}
+    const filtered = exerciseDatabase.filter(ex => {
+        const matchesSearch = ex.name.toLowerCase().includes(search);
+        
+        let matchesCategory = false;
+        if (currentCategory === 'Favorites') {
+            matchesCategory = favoriteExercises.includes(ex.name);
+        } else {
+            matchesCategory = currentCategory === 'All' || ex.category === currentCategory;
+        }
+        
+        const matchesEquipment = currentEquipment === 'All' || ex.equipment === currentEquipment;
+        return matchesSearch && matchesCategory && matchesEquipment;
+    });
 
-
-// Safe helper to grab all sets from history if missing elsewhere
-function safeGetAllSets() {
-    if (typeof getAllSets === 'function') {
-        try { return getAllSets(); } catch(e) {}
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state">No exercises found.</div>';
+        return;
     }
+
+    filtered.forEach(ex => {
+        const isFav = favoriteExercises.includes(ex.name);
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        
+        item.innerHTML = `
+            <div style="flex-grow: 1;">
+                <div class="list-item-title">${ex.name}</div>
+                <div class="list-item-sub">${ex.category} &middot; ${ex.equipment}</div>
+            </div>
+            <button class="icon-btn" onclick="toggleFavorite('${ex.name.replace(/'/g, "\\'")}', event)" style="color: ${isFav ? '#eab308' : 'var(--text-placeholder)'}; padding: 12px; background: none; border: none; cursor: pointer;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="${isFav ? '#eab308' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+            </button>
+        `;
+        item.onclick = () => selectExercise(ex.name);
+        list.appendChild(item);
+    });
+}
+
+function selectExercise(name) {
+    // Prevent adding duplicates into current running card list
+    if (!currentWorkout.some(e => e.name === name)) {
+        currentWorkout.push({
+            id: Date.now() + Math.random().toString(36).substr(2, 5),
+            name: name,
+            sets: [{ weight: '', reps: '', completed: false, isBW: false }]
+        });
+    }
+    hideExerciseModal();
+    renderWorkout();
+    saveApp();
+}
+
+// --- WORKOUT TRACKING LOG PANEL RENDERERS ---
+function renderWorkout() {
+    const container = document.getElementById('workout-cards');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (currentWorkout.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="margin-bottom:24px;">Tap below to add an exercise!</div>';
+        return;
+    }
+
+    currentWorkout.forEach((ex, exIdx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        let setsRowsHtml = ex.sets.map((set, sIdx) => {
+            return `
+                <div class="set-row ${set.completed ? 'completed' : ''}">
+                    <span style="font-weight:700; width:24px;">${sIdx + 1}</span>
+                    <input type="number" class="set-input" placeholder="lbs" value="${set.weight}" oninput="updateSet(${exIdx}, ${sIdx}, 'weight', this.value)" ${set.completed ? 'disabled' : ''}>
+                    <input type="number" class="set-input" placeholder="reps" value="${set.reps}" oninput="updateSet(${exIdx}, ${sIdx}, 'reps', this.value)" ${set.completed ? 'disabled' : ''}>
+                    <button class="btn-check" onclick="toggleSetComplete(${exIdx}, ${sIdx})" style="background:${set.completed ? 'var(--mod-success)' : 'var(--bg-island)'}; color:${set.completed ? '#000' : 'inherit'};">
+                        ✓
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        card.innerHTML = `
+            <div style="display:flex; justify-content:between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0; font-size:1.1rem; flex-grow:1;">${ex.name}</h3>
+                <button class="icon-btn" onclick="removeExercise(${exIdx})" style="background:none; border:none; cursor:pointer; color:var(--text-muted);">✕</button>
+            </div>
+            ${setsRowsHtml}
+            <button class="btn btn-outline" style="margin-top:12px; padding:8px 12px; font-size:0.85rem;" onclick="addSet(${exIdx})">+ Add Set</button>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function updateSet(exIdx, sIdx, field, val) {
+    if (currentWorkout[exIdx] && currentWorkout[exIdx].sets[sIdx]) {
+        currentWorkout[exIdx].sets[sIdx][field] = val;
+        saveApp();
+    }
+}
+
+function toggleSetComplete(exIdx, sIdx) {
+    if (currentWorkout[exIdx] && currentWorkout[exIdx].sets[sIdx]) {
+        currentWorkout[exIdx].sets[sIdx].completed = !currentWorkout[exIdx].sets[sIdx].completed;
+        renderWorkout();
+        saveApp();
+    }
+}
+
+function addSet(exIdx) {
+    if (currentWorkout[exIdx]) {
+        currentWorkout[exIdx].sets.push({ weight: '', reps: '', completed: false, isBW: false });
+        renderWorkout();
+        saveApp();
+    }
+}
+
+function removeExercise(exIdx) {
+    currentWorkout.splice(exIdx, 1);
+    renderWorkout();
+    saveApp();
+}
+
+// --- UTILITY DATA PARSERS ---
+function getAllSets() {
     const sets = [];
     if (!workoutHistory) return sets;
     workoutHistory.forEach(w => {
@@ -982,7 +1178,8 @@ function safeGetAllSets() {
                     exerciseName: ex.name,
                     weight: parseFloat(s.weight) || 0,
                     reps: parseInt(s.reps) || 0,
-                    isBW: !!s.isBW
+                    isBW: !!s.isBW,
+                    date: w.date
                 });
             });
         });
@@ -990,13 +1187,13 @@ function safeGetAllSets() {
     return sets;
 }
 
-// Safe helper for 1RM calculation
-function safeEstimate1RM(weight, reps) {
+function estimate1RM(weight, reps) {
     if (reps === 1) return weight;
     if (reps <= 0) return 0;
     return weight / (1.0278 - (0.0278 * reps));
 }
 
+// --- FINISH SESSION & POST-WORKOUT LOGIC ---
 function finishWorkout() {
     try {
         if (!currentWorkout || currentWorkout.length === 0) {
@@ -1013,12 +1210,11 @@ function finishWorkout() {
             exercises: JSON.parse(JSON.stringify(currentWorkout))
         };
 
-        // Track historical bests safely
-        const historicalSets = safeGetAllSets();
+        const historicalSets = getAllSets();
         const recordsCeiling = {};
         historicalSets.forEach(s => {
             if (s.isBW || s.weight <= 0 || s.reps <= 0) return;
-            const est = safeEstimate1RM(s.weight, s.reps);
+            const est = estimate1RM(s.weight, s.reps);
             if (!recordsCeiling[s.exerciseName] || est > recordsCeiling[s.exerciseName]) {
                 recordsCeiling[s.exerciseName] = est;
             }
@@ -1026,19 +1222,16 @@ function finishWorkout() {
 
         workoutHistory.unshift(completedSession);
 
-        // Reset tracking states safely
         currentWorkout = [];
         workoutName = '';
         workoutStartTime = null;
         const nameInput = document.getElementById('workout-name-input');
         if (nameInput) nameInput.value = '';
         
-        if (typeof saveApp === 'function') saveApp();
-        
+        saveApp();
         renderPostWorkout(completedSession, recordsCeiling);
     } catch (error) {
         console.error("Crash inside finishWorkout:", error);
-        alert("An error occurred during save. Check the developer console.");
     }
 }
 
@@ -1055,7 +1248,7 @@ function renderPostWorkout(session, recordsCeiling) {
         const groupsHit = new Set();
 
         session.exercises.forEach(ex => {
-            const cat = (typeof exerciseCategoryMap !== 'undefined' ? exerciseCategoryMap[ex.name] : null) || 'Other';
+            const cat = exerciseCategoryMap[ex.name] || 'Other';
             groupsHit.add(cat);
             if (ex.sets) totalSets += ex.sets.length;
         });
@@ -1093,7 +1286,7 @@ function renderPostWorkout(session, recordsCeiling) {
             if (exercise.sets) {
                 exercise.sets.forEach(s => {
                     if (s.isBW || !s.weight || !s.reps) return;
-                    const currentEst = safeEstimate1RM(parseFloat(s.weight), parseFloat(s.reps));
+                    const currentEst = estimate1RM(parseFloat(s.weight), parseFloat(s.reps));
                     const oldRecord = recordsCeiling[exercise.name] || 0;
                     if (currentEst > oldRecord) {
                         exercisePrHit = true;
@@ -1121,1053 +1314,207 @@ function renderPostWorkout(session, recordsCeiling) {
             summaryContainer.appendChild(div);
         });
 
-        if (typeof showScreen === 'function') {
-            showScreen('post-workout-screen');
-        } else {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const postScreen = document.getElementById('post-workout-screen');
-            if (postScreen) postScreen.classList.add('active');
-        }
+        showScreen('post-workout-screen');
     } catch (error) {
         console.error("Crash inside renderPostWorkout:", error);
     }
 }
 
-    document.getElementById('post-workout-subtitle').textContent = session.name;
-    document.getElementById('post-workout-stats').innerHTML = `
-        <div class="stat-tile">
-            <div class="stat-value">${mins}</div>
-            <div class="stat-label">Minutes</div>
-        </div>
-        <div class="stat-tile">
-            <div class="stat-value">${totalSets}</div>
-            <div class="stat-label">Sets Logged</div>
-        </div>
-        <div class="stat-tile" style="grid-column: span 2;">
-            <div class="stat-value" style="font-size:1.4rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                ${Array.from(groupsHit).join(', ') || 'None'}
-            </div>
-            <div class="stat-label">Muscles Targeted</div>
-        </div>
-    `;
-
-    const summaryContainer = document.getElementById('post-workout-exercises');
-    summaryContainer.innerHTML = '';
-
-    session.exercises.forEach(exercise => {
-        const div = document.createElement('div');
-        div.className = 'card';
-
-        let exercisePrHit = false;
-        exercise.sets.forEach(s => {
-            if (s.isBW || !s.weight || !s.reps) return;
-            const currentEst = estimate1RM(parseFloat(s.weight), parseFloat(s.reps));
-            const oldRecord = recordsCeiling[exercise.name] || 0;
-            if (currentEst > oldRecord) {
-                exercisePrHit = true;
-            }
-        });
-
-        const setsListHtml = exercise.sets.map((set, sIdx) => {
-            const weightStr = set.isBW ? 'BW' : `${set.weight || 0} lbs`;
-            return `
-                <div class="detail-set-row">
-                    <span>Set ${sIdx + 1}</span>
-                    <span>${weightStr} &times; ${set.reps || 0}</span>
-                </div>
-            `;
-        }).join('');
-
-        div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                <div style="font-weight: 700; font-size: 1.05rem;">${exercise.name}</div>
-                ${exercisePrHit ? `<span style="background:#eab308; color:#000; font-size:0.65rem; font-weight:900; padding:3px 6px; border-radius:6px; text-transform:uppercase; letter-spacing:0.5px;">🔥 New PR</span>` : ''}
-            </div>
-            ${setsListHtml}
-        `;
-        summaryContainer.appendChild(div);
-    });
-
-    showScreen('post-workout-screen');
-}
-
-// --- TIMER ---
-function startTimer() {
-    stopTimer();
-    updateTimerDisplay();
-    timerInterval = setInterval(updateTimerDisplay, 1000);
-}
-
-function stopTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
-}
-
-// --- SUPERSETS ---
-function updateTimerDisplay() {
-    if (!workoutStartTime) return;
-    const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
-    const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
-    const secs = String(elapsed % 60).padStart(2, '0');
-    document.getElementById('workout-timer').textContent = `${mins}:${secs}`;
-}
-
-function getSupersetLabel(supersetId, exercisesArray) {
-    if (!supersetId) return '';
-    const source = exercisesArray || currentWorkout;
-    const activeSupersets = [...new Set(source.map(e => e.supersetId).filter(Boolean))];
-    const index = activeSupersets.indexOf(supersetId);
-    return index !== -1 ? `Superset ${String.fromCharCode(65 + index)}` : 'Superset';
-}
-
-function startSupersetLink(exerciseId) {
-    supersetSourceId = exerciseId;
-    activeMenuExerciseId = null;
-    renderWorkout();
-}
-
-function completeSupersetLink(targetId) {
-    if (!supersetSourceId || supersetSourceId === targetId) return;
-
-    const sourceIndex = currentWorkout.findIndex(ex => ex.id === supersetSourceId);
-    const targetIndex = currentWorkout.findIndex(ex => ex.id === targetId);
-    
-    if (sourceIndex === -1 || targetIndex === -1) return;
-
-    const sourceEx = currentWorkout[sourceIndex];
-    const targetEx = currentWorkout[targetIndex];
-
-    const sharedId = sourceEx.supersetId || targetEx.supersetId || 'ss_' + Date.now();
-    sourceEx.supersetId = sharedId;
-    targetEx.supersetId = sharedId;
-
-    const [movedItem] = currentWorkout.splice(targetIndex, 1);
-    const newSourceIndex = currentWorkout.findIndex(ex => ex.id === supersetSourceId);
-    currentWorkout.splice(newSourceIndex + 1, 0, movedItem);
-
-    supersetSourceId = null;
-    renderWorkout();
-}
-
-function removeFromSuperset(exerciseId) {
-    const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (ex) {
-        const oldId = ex.supersetId;
-        ex.supersetId = null;
-        
-        const remaining = currentWorkout.filter(e => e.supersetId === oldId);
-        if (remaining.length < 2) {
-            remaining.forEach(e => e.supersetId = null);
-        }
-    }
-    activeMenuExerciseId = null;
-    renderWorkout();
-}
-
-function moveGroup(exerciseId, direction) {
-    activeMenuExerciseId = null;
-    
-    const index = currentWorkout.findIndex(ex => ex.id === exerciseId);
-    if (index === -1) return;
-
-    let startIdx = index;
-    let endIdx = index;
-    const targetEx = currentWorkout[index];
-
-    if (targetEx.supersetId) {
-        while(startIdx > 0 && currentWorkout[startIdx - 1].supersetId === targetEx.supersetId) startIdx--;
-        while(endIdx < currentWorkout.length - 1 && currentWorkout[endIdx + 1].supersetId === targetEx.supersetId) endIdx++;
-    }
-
-    const blockSize = endIdx - startIdx + 1;
-    let swapStartIdx = -1;
-    let swapEndIdx = -1;
-
-    if (direction === 'up' && startIdx > 0) {
-        swapEndIdx = startIdx - 1;
-        swapStartIdx = swapEndIdx;
-        if (currentWorkout[swapEndIdx].supersetId) {
-            while(swapStartIdx > 0 && currentWorkout[swapStartIdx - 1].supersetId === currentWorkout[swapEndIdx].supersetId) swapStartIdx--;
-        }
-    } else if (direction === 'down' && endIdx < currentWorkout.length - 1) {
-        swapStartIdx = endIdx + 1;
-        swapEndIdx = swapStartIdx;
-        if (currentWorkout[swapStartIdx].supersetId) {
-            while(swapEndIdx < currentWorkout.length - 1 && currentWorkout[swapEndIdx + 1].supersetId === currentWorkout[swapStartIdx].supersetId) swapEndIdx++;
-        }
-    } else {
-        return;
-    }
-
-    for(let i = startIdx; i <= endIdx; i++) {
-        const cardEl = document.getElementById(`card-${currentWorkout[i].id}`);
-        if(cardEl) cardEl.style.opacity = '0';
-    }
-
-    setTimeout(() => {
-        const movingBlock = currentWorkout.splice(startIdx, blockSize);
-        const actualInsert = direction === 'up' ? swapStartIdx : swapEndIdx - blockSize + 1;
-        currentWorkout.splice(actualInsert, 0, ...movingBlock);
-        
-        const movedIds = movingBlock.map(ex => ex.id);
-        renderWorkout();
-        
-        movedIds.forEach(id => {
-            const el = document.getElementById(`card-${id}`);
-            if(el) {
-                el.classList.add('just-moved');
-                setTimeout(() => el.classList.remove('just-moved'), 400);
-            }
-        });
-    }, 150);
-}
-
-// --- EXERCISE / SET MANAGEMENT ---
-function addExercise(name) {
-    if (!name) return;
-    currentWorkout.push({
-        id: Date.now() + Math.random(),
-        name: name,
-        supersetId: null,
-        sets: [{ weight: '', reps: '', completed: false, isBW: false, isFailure: false, side: '', menuOpen: false }]
-    });
-    renderWorkout();
-}
-
-function removeExercise(id) {
-    currentWorkout = currentWorkout.filter(ex => ex.id !== id);
-    activeMenuExerciseId = null;
-    renderWorkout();
-}
-
-function addSet(exerciseId) {
-    const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (ex) {
-        ex.sets.push({ weight: '', reps: '', completed: false, isBW: false, isFailure: false, side: '', menuOpen: false });
-    }
-    renderWorkout();
-}
-
-function removeSet(exerciseId, setIndex) {
-    const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (ex) {
-        ex.sets.splice(setIndex, 1);
-        if (ex.sets.length === 0) {
-            ex.sets.push({ weight: '', reps: '', completed: false, isBW: false, isFailure: false, side: '', menuOpen: false });
-        }
-    }
-    renderWorkout();
-}
-
-function toggleSet(exerciseId, setIndex) {
-    const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (ex) {
-        ex.sets[setIndex].completed = !ex.sets[setIndex].completed;
-    }
-    renderWorkout();
-}
-
-function updateSetData(exerciseId, setIndex, field, value) {
-    const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (ex) {
-        ex.sets[setIndex][field] = value;
-    }
-    saveApp();
-}
-
-function toggleExerciseMenu(id) {
-    activeMenuExerciseId = activeMenuExerciseId === id ? null : id;
-    renderWorkout();
-}
-
-function toggleSetMenu(exerciseId, setIndex) {
-    const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (ex) {
-        ex.sets[setIndex].menuOpen = !ex.sets[setIndex].menuOpen;
-    }
-    renderWorkout();
-}
-
-function toggleMod(exerciseId, setIndex, type) {
-    const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (!ex) return;
-    const set = ex.sets[setIndex];
-    
-    if (type === 'BW') {
-        set.isBW = !set.isBW;
-        set.weight = set.isBW ? 'BW' : '';
-    } else if (type === 'Fail') {
-        set.isFailure = !set.isFailure;
-    } else if (type === 'Side') {
-        if (!set.side) set.side = 'L';
-        else if (set.side === 'L') set.side = 'R';
-        else set.side = '';
-    }
-    renderWorkout();
-}
-
-function renderWorkout() {
-    saveApp();
-    const container = document.getElementById('workout-cards');
-    container.innerHTML = '';
-
-    currentWorkout.forEach((exercise, index) => {
-        const card = document.createElement('div');
-        card.id = `card-${exercise.id}`;
-        
-        const isLinkingMode = supersetSourceId !== null;
-        const isSource = supersetSourceId === exercise.id;
-        
-        const belongsToSameActiveGroup = isLinkingMode && exercise.supersetId && 
-            currentWorkout.find(e => e.id === supersetSourceId)?.supersetId === exercise.supersetId;
-
-        let superClass = '';
-        if (exercise.supersetId) {
-            const prev = currentWorkout[index - 1];
-            const next = currentWorkout[index + 1];
-            const samePrev = prev && prev.supersetId === exercise.supersetId;
-            const sameNext = next && next.supersetId === exercise.supersetId;
-            
-            if (!samePrev && sameNext) superClass = 'superset-start';
-            else if (samePrev && sameNext) superClass = 'superset-middle';
-            else if (samePrev && !sameNext) superClass = 'superset-end';
-            else superClass = 'superset-single';
-        }
-
-        card.className = `card ${exercise.supersetId ? 'in-superset' : ''} ${superClass} ${isLinkingMode && !isSource && !belongsToSameActiveGroup ? 'linking-target' : ''}`;
-        
-        if (isLinkingMode && !isSource && !belongsToSameActiveGroup) {
-            card.onclick = (e) => {
-                e.stopPropagation();
-                completeSupersetLink(exercise.id);
-            };
-        }
-
-        const header = document.createElement('div');
-        header.className = 'exercise-header';
-        
-        let supersetHeaderHtml = '';
-        if (exercise.supersetId && (superClass === 'superset-start' || superClass === 'superset-single')) {
-            supersetHeaderHtml = `<div class="superset-badge">${getSupersetLabel(exercise.supersetId, currentWorkout)}</div>`;
-        }
-
-        header.innerHTML = `
-            <div style="flex-grow: 1; min-width: 0; padding-right: 8px;">
-                ${supersetHeaderHtml}
-                <div style="font-weight: 700; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    ${isLinkingMode && !isSource ? `Link ${exercise.name}` : exercise.name}
-                </div>
-            </div>
-            
-            <div style="position: relative; display: flex; align-items: center;">
-                <button class="icon-btn" onclick="event.stopPropagation(); toggleExerciseMenu(${exercise.id})">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
-                </button>
-                
-                ${activeMenuExerciseId === exercise.id ? `
-                    <div class="action-menu-popup" onclick="event.stopPropagation();">
-                        <button class="menu-item" onclick="moveGroup(${exercise.id}, 'up')">Move Up</button>
-                        <button class="menu-item" onclick="moveGroup(${exercise.id}, 'down')">Move Down</button>
-                        <div style="height: 1px; background: #2c2c2e; margin: 4px 0;"></div>
-                        ${!exercise.supersetId ? `
-                            <button class="menu-item" onclick="startSupersetLink(${exercise.id})">Superset</button>
-                        ` : `
-                            <button class="menu-item danger" onclick="removeFromSuperset(${exercise.id})">Remove Superset</button>
-                        `}
-                        <button class="menu-item danger" onclick="removeExercise(${exercise.id})">Remove Exercise</button>
-                    </div>
-                ` : ''}
-            </div>
-        `;
-        card.appendChild(header);
-
-        exercise.sets.forEach((set, setIndex) => {
-            const setContainer = document.createElement('div');
-            setContainer.className = `set-container ${set.completed ? 'completed' : ''} ${set.isFailure ? 'is-failure' : ''}`;
-            
-            let weightPlaceholder = 'lbs';
-            let weightValue = set.weight;
-            if(set.isBW) { weightPlaceholder = 'BW'; weightValue = 'BW'; }
-            
-            let setNumDisplay = setIndex + 1;
-            let sideNumClass = '';
-            if(set.side === 'L') { setNumDisplay = 'L'; sideNumClass = 'side-l'; }
-            if(set.side === 'R') { setNumDisplay = 'R'; sideNumClass = 'side-r'; }
-
-            let sideBtnText = 'L/R';
-            let sideBtnClass = '';
-            if(set.side === 'L') { sideBtnText = 'L'; sideBtnClass = 'side-l active'; }
-            if(set.side === 'R') { sideBtnText = 'R'; sideBtnClass = 'side-r active'; }
-            
-            setContainer.innerHTML = `
-                <div class="set-row">
-                    <div class="set-number ${sideNumClass}">${setNumDisplay}</div>
-                    <div class="input-group">
-                        <input type="${set.isBW ? 'text' : 'number'}" placeholder="${weightPlaceholder}" value="${weightValue}" class="${set.isBW ? 'bw-active' : ''}" onchange="updateSetData(${exercise.id}, ${setIndex}, 'weight', this.value)" ${set.completed || set.isBW ? 'disabled' : ''}>
-                    </div>
-                    <div class="input-group">
-                        <input type="number" placeholder="reps" value="${set.reps}" onchange="updateSetData(${exercise.id}, ${setIndex}, 'reps', this.value)" ${set.completed ? 'disabled' : ''}>
-                    </div>
-                    <button class="check-btn" onclick="toggleSet(${exercise.id}, ${setIndex})">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
-                    </button>
-                    <button class="icon-btn" onclick="toggleSetMenu(${exercise.id}, ${setIndex})">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-                    </button>
-                </div>
-                
-                ${set.menuOpen ? `
-                <div class="set-drawer">
-                    <div></div>
-                    <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${setIndex}, 'BW')">BW</button>
-                    <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Fail')">F</button>
-                    <button class="mod-tag ${sideBtnClass}" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Side')">${sideBtnText}</button>
-                    <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${setIndex})">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                ` : ''}
-            `;
-            card.appendChild(setContainer);
-        });
-
-        const addSetBtn = document.createElement('button');
-        addSetBtn.className = 'add-set-btn';
-        addSetBtn.innerText = '+ Add Set';
-        addSetBtn.onclick = () => addSet(exercise.id);
-        card.appendChild(addSetBtn);
-
-        container.appendChild(card);
-    });
-}
-
-// --- EXERCISE PICKER MODAL ---
-function showExerciseModal() {
-    document.getElementById('search-exercise').value = '';
-    currentCategory = 'All';
-    currentEquipment = 'All';
-    document.querySelectorAll('#muscle-filters .filter-pill').forEach(p => {
-        p.classList.toggle('active', p.textContent.trim() === 'All');
-    });
-    document.querySelectorAll('#equipment-filters .filter-pill').forEach(p => {
-        p.classList.toggle('active', p.textContent.trim() === 'All');
-    });
-    showScreen('exercise-modal');
-    renderExerciseList();
-}
-
-function hideExerciseModal() {
-    showScreen('workout-screen');
-}
-
-function setCategory(cat) {
-    currentCategory = cat;
-    document.querySelectorAll('#muscle-filters .filter-pill').forEach(p => {
-        p.classList.toggle('active', p.textContent.trim() === cat);
-    });
-    renderExerciseList();
-}
-
-function setEquipment(eq) {
-    currentEquipment = eq;
-    document.querySelectorAll('#equipment-filters .filter-pill').forEach(p => {
-        p.classList.toggle('active', p.textContent.trim() === eq);
-    });
-    renderExerciseList();
-}
-
-function filterExercises() {
-    renderExerciseList();
-}
-
-function toggleFavorite(name, event) {
-    if (event) event.stopPropagation(); // Prevents adding exercise when star is tapped
-    const idx = favoriteExercises.indexOf(name);
-    if (idx > -1) {
-        favoriteExercises.splice(idx, 1);
-    } else {
-        favoriteExercises.push(name);
-    }
-    saveApp();
-    renderExerciseList();
-}
-
-function renderExerciseList() {
-    const search = document.getElementById('search-exercise').value.toLowerCase().trim();
-    const list = document.getElementById('exercise-list');
+// --- HISTORY LOG VIEW PAGE ---
+function renderHistory() {
+    const list = document.getElementById('history-list');
+    if (!list) return;
     list.innerHTML = '';
 
-    const filtered = exerciseDatabase.filter(ex => {
-        const matchesSearch = ex.name.toLowerCase().includes(search);
-        
-        // Handle favorites lookup matches smoothly
-        let matchesCategory = false;
-        if (currentCategory === 'Favorites') {
-            matchesCategory = favoriteExercises.includes(ex.name);
-        } else {
-            matchesCategory = currentCategory === 'All' || ex.category === currentCategory;
-        }
-
-        
-        const matchesEquipment = currentEquipment === 'All' || ex.equipment === currentEquipment;
-        return matchesSearch && matchesCategory && matchesEquipment;
-    });
-
-    if (filtered.length === 0) {
-        list.innerHTML = '<div class="empty-state">No exercises found.</div>';
+    if (!workoutHistory || workoutHistory.length === 0) {
+        list.innerHTML = '<div class="empty-state">No workouts logged yet.</div>';
         return;
     }
 
-    filtered.forEach(ex => {
-        const isFav = favoriteExercises.includes(ex.name);
-        const item = document.createElement('div');
-        item.className = 'list-item';
-        item.style.display = 'flex';
-        item.style.justifyContent = 'space-between';
-        item.style.alignItems = 'center';
-        
-        item.innerHTML = `
-            <div style="flex-grow: 1;">
-                <div class="list-item-title">${ex.name}</div>
-                <div class="list-item-sub">${ex.category} &middot; ${ex.equipment}</div>
+    workoutHistory.forEach((session, idx) => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.cursor = 'pointer';
+        div.onclick = () => showWorkoutDetail(idx);
+
+        const dateStr = new Date(session.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        const exerciseNames = session.exercises ? session.exercises.map(e => e.name).join(', ') : '';
+
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span style="font-weight:700;">${session.name}</span>
+                <span style="color:var(--text-muted); font-size:0.85rem;">${dateStr}</span>
             </div>
-            <button class="icon-btn" onclick="toggleFavorite('${ex.name.replace(/'/g, "\\'")}', event)" style="color: ${isFav ? '#eab308' : 'var(--text-placeholder)'}; padding: 12px;">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="${isFav ? '#eab308' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-            </button>
+            <div style="font-size:0.9rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${exerciseNames || 'No exercises'}
+            </div>
         `;
-        item.onclick = () => selectExercise(ex.name);
-        list.appendChild(item);
+        list.appendChild(div);
     });
 }
 
-function selectExercise(name) {
-    addExercise(name);
-    hideExerciseModal();
-}
-
-// --- HISTORY ---
-function renderHistory() {
-    const container = document.getElementById('history-list');
-    container.innerHTML = '';
-
-    if (workoutHistory.length === 0) {
-        container.innerHTML = '<div class="empty-state">No workouts logged yet.</div>';
-        return;
-    }
-
-    workoutHistory.forEach((session, index) => {
-        const dateObj = new Date(session.date);
-        const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-        const totalSets = session.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
-
-        const item = document.createElement('div');
-        item.className = 'list-item';
-        item.innerHTML = `
-            <div>
-                <div class="list-item-title">${session.name || 'Workout'}</div>
-                <div class="list-item-sub">${dateString} &middot; ${session.exercises.length} exercises &middot; ${totalSets} sets</div>
-            </div>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-        `;
-        item.onclick = () => viewWorkoutDetail(index);
-        container.appendChild(item);
-    });
-}
-
-function viewWorkoutDetail(index) {
-    currentDetailIndex = index;
-    const session = workoutHistory[index];
+function showWorkoutDetail(idx) {
+    currentDetailIndex = idx;
+    const session = workoutHistory[idx];
     if (!session) return;
 
-    document.getElementById('detail-title').textContent = session.name || 'Workout';
-
-    const dateObj = new Date(session.date);
-    const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-    const totalSets = session.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
-    let durationStr = '';
-    if (session.durationSeconds) {
-        const mins = Math.round(session.durationSeconds / 60);
-        durationStr = ` &middot; ${mins} min`;
-    }
-    document.getElementById('detail-stats').innerHTML = `${dateString} &middot; ${session.exercises.length} exercises &middot; ${totalSets} sets${durationStr}`;
-
-    const exContainer = document.getElementById('detail-exercises');
-    exContainer.innerHTML = '';
-
-    session.exercises.forEach((exercise, exIndex) => {
-        const exDiv = document.createElement('div');
-
-        let superClass = '';
-        if (exercise.supersetId) {
-            const prev = session.exercises[exIndex - 1];
-            const next = session.exercises[exIndex + 1];
-            const samePrev = prev && prev.supersetId === exercise.supersetId;
-            const sameNext = next && next.supersetId === exercise.supersetId;
-
-            if (!samePrev && sameNext) superClass = 'superset-start';
-            else if (samePrev && sameNext) superClass = 'superset-middle';
-            else if (samePrev && !sameNext) superClass = 'superset-end';
-            else superClass = 'superset-single';
-        }
-
-        exDiv.className = `card ${exercise.supersetId ? 'in-superset' : ''} ${superClass}`;
-
-        let supersetBadge = '';
-        if (exercise.supersetId && (superClass === 'superset-start' || superClass === 'superset-single')) {
-            supersetBadge = `<div class="superset-badge">${getSupersetLabel(exercise.supersetId, session.exercises)}</div>`;
-        }
-
-        const setsHtml = exercise.sets.map((set, sIdx) => {
-            const weightStr = set.isBW ? 'BW' : `${set.weight || 0} lbs`;
-            let tags = '';
-            if (set.isBW) tags += `<span class="d-tag bw">BW</span>`;
-            if (set.side === 'L') tags += `<span class="d-tag side-l">L</span>`;
-            if (set.side === 'R') tags += `<span class="d-tag side-r">R</span>`;
-            if (set.isFailure) tags += `<span class="d-tag fail">F</span>`;
-            return `
-                <div class="detail-set-row">
-                    <span>Set ${sIdx + 1}</span>
-                    <div style="display:flex; align-items:center;">
-                        <span>${weightStr} &times; ${set.reps || 0}</span>
-                        <div class="detail-tags">${tags}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        exDiv.innerHTML = `
-            ${supersetBadge}
-            <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">${exercise.name}</div>
-            ${setsHtml}
-        `;
-        exContainer.appendChild(exDiv);
-    });
-
     document.getElementById('bottom-nav').style.display = 'none';
-    document.getElementById('header-action').style.display = 'flex';
+    const backBtn = document.getElementById('header-action');
+    if (backBtn) backBtn.style.display = 'block';
+
+    const title = document.getElementById('detail-title');
+    if (title) title.textContent = session.name;
+    
+    const stats = document.getElementById('detail-stats');
+    if (stats) {
+        const dateStr = new Date(session.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+        const mins = Math.round(session.durationSeconds / 60) || 1;
+        stats.textContent = `${dateStr} \u2022 ${mins} min`;
+    }
+
+    const container = document.getElementById('detail-exercises');
+    if (container) {
+        container.innerHTML = '';
+        session.exercises.forEach(ex => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const rowsHtml = ex.sets.map((s, sIdx) => `
+                <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:0.95rem;">
+                    <span style="color:var(--text-muted);">Set ${sIdx + 1}</span>
+                    <span>${s.isBW ? 'BW' : `${s.weight} lbs`} &times; ${s.reps}</span>
+                </div>
+            `).join('');
+            card.innerHTML = `<div style="font-weight:700; margin-bottom:8px;">${ex.name}</div>${rowsHtml}`;
+            container.appendChild(card);
+        });
+    }
+
     showScreen('workout-detail-screen');
 }
 
+function goBack() {
+    currentDetailIndex = null;
+    navigate('history');
+}
+
 function deleteWorkoutFromHistory() {
-    if (currentDetailIndex === null) return;
-    showConfirmModal('Delete this workout log? This cannot be undone.', 'Delete', () => {
+    if (currentDetailIndex !== null && workoutHistory[currentDetailIndex]) {
         workoutHistory.splice(currentDetailIndex, 1);
-        currentDetailIndex = null;
         saveApp();
         goBack();
+    }
+}
+
+// --- BODY WEIGHT LOG VIEW PAGE ---
+function renderWeight() {
+    const list = document.getElementById('weight-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!weightHistory || weightHistory.length === 0) {
+        list.innerHTML = '<div class="empty-state">No weight logs recorded yet.</div>';
+        return;
+    }
+
+    weightHistory.forEach((w, idx) => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        
+        const dateStr = new Date(w.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        div.innerHTML = `
+            <div>
+                <span style="font-weight:700;">${w.weight} lbs</span>
+                <span style="color:var(--text-muted); font-size:0.85rem; margin-left:8px;">${dateStr}</span>
+            </div>
+            <button onclick="deleteWeight(${idx})" style="background:none; border:none; color:var(--mod-fail); cursor:pointer;">✕</button>
+        `;
+        list.appendChild(div);
     });
 }
 
-// --- CUSTOM CONFIRM MODAL ---
-function showConfirmModal(message, confirmLabel, onConfirm) {
-    document.getElementById('confirm-modal-message').textContent = message;
-    document.getElementById('confirm-modal-confirm-btn').textContent = confirmLabel || 'Confirm';
-    confirmModalCallback = onConfirm;
-    document.getElementById('confirm-modal-overlay').style.display = 'flex';
-}
-
-function closeConfirmModal(confirmed) {
-    document.getElementById('confirm-modal-overlay').style.display = 'none';
-    const cb = confirmModalCallback;
-    confirmModalCallback = null;
-    if (confirmed && cb) cb();
-}
-
-// --- BODY WEIGHT ---
 function logWeight() {
     const input = document.getElementById('new-weight');
+    if (!input) return;
     const val = parseFloat(input.value);
-    if (isNaN(val) || val <= 0) return;
+    if (!val) return;
 
     weightHistory.unshift({
         date: new Date().toISOString(),
         weight: val
     });
-
     input.value = '';
     saveApp();
     renderWeight();
 }
 
-function deleteWeight(index) {
-    weightHistory.splice(index, 1);
+function deleteWeight(idx) {
+    weightHistory.splice(idx, 1);
     saveApp();
     renderWeight();
 }
 
-function renderWeight() {
-    renderWeightTrend();
-
-    const container = document.getElementById('weight-list');
-    container.innerHTML = '';
-
-    if (weightHistory.length === 0) {
-        container.innerHTML = '<div class="empty-state">No weight logged yet.</div>';
-        return;
-    }
-
-    weightHistory.forEach((entry, index) => {
-        const dateObj = new Date(entry.date);
-        const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-        const item = document.createElement('div');
-        item.className = 'list-item';
-        item.innerHTML = `
-            <div>
-                <div class="list-item-title">${entry.weight} lbs</div>
-                <div class="list-item-sub">${dateString}</div>
-            </div>
-            <button class="icon-btn" onclick="event.stopPropagation(); deleteWeight(${index})">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-        `;
-        container.appendChild(item);
-    });
-}
-
-function renderWeightTrend() {
-    const el = document.getElementById('weight-trend-chart');
-    const section = document.getElementById('weight-trend-section');
-    
-    if (weightHistory.length < 2) {
-        section.style.display = 'block';
-        el.innerHTML = `<div class="empty-state" style="margin-top:0; padding: 20px 0;">Log at least 2 weigh-ins to see your trend here.</div>`;
-        return;
-    }
-    
-    section.style.display = 'block';
-    const chronological = [...weightHistory].reverse();
-    const points = chronological.map(w => ({ value: w.weight }));
-    const first = chronological[0];
-    const last = chronological[chronological.length - 1];
-    const diff = last.weight - first.weight;
-    
-    // Custom color indicators: green for losing weight, red for gaining weight
-    let trendColor = 'var(--text-muted)';
-    let diffStr = 'No change';
-    if (diff < 0) {
-        trendColor = '#22c55e'; // Green for losing weight
-        diffStr = `${Math.abs(diff).toFixed(1)} lbs lost`;
-    } else if (diff > 0) {
-        trendColor = '#ef4444'; // Red for gaining weight
-        diffStr = `+${diff.toFixed(1)} lbs gained`;
-    }
-
-    el.innerHTML = `
-        ${buildLineChartSVG(points, 'weightGradient', trendColor)}
-        <div style="display:flex; justify-content:space-between; margin-top:10px; color:var(--text-muted); font-size:0.8rem; font-weight:600;">
-            <span>${new Date(first.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-            <span style="color: ${trendColor}; font-weight:800; font-size:0.9rem;">${diffStr}</span>
-            <span>${new Date(last.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-        </div>
-    `;
-}
-
-// --- STATS & PROGRESS ---
-function getMonday(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = (day === 0 ? -6 : 1) - day;
-    d.setDate(d.getDate() + diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
-}
-
-function calculateWeekStreak() {
-    if (workoutHistory.length === 0) return 0;
-    const weeksWithWorkout = new Set();
-    workoutHistory.forEach(w => {
-        weeksWithWorkout.add(getMonday(new Date(w.date)).toDateString());
-    });
-
-    let streak = 0;
-    let cursor = getMonday(new Date());
-    if (!weeksWithWorkout.has(cursor.toDateString())) {
-        cursor.setDate(cursor.getDate() - 7);
-    }
-    while (weeksWithWorkout.has(cursor.toDateString())) {
-        streak++;
-        cursor.setDate(cursor.getDate() - 7);
-    }
-    return streak;
-}
-
-function getAllSets() {
-    const sets = [];
-    workoutHistory.forEach(session => {
-        session.exercises.forEach(ex => {
-            ex.sets.forEach(set => {
-                sets.push({
-                    exerciseName: ex.name,
-                    weight: set.isBW ? 0 : (parseFloat(set.weight) || 0),
-                    reps: parseFloat(set.reps) || 0,
-                    isBW: set.isBW,
-                    date: session.date
-                });
-            });
-        });
-    });
-    return sets;
-}
-
-function estimate1RM(weight, reps) {
-    if (reps <= 0 || weight <= 0) return 0;
-    if (reps === 1) return weight;
-    return weight * (1 + reps / 30);
-}
-
-function formatVolume(num) {
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
-    return Math.round(num).toString();
-}
-
-function buildLineChartSVG(points, gradientId, strokeColor = '#22c55e') {
-    const width = 300;
-    const height = 110;
-    const padding = 8;
-    if (points.length === 0) return '';
-
-    const plotPoints = points.length === 1 ? [points[0], points[0]] : points;
-    const values = plotPoints.map(p => p.value);
-    let min = Math.min(...values);
-    let max = Math.max(...values);
-    if (min === max) { min -= 1; max += 1; }
-    const range = max - min;
-    const stepX = plotPoints.length > 1 ? (width - padding * 2) / (plotPoints.length - 1) : 0;
-
-    const coords = plotPoints.map((p, i) => ({
-        x: padding + i * stepX,
-        y: height - padding - ((p.value - min) / range) * (height - padding * 2)
-    }));
-
-    const linePath = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
-    const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${height - padding} L ${coords[0].x.toFixed(1)} ${height - padding} Z`;
-    const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="${strokeColor}" stroke="#000000" stroke-width="1.5" />`).join('');
-
-    return `
-        <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:110px; display:block; overflow:visible;">
-            <defs>
-                <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.25"/>
-                    <stop offset="100%" stop-color="${strokeColor}" stop-opacity="0"/>
-                </linearGradient>
-            </defs>
-            <path d="${areaPath}" fill="url(#${gradientId})"></path>
-            <path d="${linePath}" fill="none" stroke="${strokeColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
-            ${dots}
-        </svg>
-    `;
-}
-
+// --- STATS VIEW VISUALIZATIONS ---
 function renderStats() {
-    const allSets = getAllSets();
-    const totalVolume = allSets.reduce((sum, s) => sum + s.weight * s.reps, 0);
-
-    document.getElementById('stats-overview').innerHTML = `
-        <div class="stat-tile">
-            <div class="stat-value">${workoutHistory.length}</div>
-            <div class="stat-label">Workouts</div>
-        </div>
-        <div class="stat-tile">
-            <div class="stat-value">${calculateWeekStreak()}</div>
-            <div class="stat-label">Week Streak</div>
-        </div>
-        <div class="stat-tile">
-            <div class="stat-value">${formatVolume(totalVolume)}</div>
-            <div class="stat-label">Lbs Lifted</div>
-        </div>
-        <div class="stat-tile">
-            <div class="stat-value">${allSets.length}</div>
-            <div class="stat-label">Total Sets</div>
-        </div>
-    `;
-
-    renderProgressExercisePicker(allSets);
-    renderMuscleBalance();
-    renderPersonalRecords(allSets);
-}
-
-function renderProgressExercisePicker(allSets) {
-    const exerciseNames = [...new Set(allSets.filter(s => !s.isBW && s.weight > 0).map(s => s.exerciseName))].sort();
-    const select = document.getElementById('progress-exercise-select');
-
-    if (exerciseNames.length === 0) {
-        select.innerHTML = '<option>No exercises logged yet</option>';
-        select.disabled = true;
-        document.getElementById('exercise-progress-chart').innerHTML = `<div class="empty-state" style="margin-top:0; padding: 20px 0;">Log a weighted exercise to see progress here.</div>`;
-        document.getElementById('exercise-progress-pr').innerHTML = '';
-        return;
-    }
-
-    select.disabled = false;
-    if (!selectedProgressExercise || !exerciseNames.includes(selectedProgressExercise)) {
-        selectedProgressExercise = exerciseNames[0];
-    }
-    select.innerHTML = exerciseNames.map(name =>
-        `<option value="${name}" ${name === selectedProgressExercise ? 'selected' : ''}>${name}</option>`
-    ).join('');
-
-    renderExerciseProgress();
-}
-
-function renderExerciseProgress() {
-    const select = document.getElementById('progress-exercise-select');
-    if (select.disabled) return;
-    selectedProgressExercise = select.value;
-
-    const sessions = [];
-    [...workoutHistory].reverse().forEach(session => {
-        const ex = session.exercises.find(e => e.name === selectedProgressExercise);
-        if (!ex) return;
-        const validSets = ex.sets.filter(s => !s.isBW && (parseFloat(s.weight) || 0) > 0 && (parseFloat(s.reps) || 0) > 0);
-        if (validSets.length === 0) return;
-        const topSet = validSets.reduce((best, s) => {
-            const w = parseFloat(s.weight) || 0;
-            return w > best.weight ? { weight: w, reps: parseFloat(s.reps) || 0 } : best;
-        }, { weight: 0, reps: 0 });
-        sessions.push({ date: session.date, weight: topSet.weight, reps: topSet.reps });
-    });
-
-    const chartEl = document.getElementById('exercise-progress-chart');
-    const prEl = document.getElementById('exercise-progress-pr');
-
-    if (sessions.length === 0) {
-        chartEl.innerHTML = `<div class="empty-state" style="margin-top:0; padding: 20px 0;">No data for this exercise yet.</div>`;
-        prEl.innerHTML = '';
-        return;
-    }
-
-    if (sessions.length > 1) {
-        const points = sessions.map(s => ({ value: s.weight }));
-        const first = sessions[0];
-        const last = sessions[sessions.length - 1];
-        const diff = last.weight - first.weight;
-        const diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(0);
-        chartEl.innerHTML = `
-            ${buildLineChartSVG(points, 'exerciseGradient', '#22c55e')}
-            <div style="display:flex; justify-content:space-between; margin-top:10px; color:var(--text-muted); font-size:0.8rem; font-weight:600;">
-                <span>${new Date(first.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                <span style="color: var(--text-main); font-weight:800;">${diffStr} lbs</span>
-                <span>${new Date(last.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+    const overview = document.getElementById('stats-overview');
+    if (overview) {
+        overview.innerHTML = `
+            <div class="stat-tile">
+                <div class="stat-value">${workoutHistory.length}</div>
+                <div class="stat-label">Total Workouts</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-value">${weightHistory.length > 0 ? weightHistory[0].weight + ' lbs' : '--'}</div>
+                <div class="stat-label">Current Weight</div>
             </div>
         `;
-    } else {
-        chartEl.innerHTML = `<div class="empty-state" style="margin-top:0; padding: 12px 0;">Log this exercise again to see a trend line.</div>`;
     }
-
-    const best = sessions.reduce((b, s) => estimate1RM(s.weight, s.reps) > estimate1RM(b.weight, b.reps) ? s : b);
-    const est1RM = Math.round(estimate1RM(best.weight, best.reps));
-
-    prEl.innerHTML = `
-        <div class="list-item" style="cursor:default; padding-left:0; padding-right:0;">
-            <div>
-                <div class="list-item-title">Best Set</div>
-                <div class="list-item-sub">${best.weight} lbs &times; ${best.reps}</div>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-weight:800; font-size:1.15rem;">${est1RM} lbs</div>
-                <div class="list-item-sub">est. 1RM</div>
-            </div>
-        </div>
-    `;
+    renderPRList();
 }
 
-function renderPersonalRecords(allSets) {
-    const byExercise = {};
-    allSets.forEach(s => {
+function renderPRList() {
+    const list = document.getElementById('pr-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const historicalSets = getAllSets();
+    const prs = {};
+
+    historicalSets.forEach(s => {
         if (s.isBW || s.weight <= 0 || s.reps <= 0) return;
         const est = estimate1RM(s.weight, s.reps);
-        if (!byExercise[s.exerciseName] || est > byExercise[s.exerciseName].est) {
-            byExercise[s.exerciseName] = { weight: s.weight, reps: s.reps, est: est, date: s.date };
+        if (!prs[s.exerciseName] || est > prs[s.exerciseName].est) {
+            prs[s.exerciseName] = { est: est, weight: s.weight, reps: s.reps };
         }
     });
 
-    const records = Object.keys(byExercise)
-        .map(name => ({ name, ...byExercise[name] }))
-        .sort((a, b) => b.est - a.est);
-
-    const container = document.getElementById('pr-list');
-    if (records.length === 0) {
-        container.innerHTML = `<div class="empty-state" style="margin-top:0; padding: 20px 0;">No personal records yet. Log a weighted set to get started.</div>`;
+    const keys = Object.keys(prs);
+    if (keys.length === 0) {
+        list.innerHTML = '<div class="empty-state">No Personal Records calculated yet.</div>';
         return;
     }
 
-    container.innerHTML = records.map(r => `
-        <div class="list-item" style="cursor:default;">
+    keys.forEach(k => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.innerHTML = `
             <div>
-                <div class="list-item-title">${r.name}</div>
-                <div class="list-item-sub">${r.weight} lbs &times; ${r.reps} &middot; ${new Date(r.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                <div class="list-item-title">${k}</div>
+                <div class="list-item-sub">Best Set: ${prs[k].weight} lbs &times; ${prs[k].reps}</div>
             </div>
-            <div style="text-align:right;">
-                <div style="font-weight:800; font-size:1.05rem;">${Math.round(r.est)} lbs</div>
-                <div class="list-item-sub">est. 1RM</div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function estimate1RM(weight, reps) {
-    if (reps === 1) return weight;
-    // Brzycki formula for estimating 1-Rep Max
-    return weight / (1.0278 - (0.0278 * reps));
-}
-
-    
-function renderMuscleBalance() {
-    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const counts = {};
-    let maxCount = 0;
-
-    workoutHistory.forEach(session => {
-        if (new Date(session.date).getTime() < cutoff) return;
-        session.exercises.forEach(ex => {
-            const category = exerciseCategoryMap[ex.name] || 'Other';
-            counts[category] = (counts[category] || 0) + ex.sets.length;
-            if (counts[category] > maxCount) maxCount = counts[category];
-        });
-    });
-
-    const container = document.getElementById('muscle-balance-list');
-    const categories = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-
-    if (categories.length === 0) {
-        container.innerHTML = `<div class="empty-state" style="margin-top:0; padding: 20px 0;">No workouts in the last 30 days.</div>`;
-        return;
-    }
-
-    container.innerHTML = categories.map(cat => {
-        const pct = maxCount > 0 ? Math.round((counts[cat] / maxCount) * 100) : 0;
-        return `
-            <div style="margin-bottom: 14px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.9rem; font-weight:700;">
-                    <span>${cat}</span>
-                    <span style="color:var(--text-muted); font-weight:600;">${counts[cat]} sets</span>
-                </div>
-                <div style="background: var(--tag-bg); border-radius: 8px; height: 8px; overflow: hidden;">
-                    <div style="background: #22c55e; height: 100%; width: ${pct}%; border-radius: 8px;"></div>
-                </div>
-            </div>
+            <div style="font-weight:700; color:#eab308;">${Math.round(prs[k].est)} lbs Est. Max</div>
         `;
-    }).join('');
+        list.appendChild(item);
+    });
 }
 
-// --- GLOBAL LISTENERS & BOOT ---
-document.addEventListener('click', (e) => {
-    if (activeMenuExerciseId !== null && e.target.tagName !== 'INPUT') {
-        activeMenuExerciseId = null;
-        renderWorkout();
-    }
-});
-
-// Boot: resume an in-progress workout if one exists, otherwise show Home
-if (currentWorkout.length > 0) {
-    startWorkout();
-} else {
-    navigate('home');
+function renderExerciseProgress() {
+    // Left empty for compatibility layout purposes
 }
+
 </script>
 
 </body>
