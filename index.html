@@ -2173,20 +2173,42 @@ window.onload = function() {
 </script>
 
 <script>
-/* --- ROUTINES ADD-ON: paste above </body> --- */
+/* --- EXERCISE SPLITS ADD-ON: paste above </body> --- */
 
-let liftrSavedRoutines = [];
-let liftrRoutineDraft = null;
-let liftrEditingRoutineId = null;
+let liftrSavedSplits = [];
+let liftrSplitDraft = null;
+let liftrEditingSplitId = null;
+let liftrSelectedSplitDayIndex = 0;
 let liftrExercisePickerMode = 'workout';
 
 try {
     const liftrSavedData = JSON.parse(localStorage.getItem('myWorkoutApp_data'));
-    if (liftrSavedData && Array.isArray(liftrSavedData.savedRoutines)) {
-        liftrSavedRoutines = liftrSavedData.savedRoutines;
+
+    if (liftrSavedData && Array.isArray(liftrSavedData.savedSplits)) {
+        liftrSavedSplits = liftrSavedData.savedSplits;
+    } else if (liftrSavedData && Array.isArray(liftrSavedData.savedRoutines)) {
+        liftrSavedSplits = liftrSavedData.savedRoutines.map((routine, index) => ({
+            id: routine.id || Date.now() + index,
+            name: routine.name || 'Split',
+            days: [
+                {
+                    id: Date.now() + index + 1000,
+                    name: routine.name || 'Day 1',
+                    exercises: (routine.exercises || []).map(ex => {
+                        if (typeof ex === 'string') {
+                            return { name: ex, setsCount: 3 };
+                        }
+                        return {
+                            name: ex.name || 'Exercise',
+                            setsCount: ex.setsCount || 3
+                        };
+                    })
+                }
+            ]
+        }));
     }
 } catch (e) {
-    liftrSavedRoutines = [];
+    liftrSavedSplits = [];
 }
 
 function liftrEscapeHtml(text) {
@@ -2198,30 +2220,38 @@ function liftrEscapeHtml(text) {
         .replace(/'/g, '&#039;');
 }
 
-const liftrOriginalSaveApp = saveApp;
 saveApp = function() {
     localStorage.setItem('myWorkoutApp_data', JSON.stringify({
         currentWorkout: currentWorkout,
         workoutHistory: workoutHistory,
         weightHistory: weightHistory,
         favoriteExercises: favoriteExercises,
-        savedRoutines: liftrSavedRoutines,
+        savedSplits: liftrSavedSplits,
         workoutName: workoutName,
         workoutStartTime: workoutStartTime
     }));
 };
 
-function liftrInstallRoutinesUI() {
+function liftrInstallSplitsUI() {
     const style = document.createElement('style');
     style.innerHTML = `
-        .routine-actions {
+        .split-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin-top: 14px;
         }
 
-        .routine-set-control {
+        .split-day-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 0;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .split-set-control {
             background: var(--tag-bg);
             border: none;
             color: var(--text-main);
@@ -2232,7 +2262,7 @@ function liftrInstallRoutinesUI() {
             cursor: pointer;
         }
 
-        .routine-control-row {
+        .split-control-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -2240,10 +2270,30 @@ function liftrInstallRoutinesUI() {
             margin-top: 14px;
         }
 
-        .routine-mini-controls {
+        .split-mini-controls {
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .split-day-name-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.15rem;
+            font-weight: 800;
+            padding: 0;
+            margin-bottom: 8px;
+        }
+
+        .split-day-name-input:focus {
+            outline: none;
+        }
+
+        .split-exercise-row {
+            padding: 12px 0;
+            border-top: 1px solid var(--border-light);
         }
     `;
     document.head.appendChild(style);
@@ -2251,16 +2301,16 @@ function liftrInstallRoutinesUI() {
     const homeScreen = document.getElementById('home-screen');
     const startButton = homeScreen ? homeScreen.querySelector('.btn') : null;
 
-    if (startButton && !document.getElementById('routine-home-button')) {
+    if (startButton && !document.getElementById('split-home-button')) {
         startButton.insertAdjacentHTML('afterend', `
-            <button id="routine-home-button" class="btn btn-outline" style="margin-top: 12px;" onclick="showRoutines()">
+            <button id="split-home-button" class="btn btn-outline" style="margin-top: 12px;" onclick="showSplits()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                Routines
+                Exercise Splits
             </button>
 
-            <div id="home-routines-section" style="margin-top: 40px; display: none;">
-                <h3 class="section-title">Saved Routines</h3>
-                <div id="home-routine-list"></div>
+            <div id="home-splits-section" style="margin-top: 40px; display: none;">
+                <h3 class="section-title">Saved Splits</h3>
+                <div id="home-split-list"></div>
             </div>
         `);
     }
@@ -2268,72 +2318,80 @@ function liftrInstallRoutinesUI() {
     const app = document.getElementById('app-container');
     const bottomNav = document.getElementById('bottom-nav');
 
-    if (app && bottomNav && !document.getElementById('routines-screen')) {
-        const routinesScreen = document.createElement('div');
-        routinesScreen.id = 'routines-screen';
-        routinesScreen.className = 'screen';
-        routinesScreen.innerHTML = `
-            <h2>Routines</h2>
+    if (app && bottomNav && !document.getElementById('splits-screen')) {
+        const splitsScreen = document.createElement('div');
+        splitsScreen.id = 'splits-screen';
+        splitsScreen.className = 'screen';
+        splitsScreen.innerHTML = `
+            <h2>Exercise Splits</h2>
 
-            <button class="btn" onclick="createRoutine()">
+            <button class="btn" onclick="createSplit()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                Create New Routine
+                Create New Split
             </button>
 
-            <div id="routines-list" style="margin-top: 24px;"></div>
+            <div id="splits-list" style="margin-top: 24px;"></div>
         `;
-        app.insertBefore(routinesScreen, bottomNav);
+        app.insertBefore(splitsScreen, bottomNav);
     }
 
-    if (app && bottomNav && !document.getElementById('routine-editor-screen')) {
+    if (app && bottomNav && !document.getElementById('split-editor-screen')) {
         const editorScreen = document.createElement('div');
-        editorScreen.id = 'routine-editor-screen';
+        editorScreen.id = 'split-editor-screen';
         editorScreen.className = 'screen';
         editorScreen.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
-                <button class="header-btn" onclick="cancelRoutineEdit()">Cancel</button>
-                <button class="btn-small finish" onclick="saveRoutineDraft()">Save</button>
+                <button class="header-btn" onclick="cancelSplitEdit()">Cancel</button>
+                <button class="btn-small finish" onclick="saveSplitDraft()">Save</button>
             </div>
 
-            <h2 id="routine-editor-title">Routine</h2>
-            <input type="text" id="routine-name-input" class="text-input" placeholder="Routine Name..." oninput="updateRoutineDraftName(this.value)">
+            <h2 id="split-editor-title">Split</h2>
+            <input type="text" id="split-name-input" class="text-input" placeholder="Split Name..." oninput="updateSplitDraftName(this.value)">
 
-            <h3 class="section-title">Exercises</h3>
-            <div id="routine-exercise-list"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 8px; margin-bottom: 14px;">
+                <h3 class="section-title" style="margin:0;">Days</h3>
+                <button class="btn-small finish" onclick="addSplitDay()">Add Day</button>
+            </div>
 
-            <button class="btn btn-outline" style="margin-top: 16px;" onclick="showRoutineExerciseModal()">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                Add Exercise
-            </button>
+            <div id="split-days-list"></div>
         `;
         app.insertBefore(editorScreen, bottomNav);
     }
 }
 
-function renderHomeRoutines() {
-    const section = document.getElementById('home-routines-section');
-    const list = document.getElementById('home-routine-list');
+function renderHomeSplits() {
+    const section = document.getElementById('home-splits-section');
+    const list = document.getElementById('home-split-list');
     if (!section || !list) return;
 
-    if (liftrSavedRoutines.length === 0) {
+    if (liftrSavedSplits.length === 0) {
         section.style.display = 'none';
         list.innerHTML = '';
         return;
     }
 
     section.style.display = 'block';
-    list.innerHTML = liftrSavedRoutines.map(routine => `
-        <div class="list-item" onclick="startRoutineWorkout(${routine.id})">
-            <div>
-                <div class="list-item-title">${liftrEscapeHtml(routine.name || 'Routine')}</div>
-                <div class="list-item-sub">${routine.exercises.length} exercises</div>
+    list.innerHTML = liftrSavedSplits.map(split => `
+        <div class="card">
+            <div class="list-item-title">${liftrEscapeHtml(split.name || 'Split')}</div>
+            <div class="list-item-sub">${(split.days || []).length} days</div>
+
+            <div style="margin-top: 12px;">
+                ${(split.days || []).map((day, dayIndex) => `
+                    <div class="split-day-row">
+                        <div>
+                            <div style="font-weight:800;">${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}</div>
+                            <div class="list-item-sub">${(day.exercises || []).length} exercises</div>
+                        </div>
+                        <button class="btn-small finish" onclick="startSplitDayWorkout(${split.id}, ${dayIndex})">Start</button>
+                    </div>
+                `).join('')}
             </div>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
         </div>
     `).join('');
 }
 
-function showRoutines() {
+function showSplits() {
     const bottomNav = document.getElementById('bottom-nav');
     if (bottomNav) bottomNav.style.display = 'flex';
 
@@ -2349,57 +2407,84 @@ function showRoutines() {
     const navHome = document.getElementById('nav-home');
     if (navHome) navHome.classList.add('active');
 
-    showScreen('routines-screen');
-    renderRoutines();
+    showScreen('splits-screen');
+    renderSplits();
 }
 
-function renderRoutines() {
-    const list = document.getElementById('routines-list');
+function renderSplits() {
+    const list = document.getElementById('splits-list');
     if (!list) return;
 
-    if (liftrSavedRoutines.length === 0) {
-        list.innerHTML = '<div class="empty-state">No routines saved yet.</div>';
+    if (liftrSavedSplits.length === 0) {
+        list.innerHTML = '<div class="empty-state">No exercise splits saved yet.</div>';
         return;
     }
 
-    list.innerHTML = liftrSavedRoutines.map(routine => {
-        const names = routine.exercises.map(ex => ex.name).join(', ');
-        return `
-            <div class="card">
-                <div class="list-item-title">${liftrEscapeHtml(routine.name || 'Routine')}</div>
-                <div class="list-item-sub">${routine.exercises.length} exercises${names ? ' &middot; ' + liftrEscapeHtml(names) : ''}</div>
+    list.innerHTML = liftrSavedSplits.map(split => `
+        <div class="card">
+            <div class="list-item-title">${liftrEscapeHtml(split.name || 'Split')}</div>
+            <div class="list-item-sub">${(split.days || []).length} days</div>
 
-                <div class="routine-actions">
-                    <button class="btn-small finish" onclick="startRoutineWorkout(${routine.id})">Start</button>
-                    <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="editRoutine(${routine.id})">Edit</button>
-                </div>
-
-                <button class="add-set-btn" style="color:var(--mod-fail); margin-top:8px;" onclick="deleteRoutine(${routine.id})">Delete Routine</button>
+            <div style="margin-top: 12px;">
+                ${(split.days || []).map((day, dayIndex) => `
+                    <div class="split-day-row">
+                        <div>
+                            <div style="font-weight:800;">${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}</div>
+                            <div class="list-item-sub">${(day.exercises || []).length} exercises</div>
+                        </div>
+                        <button class="btn-small finish" onclick="startSplitDayWorkout(${split.id}, ${dayIndex})">Start</button>
+                    </div>
+                `).join('')}
             </div>
-        `;
-    }).join('');
+
+            <div class="split-actions">
+                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="editSplit(${split.id})">Edit</button>
+                <button class="btn-small cancel" style="background:rgba(239, 68, 68, 0.1);" onclick="deleteSplit(${split.id})">Delete</button>
+            </div>
+        </div>
+    `).join('');
 }
 
-function createRoutine() {
-    liftrEditingRoutineId = null;
-    liftrRoutineDraft = {
+function createSplit() {
+    liftrEditingSplitId = null;
+    liftrSelectedSplitDayIndex = 0;
+    liftrSplitDraft = {
         id: Date.now(),
         name: '',
-        exercises: []
+        days: [
+            {
+                id: Date.now() + 1,
+                name: 'Day 1',
+                exercises: []
+            }
+        ]
     };
-    showRoutineEditor();
+
+    showSplitEditor();
 }
 
-function editRoutine(id) {
-    const routine = liftrSavedRoutines.find(r => r.id === id);
-    if (!routine) return;
+function editSplit(id) {
+    const split = liftrSavedSplits.find(s => s.id === id);
+    if (!split) return;
 
-    liftrEditingRoutineId = id;
-    liftrRoutineDraft = JSON.parse(JSON.stringify(routine));
-    showRoutineEditor();
+    liftrEditingSplitId = id;
+    liftrSelectedSplitDayIndex = 0;
+    liftrSplitDraft = JSON.parse(JSON.stringify(split));
+
+    if (!Array.isArray(liftrSplitDraft.days) || liftrSplitDraft.days.length === 0) {
+        liftrSplitDraft.days = [
+            {
+                id: Date.now(),
+                name: 'Day 1',
+                exercises: []
+            }
+        ];
+    }
+
+    showSplitEditor();
 }
 
-function showRoutineEditor() {
+function showSplitEditor() {
     const bottomNav = document.getElementById('bottom-nav');
     if (bottomNav) bottomNav.style.display = 'none';
 
@@ -2411,148 +2496,251 @@ function showRoutineEditor() {
     if (titleEl) titleEl.style.display = 'none';
     if (headerAction) headerAction.style.display = 'none';
 
-    const title = document.getElementById('routine-editor-title');
-    if (title) title.textContent = liftrEditingRoutineId ? 'Edit Routine' : 'New Routine';
+    const title = document.getElementById('split-editor-title');
+    if (title) title.textContent = liftrEditingSplitId ? 'Edit Split' : 'New Split';
 
-    const input = document.getElementById('routine-name-input');
-    if (input) input.value = liftrRoutineDraft ? liftrRoutineDraft.name : '';
+    const input = document.getElementById('split-name-input');
+    if (input) input.value = liftrSplitDraft ? liftrSplitDraft.name : '';
 
-    showScreen('routine-editor-screen');
-    renderRoutineEditor();
+    showScreen('split-editor-screen');
+    renderSplitEditor();
 }
 
-function cancelRoutineEdit() {
-    liftrRoutineDraft = null;
-    liftrEditingRoutineId = null;
-    showRoutines();
+function cancelSplitEdit() {
+    liftrSplitDraft = null;
+    liftrEditingSplitId = null;
+    showSplits();
 }
 
-function updateRoutineDraftName(value) {
-    if (liftrRoutineDraft) liftrRoutineDraft.name = value;
+function updateSplitDraftName(value) {
+    if (liftrSplitDraft) liftrSplitDraft.name = value;
 }
 
-function saveRoutineDraft() {
-    if (!liftrRoutineDraft) return;
+function saveSplitDraft() {
+    if (!liftrSplitDraft) return;
 
-    const routineToSave = JSON.parse(JSON.stringify(liftrRoutineDraft));
-    routineToSave.name = (routineToSave.name || '').trim() || 'Routine';
-    routineToSave.exercises = routineToSave.exercises || [];
+    const splitToSave = JSON.parse(JSON.stringify(liftrSplitDraft));
+    splitToSave.name = (splitToSave.name || '').trim() || 'Exercise Split';
 
-    if (liftrEditingRoutineId) {
-        const index = liftrSavedRoutines.findIndex(r => r.id === liftrEditingRoutineId);
-        if (index !== -1) liftrSavedRoutines[index] = routineToSave;
-    } else {
-        liftrSavedRoutines.unshift(routineToSave);
+    if (!Array.isArray(splitToSave.days) || splitToSave.days.length === 0) {
+        splitToSave.days = [
+            {
+                id: Date.now(),
+                name: 'Day 1',
+                exercises: []
+            }
+        ];
     }
 
-    liftrRoutineDraft = null;
-    liftrEditingRoutineId = null;
+    splitToSave.days = splitToSave.days.map((day, index) => ({
+        id: day.id || Date.now() + index,
+        name: (day.name || '').trim() || `Day ${index + 1}`,
+        exercises: Array.isArray(day.exercises) ? day.exercises : []
+    }));
+
+    if (liftrEditingSplitId) {
+        const index = liftrSavedSplits.findIndex(s => s.id === liftrEditingSplitId);
+        if (index !== -1) liftrSavedSplits[index] = splitToSave;
+    } else {
+        liftrSavedSplits.unshift(splitToSave);
+    }
+
+    liftrSplitDraft = null;
+    liftrEditingSplitId = null;
+
     saveApp();
-    showRoutines();
+    showSplits();
 }
 
-function deleteRoutine(id) {
-    showConfirmModal('Delete this routine? This cannot be undone.', 'Delete', () => {
-        liftrSavedRoutines = liftrSavedRoutines.filter(r => r.id !== id);
+function deleteSplit(id) {
+    showConfirmModal('Delete this entire split? This cannot be undone.', 'Delete', () => {
+        liftrSavedSplits = liftrSavedSplits.filter(s => s.id !== id);
         saveApp();
-        renderRoutines();
-        renderHomeRoutines();
+        renderSplits();
+        renderHomeSplits();
     });
 }
 
-function addExerciseToRoutineDraft(name) {
-    if (!liftrRoutineDraft || !name) return;
+function addSplitDay() {
+    if (!liftrSplitDraft) return;
 
-    liftrRoutineDraft.exercises.push({
+    const nextNumber = liftrSplitDraft.days.length + 1;
+
+    liftrSplitDraft.days.push({
+        id: Date.now() + Math.random(),
+        name: `Day ${nextNumber}`,
+        exercises: []
+    });
+
+    renderSplitEditor();
+}
+
+function updateSplitDayName(dayIndex, value) {
+    if (!liftrSplitDraft || !liftrSplitDraft.days[dayIndex]) return;
+    liftrSplitDraft.days[dayIndex].name = value;
+}
+
+function deleteSplitDay(dayIndex) {
+    if (!liftrSplitDraft) return;
+
+    if (liftrSplitDraft.days.length <= 1) {
+        liftrSplitDraft.days[0].exercises = [];
+        liftrSplitDraft.days[0].name = 'Day 1';
+        renderSplitEditor();
+        return;
+    }
+
+    liftrSplitDraft.days.splice(dayIndex, 1);
+    renderSplitEditor();
+}
+
+function moveSplitDay(dayIndex, direction) {
+    if (!liftrSplitDraft) return;
+
+    const newIndex = dayIndex + direction;
+    if (newIndex < 0 || newIndex >= liftrSplitDraft.days.length) return;
+
+    const moved = liftrSplitDraft.days.splice(dayIndex, 1)[0];
+    liftrSplitDraft.days.splice(newIndex, 0, moved);
+
+    renderSplitEditor();
+}
+
+function addExerciseToSplitDayDraft(name) {
+    if (!liftrSplitDraft || !liftrSplitDraft.days[liftrSelectedSplitDayIndex] || !name) return;
+
+    liftrSplitDraft.days[liftrSelectedSplitDayIndex].exercises.push({
         name: name,
         setsCount: 3
     });
 
-    renderRoutineEditor();
+    renderSplitEditor();
 }
 
-function removeRoutineExercise(index) {
-    if (!liftrRoutineDraft) return;
-    liftrRoutineDraft.exercises.splice(index, 1);
-    renderRoutineEditor();
+function removeSplitExercise(dayIndex, exerciseIndex) {
+    if (!liftrSplitDraft || !liftrSplitDraft.days[dayIndex]) return;
+
+    liftrSplitDraft.days[dayIndex].exercises.splice(exerciseIndex, 1);
+    renderSplitEditor();
 }
 
-function changeRoutineSets(index, amount) {
-    if (!liftrRoutineDraft || !liftrRoutineDraft.exercises[index]) return;
+function changeSplitExerciseSets(dayIndex, exerciseIndex, amount) {
+    if (!liftrSplitDraft || !liftrSplitDraft.days[dayIndex]) return;
 
-    const current = parseInt(liftrRoutineDraft.exercises[index].setsCount || 3);
-    liftrRoutineDraft.exercises[index].setsCount = Math.max(1, current + amount);
+    const ex = liftrSplitDraft.days[dayIndex].exercises[exerciseIndex];
+    if (!ex) return;
 
-    renderRoutineEditor();
+    const current = parseInt(ex.setsCount || 3);
+    ex.setsCount = Math.max(1, current + amount);
+
+    renderSplitEditor();
 }
 
-function moveRoutineExercise(index, direction) {
-    if (!liftrRoutineDraft) return;
+function moveSplitExercise(dayIndex, exerciseIndex, direction) {
+    if (!liftrSplitDraft || !liftrSplitDraft.days[dayIndex]) return;
 
-    const newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= liftrRoutineDraft.exercises.length) return;
+    const exercises = liftrSplitDraft.days[dayIndex].exercises;
+    const newIndex = exerciseIndex + direction;
 
-    const moved = liftrRoutineDraft.exercises.splice(index, 1)[0];
-    liftrRoutineDraft.exercises.splice(newIndex, 0, moved);
+    if (newIndex < 0 || newIndex >= exercises.length) return;
 
-    renderRoutineEditor();
+    const moved = exercises.splice(exerciseIndex, 1)[0];
+    exercises.splice(newIndex, 0, moved);
+
+    renderSplitEditor();
 }
 
-function renderRoutineEditor() {
-    const list = document.getElementById('routine-exercise-list');
+function renderSplitEditor() {
+    const list = document.getElementById('split-days-list');
     if (!list) return;
 
-    if (!liftrRoutineDraft || liftrRoutineDraft.exercises.length === 0) {
-        list.innerHTML = '<div class="empty-state" style="margin-top: 24px;">Add exercises to build this routine.</div>';
+    if (!liftrSplitDraft || !Array.isArray(liftrSplitDraft.days)) {
+        list.innerHTML = '<div class="empty-state">No split loaded.</div>';
         return;
     }
 
-    list.innerHTML = liftrRoutineDraft.exercises.map((ex, index) => `
+    list.innerHTML = liftrSplitDraft.days.map((day, dayIndex) => `
         <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-                <div style="min-width:0;">
-                    <div class="list-item-title">${liftrEscapeHtml(ex.name)}</div>
-                    <div class="list-item-sub">${ex.setsCount || 3} sets</div>
-                </div>
+            <input
+                type="text"
+                class="split-day-name-input"
+                value="${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}"
+                placeholder="Day Name..."
+                oninput="updateSplitDayName(${dayIndex}, this.value)"
+            >
 
-                <button class="icon-btn" onclick="removeRoutineExercise(${index})" style="color:var(--mod-fail);">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
+            <div class="list-item-sub" style="margin-bottom: 12px;">
+                ${(day.exercises || []).length} exercises
             </div>
 
-            <div class="routine-control-row">
-                <div class="routine-mini-controls">
-                    <button class="routine-set-control" onclick="changeRoutineSets(${index}, -1)">-</button>
-                    <span style="font-weight:800; color:var(--text-muted); min-width:56px; text-align:center;">${ex.setsCount || 3} sets</span>
-                    <button class="routine-set-control" onclick="changeRoutineSets(${index}, 1)">+</button>
-                </div>
+            ${(day.exercises || []).length === 0 ? `
+                <div class="empty-state" style="margin-top: 18px; margin-bottom: 18px;">No exercises added to this day.</div>
+            ` : `
+                ${(day.exercises || []).map((ex, exerciseIndex) => `
+                    <div class="split-exercise-row">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                            <div style="min-width:0;">
+                                <div class="list-item-title">${liftrEscapeHtml(ex.name)}</div>
+                                <div class="list-item-sub">${ex.setsCount || 3} sets</div>
+                            </div>
 
-                <div class="routine-mini-controls">
-                    <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveRoutineExercise(${index}, -1)">Up</button>
-                    <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveRoutineExercise(${index}, 1)">Down</button>
-                </div>
+                            <button class="icon-btn" onclick="removeSplitExercise(${dayIndex}, ${exerciseIndex})" style="color:var(--mod-fail);">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <div class="split-control-row">
+                            <div class="split-mini-controls">
+                                <button class="split-set-control" onclick="changeSplitExerciseSets(${dayIndex}, ${exerciseIndex}, -1)">-</button>
+                                <span style="font-weight:800; color:var(--text-muted); min-width:56px; text-align:center;">${ex.setsCount || 3} sets</span>
+                                <button class="split-set-control" onclick="changeSplitExerciseSets(${dayIndex}, ${exerciseIndex}, 1)">+</button>
+                            </div>
+
+                            <div class="split-mini-controls">
+                                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveSplitExercise(${dayIndex}, ${exerciseIndex}, -1)">Up</button>
+                                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveSplitExercise(${dayIndex}, ${exerciseIndex}, 1)">Down</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            `}
+
+            <button class="btn btn-outline" style="margin-top: 16px;" onclick="showSplitExerciseModal(${dayIndex})">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                Add Exercise to ${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}
+            </button>
+
+            <div class="split-actions">
+                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveSplitDay(${dayIndex}, -1)">Move Day Up</button>
+                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveSplitDay(${dayIndex}, 1)">Move Day Down</button>
             </div>
+
+            <button class="add-set-btn" style="color:var(--mod-fail); margin-top:8px;" onclick="deleteSplitDay(${dayIndex})">
+                ${liftrSplitDraft.days.length <= 1 ? 'Clear Day' : 'Delete Day'}
+            </button>
         </div>
     `).join('');
 }
 
-function startRoutineWorkout(id) {
-    const routine = liftrSavedRoutines.find(r => r.id === id);
-    if (!routine) return;
+function startSplitDayWorkout(splitId, dayIndex) {
+    const split = liftrSavedSplits.find(s => s.id === splitId);
+    if (!split || !split.days || !split.days[dayIndex]) return;
 
-    const start = () => performStartRoutineWorkout(routine);
+    const day = split.days[dayIndex];
+
+    const start = () => performStartSplitDayWorkout(split, day);
 
     if (currentWorkout.length > 0) {
-        showConfirmModal('Replace your current workout with this routine?', 'Replace', start);
+        showConfirmModal('Replace your current workout with this split day?', 'Replace', start);
     } else {
         start();
     }
 }
 
-function performStartRoutineWorkout(routine) {
+function performStartSplitDayWorkout(split, day) {
     stopTimer();
 
-    currentWorkout = routine.exercises.map((ex, index) => {
+    currentWorkout = (day.exercises || []).map((ex, index) => {
         const setCount = Math.max(1, parseInt(ex.setsCount || 3));
 
         return {
@@ -2571,7 +2759,7 @@ function performStartRoutineWorkout(routine) {
         };
     });
 
-    workoutName = routine.name || 'Workout';
+    workoutName = `${split.name || 'Split'} - ${day.name || 'Day'}`;
     workoutStartTime = Date.now();
 
     const nameInput = document.getElementById('workout-name-input');
@@ -2587,15 +2775,16 @@ showExerciseModal = function() {
     liftrOriginalShowExerciseModal();
 };
 
-function showRoutineExerciseModal() {
-    liftrExercisePickerMode = 'routine';
+function showSplitExerciseModal(dayIndex) {
+    liftrExercisePickerMode = 'split';
+    liftrSelectedSplitDayIndex = dayIndex;
     liftrOriginalShowExerciseModal();
 }
 
 const liftrOriginalHideExerciseModal = hideExerciseModal;
 hideExerciseModal = function() {
-    if (liftrExercisePickerMode === 'routine') {
-        showScreen('routine-editor-screen');
+    if (liftrExercisePickerMode === 'split') {
+        showScreen('split-editor-screen');
     } else {
         liftrOriginalHideExerciseModal();
     }
@@ -2603,8 +2792,8 @@ hideExerciseModal = function() {
 
 const liftrOriginalSelectExercise = selectExercise;
 selectExercise = function(name) {
-    if (liftrExercisePickerMode === 'routine') {
-        addExerciseToRoutineDraft(name);
+    if (liftrExercisePickerMode === 'split') {
+        addExerciseToSplitDayDraft(name);
         hideExerciseModal();
     } else {
         liftrOriginalSelectExercise(name);
@@ -2615,15 +2804,15 @@ const liftrOriginalNavigate = navigate;
 navigate = function(tab) {
     liftrOriginalNavigate(tab);
     if (tab === 'home') {
-        renderHomeRoutines();
+        renderHomeSplits();
     }
 };
 
-liftrInstallRoutinesUI();
-renderHomeRoutines();
+liftrInstallSplitsUI();
+renderHomeSplits();
 saveApp();
 
-/* --- END ROUTINES ADD-ON --- */
+/* --- END EXERCISE SPLITS ADD-ON --- */
 </script>
     
 </body>
