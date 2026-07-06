@@ -2242,6 +2242,28 @@ function liftrV3DayName(day, index) {
     return name || 'Untitled Day';
 }
 
+function liftrV3SplitExerciseTotal(split) {
+    return (split.days || []).reduce((sum, day) => sum + ((day.exercises || []).length), 0);
+}
+
+function liftrV3SplitNextDayIndex(split) {
+    if (!split || !Array.isArray(split.days) || split.days.length === 0) return 0;
+    if (liftrV3ActiveSplitId === split.id) {
+        return Math.max(0, Math.min(liftrV3ActiveSplitDayIndex, split.days.length - 1));
+    }
+    return 0;
+}
+
+function liftrV3SplitDayPreview(split) {
+    const nextIndex = liftrV3SplitNextDayIndex(split);
+    return (split.days || []).slice(0, 5).map((day, index) => `
+        <div class="split-day-preview-chip ${index === nextIndex ? 'next' : ''}">
+            <div class="split-day-preview-name">${liftrV3Esc(liftrV3DayName(day, index))}</div>
+            <div class="split-day-preview-count">${(day.exercises || []).length} exercises</div>
+        </div>
+    `).join('');
+}
+
 function liftrV3NormalizeSplits() {
     liftrV3SavedSplits = liftrV3SavedSplits.map((split, splitIndex) => ({
         id: split.id || Date.now() + splitIndex,
@@ -2327,20 +2349,40 @@ function liftrV3InstallSplitsUI() {
             }
 
             .split-card {
-                padding: 24px;
-                margin-bottom: 22px;
-                border-radius: 26px;
+                padding: 20px;
+                margin-bottom: 14px;
+                border-radius: 22px;
+                background: linear-gradient(180deg, #111113 0%, #0b0b0d 100%);
             }
 
             .split-card + .split-card {
                 margin-top: 4px;
             }
 
+            .split-card.active-split-list-card,
+            .split-home-card {
+                border-color: rgba(255,255,255,0.18);
+                background: linear-gradient(180deg, #171719 0%, #0d0d0f 100%);
+            }
+
+            .split-card-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 14px;
+            }
+
+            .split-title-wrap {
+                min-width: 0;
+                flex: 1;
+            }
+
             .split-title {
                 font-size: 1.22rem;
                 font-weight: 850;
-                letter-spacing: -0.45px;
-                margin-bottom: 8px;
+                letter-spacing: 0;
+                margin-bottom: 6px;
+                line-height: 1.18;
             }
 
             .split-muted {
@@ -2350,11 +2392,120 @@ function liftrV3InstallSplitsUI() {
                 line-height: 1.4;
             }
 
+            .split-badge {
+                background: var(--text-main);
+                color: var(--bg-base);
+                border-radius: 999px;
+                padding: 7px 10px;
+                font-size: 0.68rem;
+                font-weight: 900;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+
+            .split-day-preview {
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                padding: 16px 0 4px;
+                scrollbar-width: none;
+            }
+
+            .split-day-preview::-webkit-scrollbar {
+                display: none;
+            }
+
+            .split-day-preview-chip {
+                border: 1px solid var(--border-light);
+                background: rgba(255,255,255,0.03);
+                border-radius: 14px;
+                padding: 10px 12px;
+                min-width: 92px;
+            }
+
+            .split-day-preview-chip.next {
+                border-color: rgba(255,255,255,0.42);
+                background: rgba(255,255,255,0.08);
+            }
+
+            .split-day-preview-name {
+                color: var(--text-main);
+                font-size: 0.82rem;
+                font-weight: 850;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 120px;
+            }
+
+            .split-day-preview-count {
+                color: var(--text-muted);
+                font-size: 0.72rem;
+                font-weight: 700;
+                margin-top: 3px;
+            }
+
+            .split-next-panel {
+                background: rgba(255,255,255,0.045);
+                border: 1px solid rgba(255,255,255,0.07);
+                border-radius: 18px;
+                padding: 14px;
+                margin-top: 16px;
+            }
+
+            .split-overline {
+                color: var(--text-muted);
+                font-size: 0.72rem;
+                font-weight: 900;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                margin-bottom: 5px;
+            }
+
+            .split-day-select {
+                background: #09090b;
+                border: 1px solid #202023;
+                color: var(--text-main);
+                border-radius: 14px;
+                padding: 13px 14px;
+                width: 100%;
+                font-size: 0.95rem;
+                font-weight: 800;
+                margin-top: 8px;
+            }
+
+            .split-start-btn {
+                border-radius: 16px;
+                margin-top: 14px;
+            }
+
             .split-actions {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 12px;
-                margin-top: 22px;
+                margin-top: 16px;
+            }
+
+            .split-secondary-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                margin-top: 12px;
+            }
+
+            .split-text-btn {
+                background: transparent;
+                border: none;
+                color: var(--text-muted);
+                padding: 10px 0;
+                font-size: 0.86rem;
+                font-weight: 800;
+                cursor: pointer;
+            }
+
+            .split-text-btn.danger {
+                color: var(--mod-fail);
             }
 
             .split-day-nav {
@@ -2589,13 +2740,23 @@ function liftrV3InstallSplitsUI() {
                 justify-content: space-between;
                 align-items: center;
                 gap: 14px;
-                padding: 15px 0;
+                padding: 14px 0;
                 border-top: 1px solid var(--border-light);
             }
 
             .split-view-exercise-row:first-child {
                 border-top: none;
                 padding-top: 0;
+            }
+
+            .split-set-badge {
+                background: var(--tag-bg);
+                color: var(--text-main);
+                border-radius: 999px;
+                padding: 7px 10px;
+                font-size: 0.76rem;
+                font-weight: 900;
+                white-space: nowrap;
             }
 
             .split-linking-note {
@@ -2727,22 +2888,38 @@ function renderSplits() {
 
     list.innerHTML = liftrV3SavedSplits.map(split => {
         const isActive = liftrV3ActiveSplitId === split.id;
+        const totalExercises = liftrV3SplitExerciseTotal(split);
+        const nextIndex = liftrV3SplitNextDayIndex(split);
+        const nextDay = (split.days || [])[nextIndex];
 
         return `
-            <div class="card split-card">
-                <div class="split-title">${liftrV3Esc(split.name || 'Exercise Split')}</div>
-                <div class="split-muted">${(split.days || []).length} days${isActive ? ' &middot; Active' : ''}</div>
+            <div class="card split-card ${isActive ? 'active-split-list-card' : ''}">
+                <div class="split-card-head">
+                    <div class="split-title-wrap">
+                        <div class="split-title">${liftrV3Esc(split.name || 'Exercise Split')}</div>
+                        <div class="split-muted">${(split.days || []).length} days &middot; ${totalExercises} exercises</div>
+                    </div>
+                    ${isActive ? '<div class="split-badge">Active</div>' : ''}
+                </div>
+
+                <div class="split-day-preview">
+                    ${liftrV3SplitDayPreview(split)}
+                </div>
+
+                <div class="split-next-panel">
+                    <div class="split-overline">${isActive ? 'Next Up' : 'First Day'}</div>
+                    <div class="split-title" style="font-size:1rem; margin-bottom:0;">${liftrV3Esc(liftrV3DayName(nextDay, nextIndex))}</div>
+                </div>
 
                 <div class="split-actions">
-                    <button class="btn-small finish" onclick="openSplit(${split.id})">Open</button>
+                    <button class="btn-small finish" onclick="${isActive ? 'startActiveSplitWorkout()' : `openSplit(${split.id})`}">${isActive ? 'Start' : 'Open'}</button>
                     <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="editSplit(${split.id})">Edit</button>
                 </div>
 
-                <button class="btn-small finish" style="width:100%; margin-top:12px;" onclick="setActiveSplit(${split.id})">
-                    ${isActive ? 'Active Split' : 'Set Active'}
-                </button>
-
-                <button class="add-set-btn" style="color:var(--mod-fail); margin-top:14px;" onclick="deleteSplit(${split.id})">Delete Split</button>
+                <div class="split-secondary-row">
+                    <button class="split-text-btn" onclick="setActiveSplit(${split.id})">${isActive ? 'Reset to first day' : 'Set active'}</button>
+                    <button class="split-text-btn danger" onclick="deleteSplit(${split.id})">Delete</button>
+                </div>
             </div>
         `;
     }).join('');
@@ -2757,6 +2934,11 @@ function setActiveSplit(splitId) {
     saveApp();
     renderSplits();
     renderActiveSplitHome();
+
+    const activeScreen = document.querySelector('.screen.active');
+    if (activeScreen && activeScreen.id === 'split-view-screen') {
+        renderSplitView();
+    }
 }
 
 function setActiveSplitNextDay(dayIndex) {
@@ -2791,28 +2973,37 @@ function renderActiveSplitHome() {
     if (!card) {
         card = document.createElement('div');
         card.id = 'active-split-home-card';
-        card.className = 'card split-card';
+        card.className = 'card split-home-card';
         const startBtn = home.querySelector('button.btn');
         home.insertBefore(card, startBtn);
     }
 
     card.innerHTML = `
-        <div class="split-title">Active Split</div>
-        <div class="split-muted" style="margin-bottom:10px;">${liftrV3Esc(split.name || 'Exercise Split')}</div>
+        <div class="split-card-head">
+            <div class="split-title-wrap">
+                <div class="split-overline">Active Split</div>
+                <div class="split-title">${liftrV3Esc(split.name || 'Exercise Split')}</div>
+                <div class="split-muted">${(split.days || []).length} days &middot; ${liftrV3SplitExerciseTotal(split)} exercises</div>
+            </div>
+            <div class="split-badge">Live</div>
+        </div>
 
-        <select class="text-input" style="margin-bottom:12px;" onchange="setActiveSplitNextDay(parseInt(this.value))">
-            ${split.days.map((d, index) => `
-                <option value="${index}" ${index === liftrV3ActiveSplitDayIndex ? 'selected' : ''}>
-                    ${liftrV3Esc(liftrV3DayName(d, index))}
-                </option>
-            `).join('')}
-        </select>
+        <div class="split-next-panel">
+            <div class="split-overline">Next Up</div>
+            <select class="split-day-select" onchange="setActiveSplitNextDay(parseInt(this.value))">
+                ${split.days.map((d, index) => `
+                    <option value="${index}" ${index === liftrV3ActiveSplitDayIndex ? 'selected' : ''}>
+                        ${liftrV3Esc(liftrV3DayName(d, index))}
+                    </option>
+                `).join('')}
+            </select>
 
-        <button class="btn" onclick="startActiveSplitWorkout()">
-            Start ${liftrV3Esc(liftrV3DayName(day, liftrV3ActiveSplitDayIndex))}
-        </button>
+            <button class="btn split-start-btn" onclick="startActiveSplitWorkout()">
+                Start ${liftrV3Esc(liftrV3DayName(day, liftrV3ActiveSplitDayIndex))}
+            </button>
+        </div>
 
-        <button class="add-set-btn" onclick="clearActiveSplit()">Clear Active Split</button>
+        <button class="split-text-btn" style="width:100%; text-align:center;" onclick="clearActiveSplit()">Clear active split</button>
     `;
 }
 
@@ -2861,6 +3052,8 @@ function renderSplitView() {
 
     liftrV3ViewingDayIndex = Math.max(0, Math.min(liftrV3ViewingDayIndex, split.days.length - 1));
     const day = split.days[liftrV3ViewingDayIndex];
+    const isActive = liftrV3ActiveSplitId === split.id;
+    const totalExercises = liftrV3SplitExerciseTotal(split);
 
     screen.innerHTML = `
         <div class="split-editor-toolbar">
@@ -2868,7 +3061,18 @@ function renderSplitView() {
             <button class="btn-small finish" onclick="editSplit(${split.id})">Edit</button>
         </div>
 
-        <h2>${liftrV3Esc(split.name || 'Exercise Split')}</h2>
+        <div class="card split-card ${isActive ? 'active-split-list-card' : ''}">
+            <div class="split-card-head">
+                <div class="split-title-wrap">
+                    <div class="split-overline">Split</div>
+                    <div class="split-title">${liftrV3Esc(split.name || 'Exercise Split')}</div>
+                    <div class="split-muted">${split.days.length} days &middot; ${totalExercises} exercises</div>
+                </div>
+                ${isActive ? '<div class="split-badge">Active</div>' : ''}
+            </div>
+
+            <button class="split-text-btn" onclick="setActiveSplit(${split.id})">${isActive ? 'Reset active split to first day' : 'Set as active split'}</button>
+        </div>
 
         <div class="split-day-nav">
             ${split.days.map((d, index) => `
@@ -2892,16 +3096,17 @@ function renderSplitView() {
                 <div class="split-view-exercise-list">
                     ${(day.exercises || []).map((ex, index) => `
                         <div class="split-view-exercise-row">
-                            <div>
+                            <div style="min-width:0;">
                                 <div class="split-exercise-name">${liftrV3Esc(ex.name)}</div>
-                                <div class="split-muted">${ex.setsCount || 3} sets${ex.supersetId ? ' &middot; Superset' : ''}</div>
+                                <div class="split-muted">${ex.supersetId ? 'Superset' : 'Standard'}</div>
                             </div>
+                            <div class="split-set-badge">${ex.setsCount || 3} sets</div>
                         </div>
                     `).join('')}
                 </div>
             `}
 
-            <button class="btn" style="margin-top: 24px;" onclick="startSplitDayWorkout(${split.id}, ${liftrV3ViewingDayIndex})">
+            <button class="btn split-start-btn" onclick="startSplitDayWorkout(${split.id}, ${liftrV3ViewingDayIndex})">
                 Start ${liftrV3Esc(liftrV3DayName(day, liftrV3ViewingDayIndex))}
             </button>
         </div>
