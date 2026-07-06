@@ -2173,7 +2173,7 @@ window.onload = function() {
 </script>
 
 <script>
-/* --- EXERCISE SPLITS ADD-ON: paste above </body> --- */
+/* --- EXERCISE SPLITS ADD-ON V2: dedicated page + cleaner spacing --- */
 
 let liftrSavedSplits = [];
 let liftrSplitDraft = null;
@@ -2220,6 +2220,35 @@ function liftrEscapeHtml(text) {
         .replace(/'/g, '&#039;');
 }
 
+function liftrNormalizeSplits() {
+    liftrSavedSplits = liftrSavedSplits.map((split, splitIndex) => ({
+        id: split.id || Date.now() + splitIndex,
+        name: split.name || 'Exercise Split',
+        days: Array.isArray(split.days) && split.days.length > 0 ? split.days.map((day, dayIndex) => ({
+            id: day.id || Date.now() + splitIndex + dayIndex,
+            name: day.name || `Day ${dayIndex + 1}`,
+            exercises: Array.isArray(day.exercises) ? day.exercises.map(ex => {
+                if (typeof ex === 'string') {
+                    return { name: ex, setsCount: 3 };
+                }
+
+                return {
+                    name: ex.name || 'Exercise',
+                    setsCount: ex.setsCount || 3
+                };
+            }) : []
+        })) : [
+            {
+                id: Date.now() + splitIndex,
+                name: 'Day 1',
+                exercises: []
+            }
+        ]
+    }));
+}
+
+liftrNormalizeSplits();
+
 saveApp = function() {
     localStorage.setItem('myWorkoutApp_data', JSON.stringify({
         currentWorkout: currentWorkout,
@@ -2233,32 +2262,121 @@ saveApp = function() {
 };
 
 function liftrInstallSplitsUI() {
+    const oldHomeButton = document.getElementById('split-home-button');
+    if (oldHomeButton) oldHomeButton.remove();
+
+    const oldHomeSection = document.getElementById('home-splits-section');
+    if (oldHomeSection) oldHomeSection.remove();
+
     const style = document.createElement('style');
     style.innerHTML = `
+        #bottom-nav {
+            gap: 2px;
+        }
+
+        #bottom-nav .nav-btn {
+            padding-left: 9px;
+            padding-right: 9px;
+            min-width: 0;
+        }
+
+        .split-page-top {
+            margin-bottom: 26px;
+        }
+
+        .split-page-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.45;
+            margin: -10px 0 22px;
+        }
+
+        .split-card {
+            padding: 22px;
+            margin-bottom: 18px;
+            border-radius: 24px;
+        }
+
+        .split-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .split-title {
+            font-size: 1.18rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            margin-bottom: 6px;
+        }
+
+        .split-pill {
+            background: var(--bg-surface-elevated);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 7px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .split-day-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .split-day-topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .split-day-title {
+            font-weight: 800;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
         .split-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 14px;
+            gap: 12px;
+            margin-top: 18px;
         }
 
-        .split-day-row {
+        .split-editor-toolbar {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            padding: 12px 0;
-            border-top: 1px solid var(--border-light);
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .split-editor-section {
+            margin-top: 28px;
+        }
+
+        .split-editor-day-card {
+            padding: 22px;
+            margin-bottom: 20px;
+            border-radius: 24px;
         }
 
         .split-set-control {
             background: var(--tag-bg);
             border: none;
             color: var(--text-main);
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            font-weight: 800;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 1rem;
             cursor: pointer;
         }
 
@@ -2266,14 +2384,15 @@ function liftrInstallSplitsUI() {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
-            margin-top: 14px;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
         }
 
         .split-mini-controls {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 9px;
         }
 
         .split-day-name-input {
@@ -2281,10 +2400,11 @@ function liftrInstallSplitsUI() {
             background: transparent;
             border: none;
             color: var(--text-main);
-            font-size: 1.15rem;
+            font-size: 1.22rem;
             font-weight: 800;
             padding: 0;
             margin-bottom: 8px;
+            letter-spacing: -0.4px;
         }
 
         .split-day-name-input:focus {
@@ -2292,45 +2412,66 @@ function liftrInstallSplitsUI() {
         }
 
         .split-exercise-row {
-            padding: 12px 0;
+            padding: 16px 0;
             border-top: 1px solid var(--border-light);
+        }
+
+        .split-exercise-row:first-of-type {
+            margin-top: 12px;
+        }
+
+        .split-muted-line {
+            color: var(--text-muted);
+            font-size: 0.86rem;
+            font-weight: 500;
+            line-height: 1.35;
+        }
+
+        .split-editor-empty {
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed var(--border-light);
+            border-radius: 18px;
+            padding: 22px;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 600;
+            margin: 14px 0;
         }
     `;
     document.head.appendChild(style);
 
-    const homeScreen = document.getElementById('home-screen');
-    const startButton = homeScreen ? homeScreen.querySelector('.btn') : null;
+    const bottomNav = document.getElementById('bottom-nav');
 
-    if (startButton && !document.getElementById('split-home-button')) {
-        startButton.insertAdjacentHTML('afterend', `
-            <button id="split-home-button" class="btn btn-outline" style="margin-top: 12px;" onclick="showSplits()">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                Exercise Splits
+    if (bottomNav && !document.getElementById('nav-splits')) {
+        bottomNav.insertAdjacentHTML('beforeend', `
+            <button class="nav-btn" id="nav-splits" onclick="showSplits()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M4 6h16M4 12h10M4 18h16"></path>
+                    <path d="M17 10l3 2-3 2"></path>
+                </svg>
+                Splits
             </button>
-
-            <div id="home-splits-section" style="margin-top: 40px; display: none;">
-                <h3 class="section-title">Saved Splits</h3>
-                <div id="home-split-list"></div>
-            </div>
         `);
     }
 
     const app = document.getElementById('app-container');
-    const bottomNav = document.getElementById('bottom-nav');
 
     if (app && bottomNav && !document.getElementById('splits-screen')) {
         const splitsScreen = document.createElement('div');
         splitsScreen.id = 'splits-screen';
         splitsScreen.className = 'screen';
         splitsScreen.innerHTML = `
-            <h2>Exercise Splits</h2>
+            <div class="split-page-top">
+                <h2>Exercise Splits</h2>
+                <p class="split-page-subtitle">Create multi-day splits, name each day, and start the exact day you are training.</p>
 
-            <button class="btn" onclick="createSplit()">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                Create New Split
-            </button>
+                <button class="btn" onclick="createSplit()">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Create New Split
+                </button>
+            </div>
 
-            <div id="splits-list" style="margin-top: 24px;"></div>
+            <div id="splits-list"></div>
         `;
         app.insertBefore(splitsScreen, bottomNav);
     }
@@ -2340,7 +2481,7 @@ function liftrInstallSplitsUI() {
         editorScreen.id = 'split-editor-screen';
         editorScreen.className = 'screen';
         editorScreen.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+            <div class="split-editor-toolbar">
                 <button class="header-btn" onclick="cancelSplitEdit()">Cancel</button>
                 <button class="btn-small finish" onclick="saveSplitDraft()">Save</button>
             </div>
@@ -2348,47 +2489,17 @@ function liftrInstallSplitsUI() {
             <h2 id="split-editor-title">Split</h2>
             <input type="text" id="split-name-input" class="text-input" placeholder="Split Name..." oninput="updateSplitDraftName(this.value)">
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 8px; margin-bottom: 14px;">
-                <h3 class="section-title" style="margin:0;">Days</h3>
-                <button class="btn-small finish" onclick="addSplitDay()">Add Day</button>
-            </div>
+            <div class="split-editor-section">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                    <h3 class="section-title" style="margin:0;">Days</h3>
+                    <button class="btn-small finish" onclick="addSplitDay()">Add Day</button>
+                </div>
 
-            <div id="split-days-list"></div>
+                <div id="split-days-list"></div>
+            </div>
         `;
         app.insertBefore(editorScreen, bottomNav);
     }
-}
-
-function renderHomeSplits() {
-    const section = document.getElementById('home-splits-section');
-    const list = document.getElementById('home-split-list');
-    if (!section || !list) return;
-
-    if (liftrSavedSplits.length === 0) {
-        section.style.display = 'none';
-        list.innerHTML = '';
-        return;
-    }
-
-    section.style.display = 'block';
-    list.innerHTML = liftrSavedSplits.map(split => `
-        <div class="card">
-            <div class="list-item-title">${liftrEscapeHtml(split.name || 'Split')}</div>
-            <div class="list-item-sub">${(split.days || []).length} days</div>
-
-            <div style="margin-top: 12px;">
-                ${(split.days || []).map((day, dayIndex) => `
-                    <div class="split-day-row">
-                        <div>
-                            <div style="font-weight:800;">${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}</div>
-                            <div class="list-item-sub">${(day.exercises || []).length} exercises</div>
-                        </div>
-                        <button class="btn-small finish" onclick="startSplitDayWorkout(${split.id}, ${dayIndex})">Start</button>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `).join('');
 }
 
 function showSplits() {
@@ -2404,8 +2515,8 @@ function showSplits() {
     if (headerAction) headerAction.style.display = 'none';
 
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    const navHome = document.getElementById('nav-home');
-    if (navHome) navHome.classList.add('active');
+    const navSplits = document.getElementById('nav-splits');
+    if (navSplits) navSplits.classList.add('active');
 
     showScreen('splits-screen');
     renderSplits();
@@ -2421,18 +2532,25 @@ function renderSplits() {
     }
 
     list.innerHTML = liftrSavedSplits.map(split => `
-        <div class="card">
-            <div class="list-item-title">${liftrEscapeHtml(split.name || 'Split')}</div>
-            <div class="list-item-sub">${(split.days || []).length} days</div>
+        <div class="card split-card">
+            <div class="split-card-header">
+                <div style="min-width:0;">
+                    <div class="split-title">${liftrEscapeHtml(split.name || 'Split')}</div>
+                    <div class="split-muted-line">${(split.days || []).length} training days</div>
+                </div>
+                <div class="split-pill">Split</div>
+            </div>
 
-            <div style="margin-top: 12px;">
+            <div>
                 ${(split.days || []).map((day, dayIndex) => `
-                    <div class="split-day-row">
-                        <div>
-                            <div style="font-weight:800;">${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}</div>
-                            <div class="list-item-sub">${(day.exercises || []).length} exercises</div>
+                    <div class="split-day-card">
+                        <div class="split-day-topline">
+                            <div style="min-width:0;">
+                                <div class="split-day-title">${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}</div>
+                                <div class="split-muted-line">${(day.exercises || []).length} exercises</div>
+                            </div>
+                            <button class="btn-small finish" onclick="startSplitDayWorkout(${split.id}, ${dayIndex})">Start</button>
                         </div>
-                        <button class="btn-small finish" onclick="startSplitDayWorkout(${split.id}, ${dayIndex})">Start</button>
                     </div>
                 `).join('')}
             </div>
@@ -2557,7 +2675,6 @@ function deleteSplit(id) {
         liftrSavedSplits = liftrSavedSplits.filter(s => s.id !== id);
         saveApp();
         renderSplits();
-        renderHomeSplits();
     });
 }
 
@@ -2660,7 +2777,7 @@ function renderSplitEditor() {
     }
 
     list.innerHTML = liftrSplitDraft.days.map((day, dayIndex) => `
-        <div class="card">
+        <div class="card split-editor-day-card">
             <input
                 type="text"
                 class="split-day-name-input"
@@ -2669,19 +2786,19 @@ function renderSplitEditor() {
                 oninput="updateSplitDayName(${dayIndex}, this.value)"
             >
 
-            <div class="list-item-sub" style="margin-bottom: 12px;">
-                ${(day.exercises || []).length} exercises
+            <div class="split-muted-line" style="margin-bottom: 18px;">
+                ${(day.exercises || []).length} exercises in this day
             </div>
 
             ${(day.exercises || []).length === 0 ? `
-                <div class="empty-state" style="margin-top: 18px; margin-bottom: 18px;">No exercises added to this day.</div>
+                <div class="split-editor-empty">No exercises added to this day yet.</div>
             ` : `
                 ${(day.exercises || []).map((ex, exerciseIndex) => `
                     <div class="split-exercise-row">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
                             <div style="min-width:0;">
                                 <div class="list-item-title">${liftrEscapeHtml(ex.name)}</div>
-                                <div class="list-item-sub">${ex.setsCount || 3} sets</div>
+                                <div class="split-muted-line">${ex.setsCount || 3} sets</div>
                             </div>
 
                             <button class="icon-btn" onclick="removeSplitExercise(${dayIndex}, ${exerciseIndex})" style="color:var(--mod-fail);">
@@ -2692,7 +2809,7 @@ function renderSplitEditor() {
                         <div class="split-control-row">
                             <div class="split-mini-controls">
                                 <button class="split-set-control" onclick="changeSplitExerciseSets(${dayIndex}, ${exerciseIndex}, -1)">-</button>
-                                <span style="font-weight:800; color:var(--text-muted); min-width:56px; text-align:center;">${ex.setsCount || 3} sets</span>
+                                <span style="font-weight:800; color:var(--text-muted); min-width:60px; text-align:center;">${ex.setsCount || 3} sets</span>
                                 <button class="split-set-control" onclick="changeSplitExerciseSets(${dayIndex}, ${exerciseIndex}, 1)">+</button>
                             </div>
 
@@ -2705,9 +2822,9 @@ function renderSplitEditor() {
                 `).join('')}
             `}
 
-            <button class="btn btn-outline" style="margin-top: 16px;" onclick="showSplitExerciseModal(${dayIndex})">
+            <button class="btn btn-outline" style="margin-top: 18px;" onclick="showSplitExerciseModal(${dayIndex})">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                Add Exercise to ${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}
+                Add Exercise
             </button>
 
             <div class="split-actions">
@@ -2715,7 +2832,7 @@ function renderSplitEditor() {
                 <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveSplitDay(${dayIndex}, 1)">Move Day Down</button>
             </div>
 
-            <button class="add-set-btn" style="color:var(--mod-fail); margin-top:8px;" onclick="deleteSplitDay(${dayIndex})">
+            <button class="add-set-btn" style="color:var(--mod-fail); margin-top:10px;" onclick="deleteSplitDay(${dayIndex})">
                 ${liftrSplitDraft.days.length <= 1 ? 'Clear Day' : 'Delete Day'}
             </button>
         </div>
@@ -2803,16 +2920,16 @@ selectExercise = function(name) {
 const liftrOriginalNavigate = navigate;
 navigate = function(tab) {
     liftrOriginalNavigate(tab);
-    if (tab === 'home') {
-        renderHomeSplits();
+    if (tab !== 'splits') {
+        const navSplits = document.getElementById('nav-splits');
+        if (navSplits) navSplits.classList.remove('active');
     }
 };
 
 liftrInstallSplitsUI();
-renderHomeSplits();
 saveApp();
 
-/* --- END EXERCISE SPLITS ADD-ON --- */
+/* --- END EXERCISE SPLITS ADD-ON V2 --- */
 </script>
     
 </body>
