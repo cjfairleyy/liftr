@@ -2173,34 +2173,44 @@ window.onload = function() {
 </script>
 
 <script>
-/* --- EXERCISE SPLITS ADD-ON V2: dedicated page + cleaner spacing --- */
+/* --- EXERCISE SPLITS ADD-ON V3: minimal page + day navigation + supersets --- */
 
-let liftrSavedSplits = [];
-let liftrSplitDraft = null;
-let liftrEditingSplitId = null;
-let liftrSelectedSplitDayIndex = 0;
-let liftrExercisePickerMode = 'workout';
+var liftrV3SavedSplits = [];
+var liftrV3SplitDraft = null;
+var liftrV3EditingSplitId = null;
+var liftrV3SelectedEditDayIndex = 0;
+var liftrV3ViewingSplitId = null;
+var liftrV3ViewingDayIndex = 0;
+var liftrV3ExercisePickerMode = 'workout';
+var liftrV3SelectedAddDayIndex = 0;
+var liftrV3OpenDayMenuIndex = null;
+var liftrV3OpenExerciseMenuIndex = null;
+var liftrV3SupersetSourceIndex = null;
 
 try {
-    const liftrSavedData = JSON.parse(localStorage.getItem('myWorkoutApp_data'));
+    const liftrV3SavedData = JSON.parse(localStorage.getItem('myWorkoutApp_data'));
 
-    if (liftrSavedData && Array.isArray(liftrSavedData.savedSplits)) {
-        liftrSavedSplits = liftrSavedData.savedSplits;
-    } else if (liftrSavedData && Array.isArray(liftrSavedData.savedRoutines)) {
-        liftrSavedSplits = liftrSavedData.savedRoutines.map((routine, index) => ({
+    if (liftrV3SavedData && Array.isArray(liftrV3SavedData.savedSplits)) {
+        liftrV3SavedSplits = liftrV3SavedData.savedSplits;
+    } else if (typeof liftrSavedSplits !== 'undefined' && Array.isArray(liftrSavedSplits)) {
+        liftrV3SavedSplits = liftrSavedSplits;
+    } else if (liftrV3SavedData && Array.isArray(liftrV3SavedData.savedRoutines)) {
+        liftrV3SavedSplits = liftrV3SavedData.savedRoutines.map((routine, index) => ({
             id: routine.id || Date.now() + index,
-            name: routine.name || 'Split',
+            name: routine.name || 'Exercise Split',
             days: [
                 {
                     id: Date.now() + index + 1000,
-                    name: routine.name || 'Day 1',
+                    name: routine.name || '',
                     exercises: (routine.exercises || []).map(ex => {
                         if (typeof ex === 'string') {
-                            return { name: ex, setsCount: 3 };
+                            return { name: ex, setsCount: 3, supersetId: null };
                         }
+
                         return {
                             name: ex.name || 'Exercise',
-                            setsCount: ex.setsCount || 3
+                            setsCount: ex.setsCount || 3,
+                            supersetId: ex.supersetId || null
                         };
                     })
                 }
@@ -2208,10 +2218,10 @@ try {
         }));
     }
 } catch (e) {
-    liftrSavedSplits = [];
+    liftrV3SavedSplits = [];
 }
 
-function liftrEscapeHtml(text) {
+function liftrV3Esc(text) {
     return String(text || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -2220,34 +2230,40 @@ function liftrEscapeHtml(text) {
         .replace(/'/g, '&#039;');
 }
 
-function liftrNormalizeSplits() {
-    liftrSavedSplits = liftrSavedSplits.map((split, splitIndex) => ({
+function liftrV3DayName(day, index) {
+    const name = day && typeof day.name === 'string' ? day.name.trim() : '';
+    return name || 'Untitled Day';
+}
+
+function liftrV3NormalizeSplits() {
+    liftrV3SavedSplits = liftrV3SavedSplits.map((split, splitIndex) => ({
         id: split.id || Date.now() + splitIndex,
         name: split.name || 'Exercise Split',
         days: Array.isArray(split.days) && split.days.length > 0 ? split.days.map((day, dayIndex) => ({
             id: day.id || Date.now() + splitIndex + dayIndex,
-            name: day.name || `Day ${dayIndex + 1}`,
+            name: typeof day.name === 'string' ? day.name : '',
             exercises: Array.isArray(day.exercises) ? day.exercises.map(ex => {
                 if (typeof ex === 'string') {
-                    return { name: ex, setsCount: 3 };
+                    return { name: ex, setsCount: 3, supersetId: null };
                 }
 
                 return {
                     name: ex.name || 'Exercise',
-                    setsCount: ex.setsCount || 3
+                    setsCount: ex.setsCount || 3,
+                    supersetId: ex.supersetId || null
                 };
             }) : []
         })) : [
             {
                 id: Date.now() + splitIndex,
-                name: 'Day 1',
+                name: '',
                 exercises: []
             }
         ]
     }));
 }
 
-liftrNormalizeSplits();
+liftrV3NormalizeSplits();
 
 saveApp = function() {
     localStorage.setItem('myWorkoutApp_data', JSON.stringify({
@@ -2255,251 +2271,420 @@ saveApp = function() {
         workoutHistory: workoutHistory,
         weightHistory: weightHistory,
         favoriteExercises: favoriteExercises,
-        savedSplits: liftrSavedSplits,
+        savedSplits: liftrV3SavedSplits,
         workoutName: workoutName,
         workoutStartTime: workoutStartTime
     }));
 };
 
-function liftrInstallSplitsUI() {
+function liftrV3InstallSplitsUI() {
     const oldHomeButton = document.getElementById('split-home-button');
     if (oldHomeButton) oldHomeButton.remove();
 
     const oldHomeSection = document.getElementById('home-splits-section');
     if (oldHomeSection) oldHomeSection.remove();
 
-    const style = document.createElement('style');
-    style.innerHTML = `
-        #bottom-nav {
-            gap: 2px;
-        }
+    if (!document.getElementById('liftr-v3-splits-style')) {
+        const style = document.createElement('style');
+        style.id = 'liftr-v3-splits-style';
+        style.innerHTML = `
+            #bottom-nav {
+                gap: 2px;
+            }
 
-        #bottom-nav .nav-btn {
-            padding-left: 9px;
-            padding-right: 9px;
-            min-width: 0;
-        }
+            #bottom-nav .nav-btn {
+                padding-left: 9px;
+                padding-right: 9px;
+                min-width: 0;
+            }
 
-        .split-page-top {
-            margin-bottom: 26px;
-        }
+            .split-top-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 14px;
+                margin-bottom: 28px;
+            }
 
-        .split-page-subtitle {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            font-weight: 500;
-            line-height: 1.45;
-            margin: -10px 0 22px;
-        }
+            .split-top-row h2 {
+                margin-bottom: 0;
+            }
 
-        .split-card {
-            padding: 22px;
-            margin-bottom: 18px;
-            border-radius: 24px;
-        }
+            .split-round-btn {
+                width: auto;
+                padding: 12px 16px;
+                border-radius: 16px;
+                white-space: nowrap;
+            }
 
-        .split-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 14px;
-            margin-bottom: 18px;
-        }
+            .split-card {
+                padding: 24px;
+                margin-bottom: 22px;
+                border-radius: 26px;
+            }
 
-        .split-title {
-            font-size: 1.18rem;
-            font-weight: 800;
-            letter-spacing: -0.3px;
-            margin-bottom: 6px;
-        }
+            .split-card + .split-card {
+                margin-top: 4px;
+            }
 
-        .split-pill {
-            background: var(--bg-surface-elevated);
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            font-weight: 800;
-            padding: 7px 10px;
-            border-radius: 999px;
-            white-space: nowrap;
-        }
+            .split-title {
+                font-size: 1.22rem;
+                font-weight: 850;
+                letter-spacing: -0.45px;
+                margin-bottom: 8px;
+            }
 
-        .split-day-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 18px;
-            padding: 15px;
-            margin-top: 10px;
-        }
+            .split-muted {
+                color: var(--text-muted);
+                font-size: 0.88rem;
+                font-weight: 550;
+                line-height: 1.4;
+            }
 
-        .split-day-topline {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 14px;
-        }
+            .split-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-top: 22px;
+            }
 
-        .split-day-title {
-            font-weight: 800;
-            font-size: 1rem;
-            margin-bottom: 4px;
-        }
+            .split-day-nav {
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                padding: 4px 0 18px;
+                margin-bottom: 12px;
+                scrollbar-width: none;
+            }
 
-        .split-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 18px;
-        }
+            .split-day-nav::-webkit-scrollbar {
+                display: none;
+            }
 
-        .split-editor-toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
+            .split-day-pill {
+                background: var(--tag-bg);
+                border: none;
+                color: var(--text-muted);
+                padding: 12px 16px;
+                border-radius: 999px;
+                font-size: 0.86rem;
+                font-weight: 800;
+                cursor: pointer;
+                white-space: nowrap;
+            }
 
-        .split-editor-section {
-            margin-top: 28px;
-        }
+            .split-day-pill.active {
+                background: var(--text-main);
+                color: var(--bg-base);
+            }
 
-        .split-editor-day-card {
-            padding: 22px;
-            margin-bottom: 20px;
-            border-radius: 24px;
-        }
+            .split-day-panel {
+                padding: 24px;
+                border-radius: 26px;
+                margin-bottom: 22px;
+            }
 
-        .split-set-control {
-            background: var(--tag-bg);
-            border: none;
-            color: var(--text-main);
-            width: 38px;
-            height: 38px;
-            border-radius: 12px;
-            font-weight: 900;
-            font-size: 1rem;
-            cursor: pointer;
-        }
+            .split-day-panel-header {
+                position: relative;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 14px;
+                margin-bottom: 22px;
+            }
 
-        .split-control-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
+            .split-day-title {
+                font-size: 1.28rem;
+                font-weight: 850;
+                letter-spacing: -0.4px;
+                margin-bottom: 6px;
+            }
 
-        .split-mini-controls {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-        }
+            .split-editor-toolbar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 28px;
+            }
 
-        .split-day-name-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-size: 1.22rem;
-            font-weight: 800;
-            padding: 0;
-            margin-bottom: 8px;
-            letter-spacing: -0.4px;
-        }
+            .split-editor-name {
+                margin-bottom: 26px;
+            }
 
-        .split-day-name-input:focus {
-            outline: none;
-        }
+            .split-day-name-input {
+                width: 100%;
+                background: transparent;
+                border: none;
+                color: var(--text-main);
+                font-size: 1.28rem;
+                font-weight: 850;
+                padding: 0;
+                margin-bottom: 6px;
+                letter-spacing: -0.4px;
+            }
 
-        .split-exercise-row {
-            padding: 16px 0;
-            border-top: 1px solid var(--border-light);
-        }
+            .split-day-name-input:focus {
+                outline: none;
+            }
 
-        .split-exercise-row:first-of-type {
-            margin-top: 12px;
-        }
+            .split-day-name-input::placeholder {
+                color: var(--text-placeholder);
+            }
 
-        .split-muted-line {
-            color: var(--text-muted);
-            font-size: 0.86rem;
-            font-weight: 500;
-            line-height: 1.35;
-        }
+            .split-menu-wrap {
+                position: relative;
+            }
 
-        .split-editor-empty {
-            background: rgba(255,255,255,0.03);
-            border: 1px dashed var(--border-light);
-            border-radius: 18px;
-            padding: 22px;
-            color: var(--text-muted);
-            text-align: center;
-            font-weight: 600;
-            margin: 14px 0;
-        }
-    `;
-    document.head.appendChild(style);
+            .split-menu-popup {
+                position: absolute;
+                top: 42px;
+                right: 0;
+                background: #1c1c1e;
+                border: 1px solid #2c2c2e;
+                border-radius: 14px;
+                padding: 7px;
+                z-index: 160;
+                box-shadow: 0 4px 18px rgba(0,0,0,0.65);
+                display: flex;
+                flex-direction: column;
+                min-width: 180px;
+            }
+
+            .split-menu-item {
+                background: transparent;
+                border: none;
+                color: var(--text-main);
+                text-align: left;
+                padding: 12px 13px;
+                font-size: 0.86rem;
+                font-weight: 700;
+                border-radius: 10px;
+                cursor: pointer;
+            }
+
+            .split-menu-item:active {
+                background: #2c2c2e;
+            }
+
+            .split-menu-item.danger {
+                color: var(--mod-fail);
+            }
+
+            .split-exercise-card {
+                position: relative;
+                padding: 18px 18px 16px;
+                margin-bottom: 12px;
+                border-radius: 20px;
+            }
+
+            .split-exercise-card.in-superset {
+                border: 1px solid var(--mod-superset) !important;
+                background: rgba(236, 72, 153, 0.025) !important;
+                margin-bottom: 0;
+                border-radius: 0;
+                border-bottom: none !important;
+            }
+
+            .split-exercise-card.superset-start {
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
+            }
+
+            .split-exercise-card.superset-end {
+                border-bottom-left-radius: 20px;
+                border-bottom-right-radius: 20px;
+                border-bottom: 1px solid var(--mod-superset) !important;
+                margin-bottom: 12px;
+            }
+
+            .split-exercise-card.superset-single {
+                border-radius: 20px;
+                border-bottom: 1px solid var(--mod-superset) !important;
+                margin-bottom: 12px;
+            }
+
+            .split-exercise-card.linking-target {
+                border: 1px dashed var(--mod-superset) !important;
+                background: rgba(236, 72, 153, 0.07) !important;
+                cursor: pointer;
+            }
+
+            .split-exercise-top {
+                position: relative;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 14px;
+            }
+
+            .split-exercise-name {
+                font-weight: 800;
+                font-size: 1.02rem;
+                line-height: 1.25;
+                margin-bottom: 6px;
+            }
+
+            .split-set-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                margin-top: 18px;
+                flex-wrap: wrap;
+            }
+
+            .split-set-controls {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .split-set-control {
+                background: var(--tag-bg);
+                border: none;
+                color: var(--text-main);
+                width: 40px;
+                height: 40px;
+                border-radius: 13px;
+                font-weight: 900;
+                font-size: 1.05rem;
+                cursor: pointer;
+            }
+
+            .split-empty-panel {
+                background: rgba(255,255,255,0.03);
+                border: 1px dashed var(--border-light);
+                border-radius: 20px;
+                padding: 28px 20px;
+                color: var(--text-muted);
+                text-align: center;
+                font-weight: 650;
+                margin: 18px 0 20px;
+                line-height: 1.35;
+            }
+
+            .split-add-day-card {
+                border: 1px dashed var(--border-light);
+                background: rgba(255,255,255,0.02);
+                border-radius: 24px;
+                padding: 18px;
+                margin-top: 20px;
+            }
+
+            .split-view-exercise-list {
+                margin-top: 20px;
+            }
+
+            .split-view-exercise-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 14px;
+                padding: 15px 0;
+                border-top: 1px solid var(--border-light);
+            }
+
+            .split-view-exercise-row:first-child {
+                border-top: none;
+                padding-top: 0;
+            }
+
+            .split-linking-note {
+                color: var(--mod-superset);
+                font-size: 0.82rem;
+                font-weight: 800;
+                margin: 12px 0 18px;
+                line-height: 1.35;
+            }
+        `;
+        document.head.appendChild(style);
+    }
 
     const bottomNav = document.getElementById('bottom-nav');
 
-    if (bottomNav && !document.getElementById('nav-splits')) {
-        bottomNav.insertAdjacentHTML('beforeend', `
-            <button class="nav-btn" id="nav-splits" onclick="showSplits()">
+    if (bottomNav) {
+        let navSplits = document.getElementById('nav-splits');
+
+        if (!navSplits) {
+            bottomNav.insertAdjacentHTML('beforeend', `
+                <button class="nav-btn" id="nav-splits" onclick="showSplits()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M4 6h16M4 12h10M4 18h16"></path>
+                        <path d="M17 10l3 2-3 2"></path>
+                    </svg>
+                    Splits
+                </button>
+            `);
+        } else {
+            navSplits.setAttribute('onclick', 'showSplits()');
+            navSplits.innerHTML = `
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M4 6h16M4 12h10M4 18h16"></path>
                     <path d="M17 10l3 2-3 2"></path>
                 </svg>
                 Splits
-            </button>
-        `);
+            `;
+        }
     }
 
     const app = document.getElementById('app-container');
+    if (!app || !bottomNav) return;
 
-    if (app && bottomNav && !document.getElementById('splits-screen')) {
-        const splitsScreen = document.createElement('div');
+    let splitsScreen = document.getElementById('splits-screen');
+    if (!splitsScreen) {
+        splitsScreen = document.createElement('div');
         splitsScreen.id = 'splits-screen';
         splitsScreen.className = 'screen';
-        splitsScreen.innerHTML = `
-            <div class="split-page-top">
-                <h2>Exercise Splits</h2>
-                <p class="split-page-subtitle">Create multi-day splits, name each day, and start the exact day you are training.</p>
-
-                <button class="btn" onclick="createSplit()">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                    Create New Split
-                </button>
-            </div>
-
-            <div id="splits-list"></div>
-        `;
         app.insertBefore(splitsScreen, bottomNav);
     }
 
-    if (app && bottomNav && !document.getElementById('split-editor-screen')) {
-        const editorScreen = document.createElement('div');
-        editorScreen.id = 'split-editor-screen';
-        editorScreen.className = 'screen';
-        editorScreen.innerHTML = `
-            <div class="split-editor-toolbar">
-                <button class="header-btn" onclick="cancelSplitEdit()">Cancel</button>
-                <button class="btn-small finish" onclick="saveSplitDraft()">Save</button>
-            </div>
+    splitsScreen.innerHTML = `
+        <div class="split-top-row">
+            <h2>Splits</h2>
+            <button class="btn split-round-btn" onclick="createSplit()">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                New
+            </button>
+        </div>
 
-            <h2 id="split-editor-title">Split</h2>
-            <input type="text" id="split-name-input" class="text-input" placeholder="Split Name..." oninput="updateSplitDraftName(this.value)">
+        <div id="splits-list"></div>
+    `;
 
-            <div class="split-editor-section">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
-                    <h3 class="section-title" style="margin:0;">Days</h3>
-                    <button class="btn-small finish" onclick="addSplitDay()">Add Day</button>
-                </div>
-
-                <div id="split-days-list"></div>
-            </div>
-        `;
-        app.insertBefore(editorScreen, bottomNav);
+    let splitViewScreen = document.getElementById('split-view-screen');
+    if (!splitViewScreen) {
+        splitViewScreen = document.createElement('div');
+        splitViewScreen.id = 'split-view-screen';
+        splitViewScreen.className = 'screen';
+        app.insertBefore(splitViewScreen, bottomNav);
     }
+
+    let splitEditorScreen = document.getElementById('split-editor-screen');
+    if (!splitEditorScreen) {
+        splitEditorScreen = document.createElement('div');
+        splitEditorScreen.id = 'split-editor-screen';
+        splitEditorScreen.className = 'screen';
+        app.insertBefore(splitEditorScreen, bottomNav);
+    }
+
+    splitEditorScreen.innerHTML = `
+        <div class="split-editor-toolbar">
+            <button class="header-btn" onclick="cancelSplitEdit()">Cancel</button>
+            <button class="btn-small finish" onclick="saveSplitDraft()">Save</button>
+        </div>
+
+        <h2 id="split-editor-title">Split</h2>
+        <input type="text" id="split-name-input" class="text-input split-editor-name" placeholder="Split Name..." oninput="updateSplitDraftName(this.value)">
+
+        <div id="split-edit-day-nav"></div>
+        <div id="split-edit-day-panel"></div>
+
+        <div class="split-add-day-card">
+            <button class="btn btn-outline" onclick="addSplitDay()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                Add Day
+            </button>
+        </div>
+    `;
 }
 
 function showSplits() {
@@ -2526,53 +2711,130 @@ function renderSplits() {
     const list = document.getElementById('splits-list');
     if (!list) return;
 
-    if (liftrSavedSplits.length === 0) {
-        list.innerHTML = '<div class="empty-state">No exercise splits saved yet.</div>';
+    if (liftrV3SavedSplits.length === 0) {
+        list.innerHTML = '<div class="empty-state">No splits saved yet.</div>';
         return;
     }
 
-    list.innerHTML = liftrSavedSplits.map(split => `
+    list.innerHTML = liftrV3SavedSplits.map(split => `
         <div class="card split-card">
-            <div class="split-card-header">
-                <div style="min-width:0;">
-                    <div class="split-title">${liftrEscapeHtml(split.name || 'Split')}</div>
-                    <div class="split-muted-line">${(split.days || []).length} training days</div>
-                </div>
-                <div class="split-pill">Split</div>
-            </div>
-
-            <div>
-                ${(split.days || []).map((day, dayIndex) => `
-                    <div class="split-day-card">
-                        <div class="split-day-topline">
-                            <div style="min-width:0;">
-                                <div class="split-day-title">${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}</div>
-                                <div class="split-muted-line">${(day.exercises || []).length} exercises</div>
-                            </div>
-                            <button class="btn-small finish" onclick="startSplitDayWorkout(${split.id}, ${dayIndex})">Start</button>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
+            <div class="split-title">${liftrV3Esc(split.name || 'Exercise Split')}</div>
+            <div class="split-muted">${(split.days || []).length} days</div>
 
             <div class="split-actions">
+                <button class="btn-small finish" onclick="openSplit(${split.id})">Open</button>
                 <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="editSplit(${split.id})">Edit</button>
-                <button class="btn-small cancel" style="background:rgba(239, 68, 68, 0.1);" onclick="deleteSplit(${split.id})">Delete</button>
             </div>
+
+            <button class="add-set-btn" style="color:var(--mod-fail); margin-top:14px;" onclick="deleteSplit(${split.id})">Delete Split</button>
         </div>
     `).join('');
 }
 
+function openSplit(splitId) {
+    const split = liftrV3SavedSplits.find(s => s.id === splitId);
+    if (!split) return;
+
+    liftrV3ViewingSplitId = splitId;
+    liftrV3ViewingDayIndex = Math.min(liftrV3ViewingDayIndex || 0, split.days.length - 1);
+
+    const bottomNav = document.getElementById('bottom-nav');
+    if (bottomNav) bottomNav.style.display = 'none';
+
+    const headerEl = document.getElementById('main-header');
+    const titleEl = document.getElementById('app-title');
+    const headerAction = document.getElementById('header-action');
+
+    if (headerEl) headerEl.classList.remove('has-content');
+    if (titleEl) titleEl.style.display = 'none';
+    if (headerAction) headerAction.style.display = 'none';
+
+    showScreen('split-view-screen');
+    renderSplitView();
+}
+
+function renderSplitView() {
+    const screen = document.getElementById('split-view-screen');
+    if (!screen) return;
+
+    const split = liftrV3SavedSplits.find(s => s.id === liftrV3ViewingSplitId);
+    if (!split) {
+        showSplits();
+        return;
+    }
+
+    if (!split.days || split.days.length === 0) {
+        split.days = [{ id: Date.now(), name: '', exercises: [] }];
+    }
+
+    liftrV3ViewingDayIndex = Math.max(0, Math.min(liftrV3ViewingDayIndex, split.days.length - 1));
+    const day = split.days[liftrV3ViewingDayIndex];
+
+    screen.innerHTML = `
+        <div class="split-editor-toolbar">
+            <button class="header-btn" onclick="showSplits()">Back</button>
+            <button class="btn-small finish" onclick="editSplit(${split.id})">Edit</button>
+        </div>
+
+        <h2>${liftrV3Esc(split.name || 'Exercise Split')}</h2>
+
+        <div class="split-day-nav">
+            ${split.days.map((d, index) => `
+                <button class="split-day-pill ${index === liftrV3ViewingDayIndex ? 'active' : ''}" onclick="setViewingSplitDay(${index})">
+                    ${liftrV3Esc(liftrV3DayName(d, index))}
+                </button>
+            `).join('')}
+        </div>
+
+        <div class="card split-day-panel">
+            <div class="split-day-panel-header">
+                <div>
+                    <div class="split-day-title">${liftrV3Esc(liftrV3DayName(day, liftrV3ViewingDayIndex))}</div>
+                    <div class="split-muted">${(day.exercises || []).length} exercises</div>
+                </div>
+            </div>
+
+            ${(day.exercises || []).length === 0 ? `
+                <div class="split-empty-panel">No exercises in this day.</div>
+            ` : `
+                <div class="split-view-exercise-list">
+                    ${(day.exercises || []).map((ex, index) => `
+                        <div class="split-view-exercise-row">
+                            <div>
+                                <div class="split-exercise-name">${liftrV3Esc(ex.name)}</div>
+                                <div class="split-muted">${ex.setsCount || 3} sets${ex.supersetId ? ' &middot; Superset' : ''}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+
+            <button class="btn" style="margin-top: 24px;" onclick="startSplitDayWorkout(${split.id}, ${liftrV3ViewingDayIndex})">
+                Start ${liftrV3Esc(liftrV3DayName(day, liftrV3ViewingDayIndex))}
+            </button>
+        </div>
+    `;
+}
+
+function setViewingSplitDay(index) {
+    liftrV3ViewingDayIndex = index;
+    renderSplitView();
+}
+
 function createSplit() {
-    liftrEditingSplitId = null;
-    liftrSelectedSplitDayIndex = 0;
-    liftrSplitDraft = {
+    liftrV3EditingSplitId = null;
+    liftrV3SelectedEditDayIndex = 0;
+    liftrV3OpenDayMenuIndex = null;
+    liftrV3OpenExerciseMenuIndex = null;
+    liftrV3SupersetSourceIndex = null;
+
+    liftrV3SplitDraft = {
         id: Date.now(),
         name: '',
         days: [
             {
                 id: Date.now() + 1,
-                name: 'Day 1',
+                name: '',
                 exercises: []
             }
         ]
@@ -2582,18 +2844,21 @@ function createSplit() {
 }
 
 function editSplit(id) {
-    const split = liftrSavedSplits.find(s => s.id === id);
+    const split = liftrV3SavedSplits.find(s => s.id === id);
     if (!split) return;
 
-    liftrEditingSplitId = id;
-    liftrSelectedSplitDayIndex = 0;
-    liftrSplitDraft = JSON.parse(JSON.stringify(split));
+    liftrV3EditingSplitId = id;
+    liftrV3SelectedEditDayIndex = 0;
+    liftrV3OpenDayMenuIndex = null;
+    liftrV3OpenExerciseMenuIndex = null;
+    liftrV3SupersetSourceIndex = null;
+    liftrV3SplitDraft = JSON.parse(JSON.stringify(split));
 
-    if (!Array.isArray(liftrSplitDraft.days) || liftrSplitDraft.days.length === 0) {
-        liftrSplitDraft.days = [
+    if (!Array.isArray(liftrV3SplitDraft.days) || liftrV3SplitDraft.days.length === 0) {
+        liftrV3SplitDraft.days = [
             {
                 id: Date.now(),
-                name: 'Day 1',
+                name: '',
                 exercises: []
             }
         ];
@@ -2615,36 +2880,39 @@ function showSplitEditor() {
     if (headerAction) headerAction.style.display = 'none';
 
     const title = document.getElementById('split-editor-title');
-    if (title) title.textContent = liftrEditingSplitId ? 'Edit Split' : 'New Split';
+    if (title) title.textContent = liftrV3EditingSplitId ? 'Edit Split' : 'New Split';
 
     const input = document.getElementById('split-name-input');
-    if (input) input.value = liftrSplitDraft ? liftrSplitDraft.name : '';
+    if (input) input.value = liftrV3SplitDraft ? liftrV3SplitDraft.name : '';
 
     showScreen('split-editor-screen');
     renderSplitEditor();
 }
 
 function cancelSplitEdit() {
-    liftrSplitDraft = null;
-    liftrEditingSplitId = null;
+    liftrV3SplitDraft = null;
+    liftrV3EditingSplitId = null;
+    liftrV3OpenDayMenuIndex = null;
+    liftrV3OpenExerciseMenuIndex = null;
+    liftrV3SupersetSourceIndex = null;
     showSplits();
 }
 
 function updateSplitDraftName(value) {
-    if (liftrSplitDraft) liftrSplitDraft.name = value;
+    if (liftrV3SplitDraft) liftrV3SplitDraft.name = value;
 }
 
 function saveSplitDraft() {
-    if (!liftrSplitDraft) return;
+    if (!liftrV3SplitDraft) return;
 
-    const splitToSave = JSON.parse(JSON.stringify(liftrSplitDraft));
+    const splitToSave = JSON.parse(JSON.stringify(liftrV3SplitDraft));
     splitToSave.name = (splitToSave.name || '').trim() || 'Exercise Split';
 
     if (!Array.isArray(splitToSave.days) || splitToSave.days.length === 0) {
         splitToSave.days = [
             {
                 id: Date.now(),
-                name: 'Day 1',
+                name: '',
                 exercises: []
             }
         ];
@@ -2652,99 +2920,146 @@ function saveSplitDraft() {
 
     splitToSave.days = splitToSave.days.map((day, index) => ({
         id: day.id || Date.now() + index,
-        name: (day.name || '').trim() || `Day ${index + 1}`,
-        exercises: Array.isArray(day.exercises) ? day.exercises : []
+        name: typeof day.name === 'string' ? day.name : '',
+        exercises: Array.isArray(day.exercises) ? day.exercises.map(ex => ({
+            name: ex.name || 'Exercise',
+            setsCount: ex.setsCount || 3,
+            supersetId: ex.supersetId || null
+        })) : []
     }));
 
-    if (liftrEditingSplitId) {
-        const index = liftrSavedSplits.findIndex(s => s.id === liftrEditingSplitId);
-        if (index !== -1) liftrSavedSplits[index] = splitToSave;
+    if (liftrV3EditingSplitId) {
+        const index = liftrV3SavedSplits.findIndex(s => s.id === liftrV3EditingSplitId);
+        if (index !== -1) liftrV3SavedSplits[index] = splitToSave;
     } else {
-        liftrSavedSplits.unshift(splitToSave);
+        liftrV3SavedSplits.unshift(splitToSave);
     }
 
-    liftrSplitDraft = null;
-    liftrEditingSplitId = null;
+    liftrV3ViewingSplitId = splitToSave.id;
+    liftrV3ViewingDayIndex = Math.max(0, Math.min(liftrV3SelectedEditDayIndex, splitToSave.days.length - 1));
+
+    liftrV3SplitDraft = null;
+    liftrV3EditingSplitId = null;
+    liftrV3OpenDayMenuIndex = null;
+    liftrV3OpenExerciseMenuIndex = null;
+    liftrV3SupersetSourceIndex = null;
 
     saveApp();
-    showSplits();
+    openSplit(liftrV3ViewingSplitId);
 }
 
 function deleteSplit(id) {
     showConfirmModal('Delete this entire split? This cannot be undone.', 'Delete', () => {
-        liftrSavedSplits = liftrSavedSplits.filter(s => s.id !== id);
+        liftrV3SavedSplits = liftrV3SavedSplits.filter(s => s.id !== id);
         saveApp();
         renderSplits();
     });
 }
 
 function addSplitDay() {
-    if (!liftrSplitDraft) return;
+    if (!liftrV3SplitDraft) return;
 
-    const nextNumber = liftrSplitDraft.days.length + 1;
-
-    liftrSplitDraft.days.push({
+    liftrV3SplitDraft.days.push({
         id: Date.now() + Math.random(),
-        name: `Day ${nextNumber}`,
+        name: '',
         exercises: []
     });
 
+    liftrV3SelectedEditDayIndex = liftrV3SplitDraft.days.length - 1;
+    liftrV3OpenDayMenuIndex = null;
+    liftrV3OpenExerciseMenuIndex = null;
+    liftrV3SupersetSourceIndex = null;
+
+    renderSplitEditor();
+}
+
+function setEditSplitDay(index) {
+    liftrV3SelectedEditDayIndex = index;
+    liftrV3OpenDayMenuIndex = null;
+    liftrV3OpenExerciseMenuIndex = null;
+    liftrV3SupersetSourceIndex = null;
     renderSplitEditor();
 }
 
 function updateSplitDayName(dayIndex, value) {
-    if (!liftrSplitDraft || !liftrSplitDraft.days[dayIndex]) return;
-    liftrSplitDraft.days[dayIndex].name = value;
+    if (!liftrV3SplitDraft || !liftrV3SplitDraft.days[dayIndex]) return;
+    liftrV3SplitDraft.days[dayIndex].name = value;
+}
+
+function toggleSplitDayMenu(dayIndex) {
+    liftrV3OpenDayMenuIndex = liftrV3OpenDayMenuIndex === dayIndex ? null : dayIndex;
+    liftrV3OpenExerciseMenuIndex = null;
+    renderSplitEditor();
 }
 
 function deleteSplitDay(dayIndex) {
-    if (!liftrSplitDraft) return;
+    if (!liftrV3SplitDraft) return;
 
-    if (liftrSplitDraft.days.length <= 1) {
-        liftrSplitDraft.days[0].exercises = [];
-        liftrSplitDraft.days[0].name = 'Day 1';
+    if (liftrV3SplitDraft.days.length <= 1) {
+        liftrV3SplitDraft.days[0].exercises = [];
+        liftrV3SplitDraft.days[0].name = '';
+        liftrV3OpenDayMenuIndex = null;
         renderSplitEditor();
         return;
     }
 
-    liftrSplitDraft.days.splice(dayIndex, 1);
+    liftrV3SplitDraft.days.splice(dayIndex, 1);
+    liftrV3SelectedEditDayIndex = Math.max(0, Math.min(liftrV3SelectedEditDayIndex, liftrV3SplitDraft.days.length - 1));
+    liftrV3OpenDayMenuIndex = null;
     renderSplitEditor();
 }
 
 function moveSplitDay(dayIndex, direction) {
-    if (!liftrSplitDraft) return;
+    if (!liftrV3SplitDraft) return;
 
     const newIndex = dayIndex + direction;
-    if (newIndex < 0 || newIndex >= liftrSplitDraft.days.length) return;
+    if (newIndex < 0 || newIndex >= liftrV3SplitDraft.days.length) return;
 
-    const moved = liftrSplitDraft.days.splice(dayIndex, 1)[0];
-    liftrSplitDraft.days.splice(newIndex, 0, moved);
+    const moved = liftrV3SplitDraft.days.splice(dayIndex, 1)[0];
+    liftrV3SplitDraft.days.splice(newIndex, 0, moved);
 
+    liftrV3SelectedEditDayIndex = newIndex;
+    liftrV3OpenDayMenuIndex = null;
     renderSplitEditor();
 }
 
 function addExerciseToSplitDayDraft(name) {
-    if (!liftrSplitDraft || !liftrSplitDraft.days[liftrSelectedSplitDayIndex] || !name) return;
+    if (!liftrV3SplitDraft || !liftrV3SplitDraft.days[liftrV3SelectedAddDayIndex] || !name) return;
 
-    liftrSplitDraft.days[liftrSelectedSplitDayIndex].exercises.push({
+    liftrV3SplitDraft.days[liftrV3SelectedAddDayIndex].exercises.push({
         name: name,
-        setsCount: 3
+        setsCount: 3,
+        supersetId: null
     });
 
+    liftrV3SelectedEditDayIndex = liftrV3SelectedAddDayIndex;
     renderSplitEditor();
 }
 
 function removeSplitExercise(dayIndex, exerciseIndex) {
-    if (!liftrSplitDraft || !liftrSplitDraft.days[dayIndex]) return;
+    if (!liftrV3SplitDraft || !liftrV3SplitDraft.days[dayIndex]) return;
 
-    liftrSplitDraft.days[dayIndex].exercises.splice(exerciseIndex, 1);
+    const exercises = liftrV3SplitDraft.days[dayIndex].exercises;
+    const oldSupersetId = exercises[exerciseIndex] ? exercises[exerciseIndex].supersetId : null;
+
+    exercises.splice(exerciseIndex, 1);
+
+    if (oldSupersetId) {
+        const remaining = exercises.filter(ex => ex.supersetId === oldSupersetId);
+        if (remaining.length < 2) {
+            remaining.forEach(ex => ex.supersetId = null);
+        }
+    }
+
+    liftrV3OpenExerciseMenuIndex = null;
+    liftrV3SupersetSourceIndex = null;
     renderSplitEditor();
 }
 
 function changeSplitExerciseSets(dayIndex, exerciseIndex, amount) {
-    if (!liftrSplitDraft || !liftrSplitDraft.days[dayIndex]) return;
+    if (!liftrV3SplitDraft || !liftrV3SplitDraft.days[dayIndex]) return;
 
-    const ex = liftrSplitDraft.days[dayIndex].exercises[exerciseIndex];
+    const ex = liftrV3SplitDraft.days[dayIndex].exercises[exerciseIndex];
     if (!ex) return;
 
     const current = parseInt(ex.setsCount || 3);
@@ -2754,9 +3069,9 @@ function changeSplitExerciseSets(dayIndex, exerciseIndex, amount) {
 }
 
 function moveSplitExercise(dayIndex, exerciseIndex, direction) {
-    if (!liftrSplitDraft || !liftrSplitDraft.days[dayIndex]) return;
+    if (!liftrV3SplitDraft || !liftrV3SplitDraft.days[dayIndex]) return;
 
-    const exercises = liftrSplitDraft.days[dayIndex].exercises;
+    const exercises = liftrV3SplitDraft.days[dayIndex].exercises;
     const newIndex = exerciseIndex + direction;
 
     if (newIndex < 0 || newIndex >= exercises.length) return;
@@ -2764,83 +3079,225 @@ function moveSplitExercise(dayIndex, exerciseIndex, direction) {
     const moved = exercises.splice(exerciseIndex, 1)[0];
     exercises.splice(newIndex, 0, moved);
 
+    liftrV3OpenExerciseMenuIndex = null;
+    liftrV3SupersetSourceIndex = null;
     renderSplitEditor();
 }
 
-function renderSplitEditor() {
-    const list = document.getElementById('split-days-list');
-    if (!list) return;
+function toggleSplitExerciseMenu(exerciseIndex) {
+    liftrV3OpenExerciseMenuIndex = liftrV3OpenExerciseMenuIndex === exerciseIndex ? null : exerciseIndex;
+    liftrV3OpenDayMenuIndex = null;
+    renderSplitEditor();
+}
 
-    if (!liftrSplitDraft || !Array.isArray(liftrSplitDraft.days)) {
-        list.innerHTML = '<div class="empty-state">No split loaded.</div>';
+function startSplitSupersetLink(exerciseIndex) {
+    liftrV3SupersetSourceIndex = exerciseIndex;
+    liftrV3OpenExerciseMenuIndex = null;
+    renderSplitEditor();
+}
+
+function completeSplitSupersetLink(targetIndex) {
+    if (!liftrV3SplitDraft) return;
+
+    const day = liftrV3SplitDraft.days[liftrV3SelectedEditDayIndex];
+    if (!day || !day.exercises) return;
+
+    if (liftrV3SupersetSourceIndex === null || liftrV3SupersetSourceIndex === targetIndex) return;
+
+    const sourceIndex = liftrV3SupersetSourceIndex;
+    const source = day.exercises[sourceIndex];
+    const target = day.exercises[targetIndex];
+
+    if (!source || !target) return;
+
+    const sharedId = source.supersetId || target.supersetId || 'split_ss_' + Date.now();
+    source.supersetId = sharedId;
+    target.supersetId = sharedId;
+
+    const moved = day.exercises.splice(targetIndex, 1)[0];
+    const newSourceIndex = day.exercises.indexOf(source);
+    day.exercises.splice(newSourceIndex + 1, 0, moved);
+
+    liftrV3SupersetSourceIndex = null;
+    renderSplitEditor();
+}
+
+function removeSplitSuperset(exerciseIndex) {
+    if (!liftrV3SplitDraft) return;
+
+    const day = liftrV3SplitDraft.days[liftrV3SelectedEditDayIndex];
+    if (!day || !day.exercises || !day.exercises[exerciseIndex]) return;
+
+    const oldId = day.exercises[exerciseIndex].supersetId;
+    day.exercises[exerciseIndex].supersetId = null;
+
+    if (oldId) {
+        const remaining = day.exercises.filter(ex => ex.supersetId === oldId);
+        if (remaining.length < 2) {
+            remaining.forEach(ex => ex.supersetId = null);
+        }
+    }
+
+    liftrV3OpenExerciseMenuIndex = null;
+    liftrV3SupersetSourceIndex = null;
+    renderSplitEditor();
+}
+
+function liftrV3SupersetLabel(supersetId, exercises) {
+    if (!supersetId) return '';
+    const activeSupersets = [...new Set((exercises || []).map(ex => ex.supersetId).filter(Boolean))];
+    const index = activeSupersets.indexOf(supersetId);
+    return index !== -1 ? `Superset ${String.fromCharCode(65 + index)}` : 'Superset';
+}
+
+function renderSplitEditor() {
+    const nav = document.getElementById('split-edit-day-nav');
+    const panel = document.getElementById('split-edit-day-panel');
+    const input = document.getElementById('split-name-input');
+
+    if (!nav || !panel) return;
+
+    if (!liftrV3SplitDraft || !Array.isArray(liftrV3SplitDraft.days)) {
+        nav.innerHTML = '';
+        panel.innerHTML = '<div class="empty-state">No split loaded.</div>';
         return;
     }
 
-    list.innerHTML = liftrSplitDraft.days.map((day, dayIndex) => `
-        <div class="card split-editor-day-card">
-            <input
-                type="text"
-                class="split-day-name-input"
-                value="${liftrEscapeHtml(day.name || `Day ${dayIndex + 1}`)}"
-                placeholder="Day Name..."
-                oninput="updateSplitDayName(${dayIndex}, this.value)"
+    if (input && input.value !== liftrV3SplitDraft.name) {
+        input.value = liftrV3SplitDraft.name || '';
+    }
+
+    liftrV3SelectedEditDayIndex = Math.max(0, Math.min(liftrV3SelectedEditDayIndex, liftrV3SplitDraft.days.length - 1));
+    const day = liftrV3SplitDraft.days[liftrV3SelectedEditDayIndex];
+    const exercises = day.exercises || [];
+
+    nav.innerHTML = `
+        <div class="split-day-nav">
+            ${liftrV3SplitDraft.days.map((d, index) => `
+                <button class="split-day-pill ${index === liftrV3SelectedEditDayIndex ? 'active' : ''}" onclick="setEditSplitDay(${index})">
+                    ${liftrV3Esc(liftrV3DayName(d, index))}
+                </button>
+            `).join('')}
+        </div>
+    `;
+
+    const linkingNote = liftrV3SupersetSourceIndex !== null ? `
+        <div class="split-linking-note">Tap another exercise to connect it to the superset.</div>
+    ` : '';
+
+    const exercisesHtml = exercises.length === 0 ? `
+        <div class="split-empty-panel">No exercises added to this day yet.</div>
+    ` : exercises.map((ex, exerciseIndex) => {
+        const isLinkTarget = liftrV3SupersetSourceIndex !== null && liftrV3SupersetSourceIndex !== exerciseIndex;
+        const sourceEx = liftrV3SupersetSourceIndex !== null ? exercises[liftrV3SupersetSourceIndex] : null;
+        const sameActiveGroup = isLinkTarget && sourceEx && sourceEx.supersetId && sourceEx.supersetId === ex.supersetId;
+
+        let superClass = '';
+        if (ex.supersetId) {
+            const prev = exercises[exerciseIndex - 1];
+            const next = exercises[exerciseIndex + 1];
+            const samePrev = prev && prev.supersetId === ex.supersetId;
+            const sameNext = next && next.supersetId === ex.supersetId;
+
+            if (!samePrev && sameNext) superClass = 'superset-start';
+            else if (samePrev && sameNext) superClass = 'superset-middle';
+            else if (samePrev && !sameNext) superClass = 'superset-end';
+            else superClass = 'superset-single';
+        }
+
+        const supersetBadge = ex.supersetId && (superClass === 'superset-start' || superClass === 'superset-single')
+            ? `<div class="superset-badge">${liftrV3SupersetLabel(ex.supersetId, exercises)}</div>`
+            : '';
+
+        return `
+            <div
+                class="card split-exercise-card ${ex.supersetId ? 'in-superset' : ''} ${superClass} ${isLinkTarget && !sameActiveGroup ? 'linking-target' : ''}"
+                ${isLinkTarget && !sameActiveGroup ? `onclick="completeSplitSupersetLink(${exerciseIndex})"` : ''}
             >
+                <div class="split-exercise-top">
+                    <div style="min-width:0;">
+                        ${supersetBadge}
+                        <div class="split-exercise-name">${liftrV3Esc(ex.name)}</div>
+                        <div class="split-muted">${ex.setsCount || 3} sets</div>
+                    </div>
 
-            <div class="split-muted-line" style="margin-bottom: 18px;">
-                ${(day.exercises || []).length} exercises in this day
-            </div>
+                    <div class="split-menu-wrap" onclick="event.stopPropagation();">
+                        <button class="icon-btn" onclick="toggleSplitExerciseMenu(${exerciseIndex})">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
+                        </button>
 
-            ${(day.exercises || []).length === 0 ? `
-                <div class="split-editor-empty">No exercises added to this day yet.</div>
-            ` : `
-                ${(day.exercises || []).map((ex, exerciseIndex) => `
-                    <div class="split-exercise-row">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-                            <div style="min-width:0;">
-                                <div class="list-item-title">${liftrEscapeHtml(ex.name)}</div>
-                                <div class="split-muted-line">${ex.setsCount || 3} sets</div>
+                        ${liftrV3OpenExerciseMenuIndex === exerciseIndex ? `
+                            <div class="split-menu-popup">
+                                <button class="split-menu-item" onclick="moveSplitExercise(${liftrV3SelectedEditDayIndex}, ${exerciseIndex}, -1)">Move Up</button>
+                                <button class="split-menu-item" onclick="moveSplitExercise(${liftrV3SelectedEditDayIndex}, ${exerciseIndex}, 1)">Move Down</button>
+                                <div style="height:1px; background:#2c2c2e; margin:5px 0;"></div>
+                                ${!ex.supersetId ? `
+                                    <button class="split-menu-item" onclick="startSplitSupersetLink(${exerciseIndex})">Superset</button>
+                                ` : `
+                                    <button class="split-menu-item danger" onclick="removeSplitSuperset(${exerciseIndex})">Remove Superset</button>
+                                `}
+                                <button class="split-menu-item danger" onclick="removeSplitExercise(${liftrV3SelectedEditDayIndex}, ${exerciseIndex})">Delete Exercise</button>
                             </div>
+                        ` : ''}
+                    </div>
+                </div>
 
-                            <button class="icon-btn" onclick="removeSplitExercise(${dayIndex}, ${exerciseIndex})" style="color:var(--mod-fail);">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                <div class="split-set-row">
+                    <div class="split-set-controls">
+                        <button class="split-set-control" onclick="event.stopPropagation(); changeSplitExerciseSets(${liftrV3SelectedEditDayIndex}, ${exerciseIndex}, -1)">-</button>
+                        <span style="font-weight:800; color:var(--text-muted); min-width:64px; text-align:center;">${ex.setsCount || 3} sets</span>
+                        <button class="split-set-control" onclick="event.stopPropagation(); changeSplitExerciseSets(${liftrV3SelectedEditDayIndex}, ${exerciseIndex}, 1)">+</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    panel.innerHTML = `
+        <div class="card split-day-panel">
+            <div class="split-day-panel-header">
+                <div style="flex:1; min-width:0;">
+                    <input
+                        type="text"
+                        class="split-day-name-input"
+                        value="${liftrV3Esc(day.name || '')}"
+                        placeholder="Untitled Day"
+                        oninput="updateSplitDayName(${liftrV3SelectedEditDayIndex}, this.value)"
+                    >
+                    <div class="split-muted">${exercises.length} exercises</div>
+                </div>
+
+                <div class="split-menu-wrap">
+                    <button class="icon-btn" onclick="toggleSplitDayMenu(${liftrV3SelectedEditDayIndex})">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
+                    </button>
+
+                    ${liftrV3OpenDayMenuIndex === liftrV3SelectedEditDayIndex ? `
+                        <div class="split-menu-popup">
+                            <button class="split-menu-item" onclick="moveSplitDay(${liftrV3SelectedEditDayIndex}, -1)">Move Day Up</button>
+                            <button class="split-menu-item" onclick="moveSplitDay(${liftrV3SelectedEditDayIndex}, 1)">Move Day Down</button>
+                            <div style="height:1px; background:#2c2c2e; margin:5px 0;"></div>
+                            <button class="split-menu-item danger" onclick="deleteSplitDay(${liftrV3SelectedEditDayIndex})">
+                                ${liftrV3SplitDraft.days.length <= 1 ? 'Clear Day' : 'Delete Day'}
                             </button>
                         </div>
+                    ` : ''}
+                </div>
+            </div>
 
-                        <div class="split-control-row">
-                            <div class="split-mini-controls">
-                                <button class="split-set-control" onclick="changeSplitExerciseSets(${dayIndex}, ${exerciseIndex}, -1)">-</button>
-                                <span style="font-weight:800; color:var(--text-muted); min-width:60px; text-align:center;">${ex.setsCount || 3} sets</span>
-                                <button class="split-set-control" onclick="changeSplitExerciseSets(${dayIndex}, ${exerciseIndex}, 1)">+</button>
-                            </div>
+            ${linkingNote}
+            ${exercisesHtml}
 
-                            <div class="split-mini-controls">
-                                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveSplitExercise(${dayIndex}, ${exerciseIndex}, -1)">Up</button>
-                                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveSplitExercise(${dayIndex}, ${exerciseIndex}, 1)">Down</button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            `}
-
-            <button class="btn btn-outline" style="margin-top: 18px;" onclick="showSplitExerciseModal(${dayIndex})">
+            <button class="btn btn-outline" style="margin-top: 20px;" onclick="showSplitExerciseModal(${liftrV3SelectedEditDayIndex})">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                 Add Exercise
             </button>
-
-            <div class="split-actions">
-                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveSplitDay(${dayIndex}, -1)">Move Day Up</button>
-                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveSplitDay(${dayIndex}, 1)">Move Day Down</button>
-            </div>
-
-            <button class="add-set-btn" style="color:var(--mod-fail); margin-top:10px;" onclick="deleteSplitDay(${dayIndex})">
-                ${liftrSplitDraft.days.length <= 1 ? 'Clear Day' : 'Delete Day'}
-            </button>
         </div>
-    `).join('');
+    `;
 }
 
 function startSplitDayWorkout(splitId, dayIndex) {
-    const split = liftrSavedSplits.find(s => s.id === splitId);
+    const split = liftrV3SavedSplits.find(s => s.id === splitId);
     if (!split || !split.days || !split.days[dayIndex]) return;
 
     const day = split.days[dayIndex];
@@ -2857,13 +3314,26 @@ function startSplitDayWorkout(splitId, dayIndex) {
 function performStartSplitDayWorkout(split, day) {
     stopTimer();
 
+    const supersetMap = {};
+    let supersetCounter = 0;
+
     currentWorkout = (day.exercises || []).map((ex, index) => {
         const setCount = Math.max(1, parseInt(ex.setsCount || 3));
+        let copiedSupersetId = null;
+
+        if (ex.supersetId) {
+            if (!supersetMap[ex.supersetId]) {
+                supersetCounter++;
+                supersetMap[ex.supersetId] = 'ss_split_' + Date.now() + '_' + supersetCounter;
+            }
+
+            copiedSupersetId = supersetMap[ex.supersetId];
+        }
 
         return {
             id: Date.now() + Math.random() + index,
             name: ex.name,
-            supersetId: null,
+            supersetId: copiedSupersetId,
             sets: Array.from({ length: setCount }, () => ({
                 weight: '',
                 reps: '',
@@ -2876,7 +3346,7 @@ function performStartSplitDayWorkout(split, day) {
         };
     });
 
-    workoutName = `${split.name || 'Split'} - ${day.name || 'Day'}`;
+    workoutName = `${split.name || 'Split'} - ${liftrV3DayName(day, 0)}`;
     workoutStartTime = Date.now();
 
     const nameInput = document.getElementById('workout-name-input');
@@ -2886,50 +3356,63 @@ function performStartSplitDayWorkout(split, day) {
     startWorkout();
 }
 
-const liftrOriginalShowExerciseModal = showExerciseModal;
+const liftrV3OriginalShowExerciseModal = showExerciseModal;
 showExerciseModal = function() {
-    liftrExercisePickerMode = 'workout';
-    liftrOriginalShowExerciseModal();
+    liftrV3ExercisePickerMode = 'workout';
+    liftrV3OriginalShowExerciseModal();
 };
 
 function showSplitExerciseModal(dayIndex) {
-    liftrExercisePickerMode = 'split';
-    liftrSelectedSplitDayIndex = dayIndex;
-    liftrOriginalShowExerciseModal();
+    liftrV3ExercisePickerMode = 'split';
+    liftrV3SelectedAddDayIndex = dayIndex;
+    liftrV3OriginalShowExerciseModal();
 }
 
-const liftrOriginalHideExerciseModal = hideExerciseModal;
+const liftrV3OriginalHideExerciseModal = hideExerciseModal;
 hideExerciseModal = function() {
-    if (liftrExercisePickerMode === 'split') {
+    if (liftrV3ExercisePickerMode === 'split') {
         showScreen('split-editor-screen');
     } else {
-        liftrOriginalHideExerciseModal();
+        liftrV3OriginalHideExerciseModal();
     }
 };
 
-const liftrOriginalSelectExercise = selectExercise;
+const liftrV3OriginalSelectExercise = selectExercise;
 selectExercise = function(name) {
-    if (liftrExercisePickerMode === 'split') {
+    if (liftrV3ExercisePickerMode === 'split') {
         addExerciseToSplitDayDraft(name);
         hideExerciseModal();
     } else {
-        liftrOriginalSelectExercise(name);
+        liftrV3OriginalSelectExercise(name);
     }
 };
 
-const liftrOriginalNavigate = navigate;
+const liftrV3OriginalNavigate = navigate;
 navigate = function(tab) {
-    liftrOriginalNavigate(tab);
-    if (tab !== 'splits') {
-        const navSplits = document.getElementById('nav-splits');
-        if (navSplits) navSplits.classList.remove('active');
-    }
+    liftrV3OriginalNavigate(tab);
+
+    const navSplits = document.getElementById('nav-splits');
+    if (navSplits) navSplits.classList.remove('active');
 };
 
-liftrInstallSplitsUI();
+document.addEventListener('click', function(e) {
+    const clickedSplitMenu = e.target.closest && e.target.closest('.split-menu-wrap');
+
+    if (!clickedSplitMenu && (liftrV3OpenDayMenuIndex !== null || liftrV3OpenExerciseMenuIndex !== null)) {
+        liftrV3OpenDayMenuIndex = null;
+        liftrV3OpenExerciseMenuIndex = null;
+
+        const activeScreen = document.querySelector('.screen.active');
+        if (activeScreen && activeScreen.id === 'split-editor-screen') {
+            renderSplitEditor();
+        }
+    }
+});
+
+liftrV3InstallSplitsUI();
 saveApp();
 
-/* --- END EXERCISE SPLITS ADD-ON V2 --- */
+/* --- END EXERCISE SPLITS ADD-ON V3 --- */
 </script>
     
 </body>
