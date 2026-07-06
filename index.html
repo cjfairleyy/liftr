@@ -2172,5 +2172,459 @@ window.onload = function() {
     document.addEventListener('touchstart', function() {}, { passive: true });
 </script>
 
+<script>
+/* --- ROUTINES ADD-ON: paste above </body> --- */
+
+let liftrSavedRoutines = [];
+let liftrRoutineDraft = null;
+let liftrEditingRoutineId = null;
+let liftrExercisePickerMode = 'workout';
+
+try {
+    const liftrSavedData = JSON.parse(localStorage.getItem('myWorkoutApp_data'));
+    if (liftrSavedData && Array.isArray(liftrSavedData.savedRoutines)) {
+        liftrSavedRoutines = liftrSavedData.savedRoutines;
+    }
+} catch (e) {
+    liftrSavedRoutines = [];
+}
+
+function liftrEscapeHtml(text) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+const liftrOriginalSaveApp = saveApp;
+saveApp = function() {
+    localStorage.setItem('myWorkoutApp_data', JSON.stringify({
+        currentWorkout: currentWorkout,
+        workoutHistory: workoutHistory,
+        weightHistory: weightHistory,
+        favoriteExercises: favoriteExercises,
+        savedRoutines: liftrSavedRoutines,
+        workoutName: workoutName,
+        workoutStartTime: workoutStartTime
+    }));
+};
+
+function liftrInstallRoutinesUI() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .routine-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .routine-set-control {
+            background: var(--tag-bg);
+            border: none;
+            color: var(--text-main);
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .routine-control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .routine-mini-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    `;
+    document.head.appendChild(style);
+
+    const homeScreen = document.getElementById('home-screen');
+    const startButton = homeScreen ? homeScreen.querySelector('.btn') : null;
+
+    if (startButton && !document.getElementById('routine-home-button')) {
+        startButton.insertAdjacentHTML('afterend', `
+            <button id="routine-home-button" class="btn btn-outline" style="margin-top: 12px;" onclick="showRoutines()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                Routines
+            </button>
+
+            <div id="home-routines-section" style="margin-top: 40px; display: none;">
+                <h3 class="section-title">Saved Routines</h3>
+                <div id="home-routine-list"></div>
+            </div>
+        `);
+    }
+
+    const app = document.getElementById('app-container');
+    const bottomNav = document.getElementById('bottom-nav');
+
+    if (app && bottomNav && !document.getElementById('routines-screen')) {
+        const routinesScreen = document.createElement('div');
+        routinesScreen.id = 'routines-screen';
+        routinesScreen.className = 'screen';
+        routinesScreen.innerHTML = `
+            <h2>Routines</h2>
+
+            <button class="btn" onclick="createRoutine()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                Create New Routine
+            </button>
+
+            <div id="routines-list" style="margin-top: 24px;"></div>
+        `;
+        app.insertBefore(routinesScreen, bottomNav);
+    }
+
+    if (app && bottomNav && !document.getElementById('routine-editor-screen')) {
+        const editorScreen = document.createElement('div');
+        editorScreen.id = 'routine-editor-screen';
+        editorScreen.className = 'screen';
+        editorScreen.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                <button class="header-btn" onclick="cancelRoutineEdit()">Cancel</button>
+                <button class="btn-small finish" onclick="saveRoutineDraft()">Save</button>
+            </div>
+
+            <h2 id="routine-editor-title">Routine</h2>
+            <input type="text" id="routine-name-input" class="text-input" placeholder="Routine Name..." oninput="updateRoutineDraftName(this.value)">
+
+            <h3 class="section-title">Exercises</h3>
+            <div id="routine-exercise-list"></div>
+
+            <button class="btn btn-outline" style="margin-top: 16px;" onclick="showRoutineExerciseModal()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                Add Exercise
+            </button>
+        `;
+        app.insertBefore(editorScreen, bottomNav);
+    }
+}
+
+function renderHomeRoutines() {
+    const section = document.getElementById('home-routines-section');
+    const list = document.getElementById('home-routine-list');
+    if (!section || !list) return;
+
+    if (liftrSavedRoutines.length === 0) {
+        section.style.display = 'none';
+        list.innerHTML = '';
+        return;
+    }
+
+    section.style.display = 'block';
+    list.innerHTML = liftrSavedRoutines.map(routine => `
+        <div class="list-item" onclick="startRoutineWorkout(${routine.id})">
+            <div>
+                <div class="list-item-title">${liftrEscapeHtml(routine.name || 'Routine')}</div>
+                <div class="list-item-sub">${routine.exercises.length} exercises</div>
+            </div>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
+        </div>
+    `).join('');
+}
+
+function showRoutines() {
+    const bottomNav = document.getElementById('bottom-nav');
+    if (bottomNav) bottomNav.style.display = 'flex';
+
+    const headerEl = document.getElementById('main-header');
+    const titleEl = document.getElementById('app-title');
+    const headerAction = document.getElementById('header-action');
+
+    if (headerEl) headerEl.classList.remove('has-content');
+    if (titleEl) titleEl.style.display = 'none';
+    if (headerAction) headerAction.style.display = 'none';
+
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const navHome = document.getElementById('nav-home');
+    if (navHome) navHome.classList.add('active');
+
+    showScreen('routines-screen');
+    renderRoutines();
+}
+
+function renderRoutines() {
+    const list = document.getElementById('routines-list');
+    if (!list) return;
+
+    if (liftrSavedRoutines.length === 0) {
+        list.innerHTML = '<div class="empty-state">No routines saved yet.</div>';
+        return;
+    }
+
+    list.innerHTML = liftrSavedRoutines.map(routine => {
+        const names = routine.exercises.map(ex => ex.name).join(', ');
+        return `
+            <div class="card">
+                <div class="list-item-title">${liftrEscapeHtml(routine.name || 'Routine')}</div>
+                <div class="list-item-sub">${routine.exercises.length} exercises${names ? ' &middot; ' + liftrEscapeHtml(names) : ''}</div>
+
+                <div class="routine-actions">
+                    <button class="btn-small finish" onclick="startRoutineWorkout(${routine.id})">Start</button>
+                    <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="editRoutine(${routine.id})">Edit</button>
+                </div>
+
+                <button class="add-set-btn" style="color:var(--mod-fail); margin-top:8px;" onclick="deleteRoutine(${routine.id})">Delete Routine</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function createRoutine() {
+    liftrEditingRoutineId = null;
+    liftrRoutineDraft = {
+        id: Date.now(),
+        name: '',
+        exercises: []
+    };
+    showRoutineEditor();
+}
+
+function editRoutine(id) {
+    const routine = liftrSavedRoutines.find(r => r.id === id);
+    if (!routine) return;
+
+    liftrEditingRoutineId = id;
+    liftrRoutineDraft = JSON.parse(JSON.stringify(routine));
+    showRoutineEditor();
+}
+
+function showRoutineEditor() {
+    const bottomNav = document.getElementById('bottom-nav');
+    if (bottomNav) bottomNav.style.display = 'none';
+
+    const headerEl = document.getElementById('main-header');
+    const titleEl = document.getElementById('app-title');
+    const headerAction = document.getElementById('header-action');
+
+    if (headerEl) headerEl.classList.remove('has-content');
+    if (titleEl) titleEl.style.display = 'none';
+    if (headerAction) headerAction.style.display = 'none';
+
+    const title = document.getElementById('routine-editor-title');
+    if (title) title.textContent = liftrEditingRoutineId ? 'Edit Routine' : 'New Routine';
+
+    const input = document.getElementById('routine-name-input');
+    if (input) input.value = liftrRoutineDraft ? liftrRoutineDraft.name : '';
+
+    showScreen('routine-editor-screen');
+    renderRoutineEditor();
+}
+
+function cancelRoutineEdit() {
+    liftrRoutineDraft = null;
+    liftrEditingRoutineId = null;
+    showRoutines();
+}
+
+function updateRoutineDraftName(value) {
+    if (liftrRoutineDraft) liftrRoutineDraft.name = value;
+}
+
+function saveRoutineDraft() {
+    if (!liftrRoutineDraft) return;
+
+    const routineToSave = JSON.parse(JSON.stringify(liftrRoutineDraft));
+    routineToSave.name = (routineToSave.name || '').trim() || 'Routine';
+    routineToSave.exercises = routineToSave.exercises || [];
+
+    if (liftrEditingRoutineId) {
+        const index = liftrSavedRoutines.findIndex(r => r.id === liftrEditingRoutineId);
+        if (index !== -1) liftrSavedRoutines[index] = routineToSave;
+    } else {
+        liftrSavedRoutines.unshift(routineToSave);
+    }
+
+    liftrRoutineDraft = null;
+    liftrEditingRoutineId = null;
+    saveApp();
+    showRoutines();
+}
+
+function deleteRoutine(id) {
+    showConfirmModal('Delete this routine? This cannot be undone.', 'Delete', () => {
+        liftrSavedRoutines = liftrSavedRoutines.filter(r => r.id !== id);
+        saveApp();
+        renderRoutines();
+        renderHomeRoutines();
+    });
+}
+
+function addExerciseToRoutineDraft(name) {
+    if (!liftrRoutineDraft || !name) return;
+
+    liftrRoutineDraft.exercises.push({
+        name: name,
+        setsCount: 3
+    });
+
+    renderRoutineEditor();
+}
+
+function removeRoutineExercise(index) {
+    if (!liftrRoutineDraft) return;
+    liftrRoutineDraft.exercises.splice(index, 1);
+    renderRoutineEditor();
+}
+
+function changeRoutineSets(index, amount) {
+    if (!liftrRoutineDraft || !liftrRoutineDraft.exercises[index]) return;
+
+    const current = parseInt(liftrRoutineDraft.exercises[index].setsCount || 3);
+    liftrRoutineDraft.exercises[index].setsCount = Math.max(1, current + amount);
+
+    renderRoutineEditor();
+}
+
+function moveRoutineExercise(index, direction) {
+    if (!liftrRoutineDraft) return;
+
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= liftrRoutineDraft.exercises.length) return;
+
+    const moved = liftrRoutineDraft.exercises.splice(index, 1)[0];
+    liftrRoutineDraft.exercises.splice(newIndex, 0, moved);
+
+    renderRoutineEditor();
+}
+
+function renderRoutineEditor() {
+    const list = document.getElementById('routine-exercise-list');
+    if (!list) return;
+
+    if (!liftrRoutineDraft || liftrRoutineDraft.exercises.length === 0) {
+        list.innerHTML = '<div class="empty-state" style="margin-top: 24px;">Add exercises to build this routine.</div>';
+        return;
+    }
+
+    list.innerHTML = liftrRoutineDraft.exercises.map((ex, index) => `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                <div style="min-width:0;">
+                    <div class="list-item-title">${liftrEscapeHtml(ex.name)}</div>
+                    <div class="list-item-sub">${ex.setsCount || 3} sets</div>
+                </div>
+
+                <button class="icon-btn" onclick="removeRoutineExercise(${index})" style="color:var(--mod-fail);">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="routine-control-row">
+                <div class="routine-mini-controls">
+                    <button class="routine-set-control" onclick="changeRoutineSets(${index}, -1)">-</button>
+                    <span style="font-weight:800; color:var(--text-muted); min-width:56px; text-align:center;">${ex.setsCount || 3} sets</span>
+                    <button class="routine-set-control" onclick="changeRoutineSets(${index}, 1)">+</button>
+                </div>
+
+                <div class="routine-mini-controls">
+                    <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveRoutineExercise(${index}, -1)">Up</button>
+                    <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="moveRoutineExercise(${index}, 1)">Down</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function startRoutineWorkout(id) {
+    const routine = liftrSavedRoutines.find(r => r.id === id);
+    if (!routine) return;
+
+    const start = () => performStartRoutineWorkout(routine);
+
+    if (currentWorkout.length > 0) {
+        showConfirmModal('Replace your current workout with this routine?', 'Replace', start);
+    } else {
+        start();
+    }
+}
+
+function performStartRoutineWorkout(routine) {
+    stopTimer();
+
+    currentWorkout = routine.exercises.map((ex, index) => {
+        const setCount = Math.max(1, parseInt(ex.setsCount || 3));
+
+        return {
+            id: Date.now() + Math.random() + index,
+            name: ex.name,
+            supersetId: null,
+            sets: Array.from({ length: setCount }, () => ({
+                weight: '',
+                reps: '',
+                completed: false,
+                isBW: false,
+                isFailure: false,
+                side: '',
+                menuOpen: false
+            }))
+        };
+    });
+
+    workoutName = routine.name || 'Workout';
+    workoutStartTime = Date.now();
+
+    const nameInput = document.getElementById('workout-name-input');
+    if (nameInput) nameInput.value = workoutName;
+
+    saveApp();
+    startWorkout();
+}
+
+const liftrOriginalShowExerciseModal = showExerciseModal;
+showExerciseModal = function() {
+    liftrExercisePickerMode = 'workout';
+    liftrOriginalShowExerciseModal();
+};
+
+function showRoutineExerciseModal() {
+    liftrExercisePickerMode = 'routine';
+    liftrOriginalShowExerciseModal();
+}
+
+const liftrOriginalHideExerciseModal = hideExerciseModal;
+hideExerciseModal = function() {
+    if (liftrExercisePickerMode === 'routine') {
+        showScreen('routine-editor-screen');
+    } else {
+        liftrOriginalHideExerciseModal();
+    }
+};
+
+const liftrOriginalSelectExercise = selectExercise;
+selectExercise = function(name) {
+    if (liftrExercisePickerMode === 'routine') {
+        addExerciseToRoutineDraft(name);
+        hideExerciseModal();
+    } else {
+        liftrOriginalSelectExercise(name);
+    }
+};
+
+const liftrOriginalNavigate = navigate;
+navigate = function(tab) {
+    liftrOriginalNavigate(tab);
+    if (tab === 'home') {
+        renderHomeRoutines();
+    }
+};
+
+liftrInstallRoutinesUI();
+renderHomeRoutines();
+saveApp();
+
+/* --- END ROUTINES ADD-ON --- */
+</script>
+    
 </body>
 </html>
