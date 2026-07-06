@@ -2186,9 +2186,16 @@ var liftrV3SelectedAddDayIndex = 0;
 var liftrV3OpenDayMenuIndex = null;
 var liftrV3OpenExerciseMenuIndex = null;
 var liftrV3SupersetSourceIndex = null;
+var liftrV3ActiveSplitId = null;
+var liftrV3ActiveSplitDayIndex = 0;
 
 try {
     const liftrV3SavedData = JSON.parse(localStorage.getItem('myWorkoutApp_data'));
+
+    if (liftrV3SavedData) {
+        liftrV3ActiveSplitId = liftrV3SavedData.activeSplitId || null;
+        liftrV3ActiveSplitDayIndex = parseInt(liftrV3SavedData.activeSplitDayIndex || 0);
+    }
 
     if (liftrV3SavedData && Array.isArray(liftrV3SavedData.savedSplits)) {
         liftrV3SavedSplits = liftrV3SavedData.savedSplits;
@@ -2272,6 +2279,8 @@ saveApp = function() {
         weightHistory: weightHistory,
         favoriteExercises: favoriteExercises,
         savedSplits: liftrV3SavedSplits,
+        activeSplitId: liftrV3ActiveSplitId,
+        activeSplitDayIndex: liftrV3ActiveSplitDayIndex,
         workoutName: workoutName,
         workoutStartTime: workoutStartTime
     }));
@@ -2716,19 +2725,102 @@ function renderSplits() {
         return;
     }
 
-    list.innerHTML = liftrV3SavedSplits.map(split => `
-        <div class="card split-card">
-            <div class="split-title">${liftrV3Esc(split.name || 'Exercise Split')}</div>
-            <div class="split-muted">${(split.days || []).length} days</div>
+    list.innerHTML = liftrV3SavedSplits.map(split => {
+        const isActive = liftrV3ActiveSplitId === split.id;
 
-            <div class="split-actions">
-                <button class="btn-small finish" onclick="openSplit(${split.id})">Open</button>
-                <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="editSplit(${split.id})">Edit</button>
+        return `
+            <div class="card split-card">
+                <div class="split-title">${liftrV3Esc(split.name || 'Exercise Split')}</div>
+                <div class="split-muted">${(split.days || []).length} days${isActive ? ' &middot; Active' : ''}</div>
+
+                <div class="split-actions">
+                    <button class="btn-small finish" onclick="openSplit(${split.id})">Open</button>
+                    <button class="btn-small" style="background:var(--bg-surface-elevated); color:var(--text-main);" onclick="editSplit(${split.id})">Edit</button>
+                </div>
+
+                <button class="btn-small finish" style="width:100%; margin-top:12px;" onclick="setActiveSplit(${split.id})">
+                    ${isActive ? 'Active Split' : 'Set Active'}
+                </button>
+
+                <button class="add-set-btn" style="color:var(--mod-fail); margin-top:14px;" onclick="deleteSplit(${split.id})">Delete Split</button>
             </div>
+        `;
+    }).join('');
+}
 
-            <button class="add-set-btn" style="color:var(--mod-fail); margin-top:14px;" onclick="deleteSplit(${split.id})">Delete Split</button>
-        </div>
-    `).join('');
+function setActiveSplit(splitId) {
+    const split = liftrV3SavedSplits.find(s => s.id === splitId);
+    if (!split) return;
+
+    liftrV3ActiveSplitId = splitId;
+    liftrV3ActiveSplitDayIndex = 0;
+    saveApp();
+    renderSplits();
+    renderActiveSplitHome();
+}
+
+function setActiveSplitNextDay(dayIndex) {
+    liftrV3ActiveSplitDayIndex = dayIndex;
+    saveApp();
+    renderActiveSplitHome();
+}
+
+function clearActiveSplit() {
+    liftrV3ActiveSplitId = null;
+    liftrV3ActiveSplitDayIndex = 0;
+    saveApp();
+    renderSplits();
+    renderActiveSplitHome();
+}
+
+function renderActiveSplitHome() {
+    const home = document.getElementById('home-screen');
+    if (!home) return;
+
+    let card = document.getElementById('active-split-home-card');
+    const split = liftrV3SavedSplits.find(s => s.id === liftrV3ActiveSplitId);
+
+    if (!split || !Array.isArray(split.days) || split.days.length === 0) {
+        if (card) card.remove();
+        return;
+    }
+
+    liftrV3ActiveSplitDayIndex = Math.max(0, Math.min(liftrV3ActiveSplitDayIndex, split.days.length - 1));
+    const day = split.days[liftrV3ActiveSplitDayIndex];
+
+    if (!card) {
+        card = document.createElement('div');
+        card.id = 'active-split-home-card';
+        card.className = 'card split-card';
+        const startBtn = home.querySelector('button.btn');
+        home.insertBefore(card, startBtn);
+    }
+
+    card.innerHTML = `
+        <div class="split-title">Active Split</div>
+        <div class="split-muted" style="margin-bottom:10px;">${liftrV3Esc(split.name || 'Exercise Split')}</div>
+
+        <select class="text-input" style="margin-bottom:12px;" onchange="setActiveSplitNextDay(parseInt(this.value))">
+            ${split.days.map((d, index) => `
+                <option value="${index}" ${index === liftrV3ActiveSplitDayIndex ? 'selected' : ''}>
+                    ${liftrV3Esc(liftrV3DayName(d, index))}
+                </option>
+            `).join('')}
+        </select>
+
+        <button class="btn" onclick="startActiveSplitWorkout()">
+            Start ${liftrV3Esc(liftrV3DayName(day, liftrV3ActiveSplitDayIndex))}
+        </button>
+
+        <button class="add-set-btn" onclick="clearActiveSplit()">Clear Active Split</button>
+    `;
+}
+
+function startActiveSplitWorkout() {
+    const split = liftrV3SavedSplits.find(s => s.id === liftrV3ActiveSplitId);
+    if (!split || !split.days || !split.days[liftrV3ActiveSplitDayIndex]) return;
+
+    startSplitDayWorkout(split.id, liftrV3ActiveSplitDayIndex, true);
 }
 
 function openSplit(splitId) {
@@ -2951,8 +3043,13 @@ function saveSplitDraft() {
 function deleteSplit(id) {
     showConfirmModal('Delete this entire split? This cannot be undone.', 'Delete', () => {
         liftrV3SavedSplits = liftrV3SavedSplits.filter(s => s.id !== id);
+        if (liftrV3ActiveSplitId === id) {
+            liftrV3ActiveSplitId = null;
+            liftrV3ActiveSplitDayIndex = 0;
+        }
         saveApp();
         renderSplits();
+        renderActiveSplitHome();
     });
 }
 
@@ -2984,6 +3081,11 @@ function setEditSplitDay(index) {
 function updateSplitDayName(dayIndex, value) {
     if (!liftrV3SplitDraft || !liftrV3SplitDraft.days[dayIndex]) return;
     liftrV3SplitDraft.days[dayIndex].name = value;
+
+    const pill = document.querySelector(`.split-day-pill[data-day-index="${dayIndex}"]`);
+    if (pill) {
+        pill.textContent = liftrV3DayName(liftrV3SplitDraft.days[dayIndex], dayIndex);
+    }
 }
 
 function toggleSplitDayMenu(dayIndex) {
@@ -3174,7 +3276,7 @@ function renderSplitEditor() {
     nav.innerHTML = `
         <div class="split-day-nav">
             ${liftrV3SplitDraft.days.map((d, index) => `
-                <button class="split-day-pill ${index === liftrV3SelectedEditDayIndex ? 'active' : ''}" onclick="setEditSplitDay(${index})">
+                <button class="split-day-pill ${index === liftrV3SelectedEditDayIndex ? 'active' : ''}" data-day-index="${index}" onclick="setEditSplitDay(${index})">
                     ${liftrV3Esc(liftrV3DayName(d, index))}
                 </button>
             `).join('')}
@@ -3296,13 +3398,13 @@ function renderSplitEditor() {
     `;
 }
 
-function startSplitDayWorkout(splitId, dayIndex) {
+function startSplitDayWorkout(splitId, dayIndex, advanceActiveSplit) {
     const split = liftrV3SavedSplits.find(s => s.id === splitId);
     if (!split || !split.days || !split.days[dayIndex]) return;
 
     const day = split.days[dayIndex];
 
-    const start = () => performStartSplitDayWorkout(split, day);
+    const start = () => performStartSplitDayWorkout(split, day, dayIndex, !!advanceActiveSplit);
 
     if (currentWorkout.length > 0) {
         showConfirmModal('Replace your current workout with this split day?', 'Replace', start);
@@ -3311,7 +3413,7 @@ function startSplitDayWorkout(splitId, dayIndex) {
     }
 }
 
-function performStartSplitDayWorkout(split, day) {
+function performStartSplitDayWorkout(split, day, dayIndex, advanceActiveSplit) {
     stopTimer();
 
     const supersetMap = {};
@@ -3346,8 +3448,12 @@ function performStartSplitDayWorkout(split, day) {
         };
     });
 
-    workoutName = `${split.name || 'Split'} - ${liftrV3DayName(day, 0)}`;
+    workoutName = liftrV3DayName(day, dayIndex);
     workoutStartTime = Date.now();
+
+    if (advanceActiveSplit && liftrV3ActiveSplitId === split.id) {
+        liftrV3ActiveSplitDayIndex = (dayIndex + 1) % split.days.length;
+    }
 
     const nameInput = document.getElementById('workout-name-input');
     if (nameInput) nameInput.value = workoutName;
@@ -3393,6 +3499,10 @@ navigate = function(tab) {
 
     const navSplits = document.getElementById('nav-splits');
     if (navSplits) navSplits.classList.remove('active');
+
+    if (tab === 'home') {
+        renderActiveSplitHome();
+    }
 };
 
 document.addEventListener('click', function(e) {
@@ -3410,6 +3520,7 @@ document.addEventListener('click', function(e) {
 });
 
 liftrV3InstallSplitsUI();
+renderActiveSplitHome();
 saveApp();
 
 /* --- END EXERCISE SPLITS ADD-ON V3 --- */
