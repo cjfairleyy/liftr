@@ -196,12 +196,25 @@
             margin-bottom: 8px;
         }
 
-        .detail-title[contenteditable="true"]:focus {
+        .detail-title-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            padding: 0;
+            margin-bottom: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .detail-title-input:focus {
             outline: none;
         }
 
-        .detail-title[contenteditable="true"]:empty::before {
-            content: "Workout";
+        .detail-title-input::placeholder {
             color: var(--text-placeholder);
         }
 
@@ -805,7 +818,7 @@
     </div>
 
     <div id="workout-detail-screen" class="screen">
-        <h2 id="detail-title" class="detail-title" contenteditable="true" oninput="renameWorkoutFromDetail(this.textContent)" onblur="normalizeWorkoutDetailTitle()">Workout</h2>
+        <input type="text" id="detail-title" class="detail-title-input" placeholder="Workout" autocapitalize="words" autocomplete="off" spellcheck="false" oninput="renameWorkoutFromDetail(this.value)" onblur="normalizeWorkoutDetailTitle()">
         <p id="detail-stats" class="page-subtitle"></p>
         <div id="detail-exercises"></div>
         <div class="page-actions">
@@ -819,7 +832,7 @@
     <div id="weight-screen" class="screen">
         <h2>Body Weight</h2>
         <div class="inline-form-row">
-            <input type="number" id="new-weight" class="text-input" placeholder="Enter weight (lbs)" step="0.1">
+            <input type="text" id="new-weight" class="text-input" placeholder="Enter weight (lbs)" inputmode="decimal" pattern="[0-9]*[.]?[0-9]*" enterkeyhint="done">
             <button class="btn compact-action-btn" onclick="logWeight()">Log</button>
         </div>
         
@@ -1657,10 +1670,10 @@ function renderWorkout() {
                 <div class="set-row">
                     <div class="set-number ${sideNumClass}">${setNumDisplay}</div>
                     <div class="input-group">
-                        <input type="${set.isBW ? 'text' : 'number'}" placeholder="${weightPlaceholder}" value="${weightValue}" class="${set.isBW ? 'bw-active' : ''}" onchange="updateSetData(${exercise.id}, ${setIndex}, 'weight', this.value)" ${set.completed || set.isBW ? 'disabled' : ''}>
+                        <input type="text" inputmode="${set.isBW ? 'text' : 'decimal'}" ${set.isBW ? '' : 'pattern="[0-9]*[.]?[0-9]*"'} enterkeyhint="next" placeholder="${weightPlaceholder}" value="${weightValue}" class="${set.isBW ? 'bw-active' : ''}" onchange="updateSetData(${exercise.id}, ${setIndex}, 'weight', this.value)" ${set.completed || set.isBW ? 'disabled' : ''}>
                     </div>
                     <div class="input-group">
-                        <input type="number" placeholder="reps" value="${set.reps}" onchange="updateSetData(${exercise.id}, ${setIndex}, 'reps', this.value)" ${set.completed ? 'disabled' : ''}>
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" placeholder="reps" value="${set.reps}" onchange="updateSetData(${exercise.id}, ${setIndex}, 'reps', this.value)" ${set.completed ? 'disabled' : ''}>
                     </div>
                     <button class="check-btn" onclick="toggleSet(${exercise.id}, ${setIndex})">
                         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
@@ -1840,7 +1853,7 @@ function viewWorkoutDetail(index) {
     if (!session) return;
 
     const titleEl = document.getElementById('detail-title');
-    if (titleEl) titleEl.textContent = session.name || 'Workout';
+    if (titleEl) titleEl.value = session.name || 'Workout';
 
     const dateObj = new Date(session.date);
     const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
@@ -1927,10 +1940,10 @@ function normalizeWorkoutDetailTitle() {
     if (currentDetailIndex === null || !workoutHistory[currentDetailIndex]) return;
 
     const titleEl = document.getElementById('detail-title');
-    const cleanName = (titleEl ? titleEl.textContent : '').trim() || 'Workout';
+    const cleanName = (titleEl ? titleEl.value : '').trim() || 'Workout';
     workoutHistory[currentDetailIndex].name = cleanName;
 
-    if (titleEl) titleEl.textContent = cleanName;
+    if (titleEl) titleEl.value = cleanName;
 
     saveApp();
 }
