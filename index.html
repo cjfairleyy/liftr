@@ -533,7 +533,7 @@
             transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s;
         }
         .nav-btn:active { transform: scale(0.88); }
-        .nav-btn svg { width: 24px; height: 24px; stroke-width: 2.5; }
+        .nav-btn svg { width: 24px; height: 24px; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .nav-btn.active { color: var(--text-main); }
 
         /* Inputs */
@@ -754,11 +754,11 @@
 
     <nav id="bottom-nav">
         <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 11.5L12 5l7 6.5"></path><path d="M7 10.5V19a2 2 0 002 2h6a2 2 0 002-2v-8.5"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4.5 11.2c0-.5.2-.95.6-1.28l5.6-4.85a2 2 0 012.6 0l5.6 4.85c.4.33.6.78.6 1.28v7.1a2.7 2.7 0 01-2.7 2.7H7.2a2.7 2.7 0 01-2.7-2.7v-7.1z"></path></svg>
             Home
         </button>
         <button class="nav-btn" id="nav-history" onclick="navigate('history')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="5" width="14" height="14" rx="3"></rect><path d="M9 10h6"></path><path d="M9 14h4"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="3.5"></rect><path d="M8 9h8"></path><path d="M8 13h8"></path><path d="M8 17h5"></path></svg>
             Workouts
         </button>
         <button class="nav-btn" id="nav-weight" onclick="navigate('weight')">
