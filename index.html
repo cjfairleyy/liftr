@@ -131,9 +131,16 @@
 
         
         #workout-screen.active, #exercise-modal.active {
-            padding-top: 0;
             padding-left: 0;
             padding-right: 0;
+        }
+
+        #workout-screen.active {
+            padding-top: 18px;
+        }
+
+        #exercise-modal.active {
+            padding-top: 0;
         }
 
         @keyframes fadeIn {
@@ -300,8 +307,15 @@
             position: sticky;
             top: 0;
             z-index: 50;
-            padding: 16px 20px;
-            margin-bottom: 12px;
+            padding: 18px 20px 20px;
+            margin-bottom: 28px;
+        }
+
+        .workout-title-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         .workout-name-input {
@@ -311,14 +325,38 @@
             font-size: 1.3rem;
             font-weight: 800;
             width: 100%;
+            min-width: 0;
+            flex: 1;
             padding: 0;
-            margin-bottom: 12px;
+            margin-bottom: 0;
             letter-spacing: -0.5px;
+            min-height: 36px;
         }
         .workout-name-input:focus { outline: none; background-color: transparent !important; }
         .workout-name-input::placeholder { color: var(--text-placeholder); }
 
-        .workout-controls { display: flex; justify-content: space-between; align-items: center; }
+        .workout-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .workout-close-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 12px;
+            justify-content: center;
+            background: var(--bg-surface-elevated);
+            color: var(--text-muted);
+        }
+
+        .workout-controls {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
 
         .timer {
             font-weight: 800;
@@ -687,11 +725,17 @@
 
     <div id="workout-screen" class="screen">
         <div class="workout-top-bar">
-            <input type="text" id="workout-name-input" class="workout-name-input" placeholder="Workout Name..." oninput="workoutName = this.value" onchange="saveApp()">
+            <div class="workout-title-row">
+                <input type="text" id="workout-name-input" class="workout-name-input" placeholder="Workout Name..." oninput="workoutName = this.value" onchange="saveApp()">
+                <div class="workout-actions">
+                    <button class="icon-btn workout-close-btn" onclick="cancelWorkout()" aria-label="Cancel workout">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                    <button class="btn-small finish" onclick="finishWorkout()">Finish</button>
+                </div>
+            </div>
             <div class="workout-controls">
-                <button class="btn-small cancel" onclick="cancelWorkout()">Cancel</button>
                 <div id="workout-timer" class="timer">00:00</div>
-                <button class="btn-small finish" onclick="finishWorkout()">Finish</button>
             </div>
         </div>
 
