@@ -103,9 +103,22 @@
             font-size: 1rem;
             cursor: pointer;
             padding: 8px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             gap: 4px;
+            transition: background-color 0.2s, color 0.2s, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .header-btn:active { background-color: var(--bg-surface-elevated); color: var(--text-main); transform: scale(0.94); }
+
+        .header-btn svg,
+        .btn svg,
+        .btn-small svg,
+        .icon-btn svg,
+        .check-btn svg {
+            flex-shrink: 0;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         h2 { font-size: 1.6rem; margin-bottom: 30px; }
@@ -141,6 +154,110 @@
 
         #exercise-modal.active {
             padding-top: 0;
+        }
+
+        .home-hero {
+            text-align: center;
+            margin-top: 60px;
+            margin-bottom: 80px;
+        }
+
+        .home-count {
+            font-size: 4.5rem;
+            margin-bottom: 0;
+            font-weight: 800;
+            letter-spacing: -2px;
+        }
+
+        .home-label {
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+        }
+
+        .screen-section {
+            margin-top: 48px;
+        }
+
+        .screen-section-compact {
+            margin-top: 24px;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            margin-top: 0;
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        .detail-title {
+            margin-bottom: 8px;
+        }
+
+        .page-actions {
+            margin-top: 40px;
+            padding-top: 24px;
+        }
+
+        .danger-soft-btn {
+            color: var(--mod-fail);
+            border: none;
+            background: rgba(239, 68, 68, 0.1);
+            font-weight: 700;
+        }
+
+        .inline-form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            margin-top: 12px;
+        }
+
+        .inline-form-row .text-input {
+            margin-bottom: 0;
+        }
+
+        .compact-action-btn {
+            width: auto;
+            border-radius: 16px;
+        }
+
+        .workout-content {
+            padding: 0 20px;
+        }
+
+        .bottom-spaced {
+            margin-bottom: 24px;
+        }
+
+        .post-workout-hero {
+            text-align: center;
+            margin-top: 24px;
+            margin-bottom: 48px;
+        }
+
+        .post-workout-title {
+            margin-bottom: 4px;
+        }
+
+        .post-workout-subtitle {
+            color: var(--text-muted);
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .exercise-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            margin-top: 16px;
+        }
+
+        .exercise-picker-title {
+            margin: 0;
         }
 
         @keyframes fadeIn {
@@ -226,7 +343,7 @@
         }
 
         /* Move Animation Classes */
-        .card { transition: opacity 0.2s ease; }
+        .card { transition: opacity 0.2s ease, border 0.2s, background-color 0.2s; }
         .card.just-moved { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         @keyframes popIn {
@@ -661,9 +778,9 @@
     </header>
 
     <div id="home-screen" class="screen active">
-        <div style="text-align: center; margin-top: 60px; margin-bottom: 80px;">
-            <h2 id="streak-text" style="font-size: 4.5rem; margin-bottom: 0; font-weight: 800; letter-spacing: -2px;">0</h2>
-            <p style="color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;">Workouts Completed</p>
+        <div class="home-hero">
+            <h2 id="streak-text" class="home-count">0</h2>
+            <p class="home-label">Workouts Completed</p>
         </div>
         <button class="btn" onclick="startWorkout()">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -679,11 +796,11 @@
     </div>
 
     <div id="workout-detail-screen" class="screen">
-        <h2 id="detail-title" style="margin-bottom: 8px;">Workout</h2>
-        <p id="detail-stats" style="color: var(--text-muted); margin-top: 0; margin-bottom: 32px; font-weight: 500;"></p>
+        <h2 id="detail-title" class="detail-title">Workout</h2>
+        <p id="detail-stats" class="page-subtitle"></p>
         <div id="detail-exercises"></div>
-        <div style="margin-top: 40px; padding-top: 24px;">
-            <button class="btn btn-outline" style="color: var(--mod-fail); border: none; background: rgba(239, 68, 68, 0.1); font-weight:700;" id="delete-workout-btn" onclick="deleteWorkoutFromHistory()">
+        <div class="page-actions">
+            <button class="btn btn-outline danger-soft-btn" id="delete-workout-btn" onclick="deleteWorkoutFromHistory()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
                 Delete Log
             </button>
@@ -692,17 +809,17 @@
 
     <div id="weight-screen" class="screen">
         <h2>Body Weight</h2>
-        <div style="display: flex; gap: 12px; margin-bottom: 24px; margin-top: 12px;">
-            <input type="number" id="new-weight" class="text-input" placeholder="Enter weight (lbs)" step="0.1" style="margin-bottom: 0;">
-            <button class="btn" style="width: auto; border-radius: 16px;" onclick="logWeight()">Log</button>
+        <div class="inline-form-row">
+            <input type="number" id="new-weight" class="text-input" placeholder="Enter weight (lbs)" step="0.1">
+            <button class="btn compact-action-btn" onclick="logWeight()">Log</button>
         </div>
         
-        <div id="weight-trend-section" style="margin-top: 36px; margin-bottom: 36px; display: none;">
+        <div id="weight-trend-section" class="screen-section" style="display: none;">
             <h3 class="section-title">Weight Trend</h3>
             <div id="weight-trend-chart" class="card"></div>
         </div>
 
-        <h3 class="section-title" style="margin-top: 24px;">History Log</h3>
+        <h3 class="section-title screen-section-compact">History Log</h3>
         <div id="weight-list">
             <div class="empty-state">No weight logged yet.</div>
         </div>
@@ -713,19 +830,19 @@
 
         <div class="stat-grid" id="stats-overview"></div>
 
-        <div style="margin-top: 48px;">
+        <div class="screen-section">
             <h3 class="section-title">Exercise Progress</h3>
             <select id="progress-exercise-select" class="text-input" onchange="renderExerciseProgress()"></select>
             <div id="exercise-progress-chart" class="card"></div>
             <div id="exercise-progress-pr"></div>
         </div>
 
-        <div style="margin-top: 48px;">
+        <div class="screen-section">
             <h3 class="section-title">Muscle Group Balance <span style="color: var(--text-muted); font-weight: 500; font-size: 0.75rem; text-transform: none; letter-spacing: 0;">&middot; Last 30 Days</span></h3>
             <div id="muscle-balance-list"></div>
         </div>
 
-        <div style="margin-top: 48px;">
+        <div class="screen-section">
             <h3 class="section-title">Personal Records</h3>
             <div id="pr-list"></div>
         </div>
@@ -747,9 +864,9 @@
             </div>
         </div>
 
-        <div style="padding: 0 20px;">
+        <div class="workout-content">
             <div id="workout-cards"></div>
-            <button class="btn btn-outline" style="margin-bottom: 24px;" onclick="showExerciseModal()">
+            <button class="btn btn-outline bottom-spaced" onclick="showExerciseModal()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                 Add Exercise
             </button>
@@ -757,26 +874,26 @@
     </div>
 
     <div id="post-workout-screen" class="screen">
-        <div style="text-align: center; margin-top: 24px; margin-bottom: 48px;">
-            <h2 style="margin-bottom: 4px;">Workout Complete!</h2>
-            <p id="post-workout-subtitle" style="color: var(--text-muted); margin: 0; font-weight: 500;"></p>
+        <div class="post-workout-hero">
+            <h2 class="post-workout-title">Workout Complete!</h2>
+            <p id="post-workout-subtitle" class="post-workout-subtitle"></p>
         </div>
 
         <div class="stat-grid" id="post-workout-stats"></div>
 
-        <h3 class="section-title" style="margin-top: 48px;">Workout Summary</h3>
+        <h3 class="section-title screen-section">Workout Summary</h3>
         <div id="post-workout-exercises"></div>
 
-        <button class="btn" style="margin-top: 48px;" onclick="navigate('home')">Continue</button>
+        <button class="btn screen-section" onclick="navigate('home')">Continue</button>
     </div>
 
     <div id="exercise-modal" class="screen">
         <div class="filter-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; margin-top: 16px;">
-                <h2 style="margin: 0;">Select Exercise</h2>
+            <div class="exercise-picker-header">
+                <h2 class="exercise-picker-title">Select Exercise</h2>
                 <button class="header-btn" onclick="hideExerciseModal()">Close</button>
             </div>
-            <input type="text" id="search-exercise" class="text-input" placeholder="Search..." onkeyup="filterExercises()" style="margin-bottom: 16px;">
+            <input type="text" id="search-exercise" class="text-input" placeholder="Search..." onkeyup="filterExercises()">
             
             <div class="filter-row" id="muscle-filters">
                 <button class="filter-pill active" onclick="setCategory('All')">All</button>
@@ -2231,3 +2348,4 @@ window.onload = function() {
     
 </body>
 </html>
+
