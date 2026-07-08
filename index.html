@@ -1283,6 +1283,8 @@ let workoutName = '';
 let workoutStartTime = null;
 let supersetSourceId = null;
 let activeMenuExerciseId = null;
+let routineSupersetSourceId = null;
+let activeRoutineMenuExerciseId = null;
 let currentCategory = 'All';
 let currentEquipment = 'All';
 let currentDetailIndex = null;
@@ -1343,6 +1345,14 @@ function escapeHTML(text) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function escapeJS(text) {
+    return String(text || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/\r/g, '')
+        .replace(/\n/g, '\\n');
 }
 
 function showScreen(screenId) {
@@ -1838,6 +1848,7 @@ function normalizeRoutineData() {
             if (!Array.isArray(day.exercises)) day.exercises = [];
             day.exercises.forEach(ex => {
                 if (!ex.id) ex.id = makeId('routineEx');
+                if (typeof ex.supersetId === 'undefined') ex.supersetId = null;
                 const meta = getExerciseMeta(ex.name);
                 ex.category = ex.category || meta.category;
                 ex.equipment = ex.equipment || meta.equipment;
@@ -2062,6 +2073,96 @@ function createRoutineDay() {
     editRoutineDay(day.id);
 }
 
+function getSupersetBlockClass(exercises, index) {
+    const exercise = exercises[index];
+    if (!exercise || !exercise.supersetId) return '';
+
+    const prev = exercises[index - 1];
+    const next = exercises[index + 1];
+    const samePrev = prev && prev.supersetId === exercise.supersetId;
+    const sameNext = next && next.supersetId === exercise.supersetId;
+
+    if (!samePrev && sameNext) return 'superset-start';
+    if (samePrev && sameNext) return 'superset-middle';
+    if (samePrev && !sameNext) return 'superset-end';
+    return 'superset-single';
+}
+
+function renderRoutineExerciseCards(container, day, options = {}) {
+    if (!container || !day) return;
+    const exercises = Array.isArray(day.exercises) ? day.exercises : [];
+    const editable = !!options.editable;
+
+    if (exercises.length === 0) {
+        container.innerHTML = `<div class="routine-empty-small">${editable ? 'No exercises yet.' : 'No exercises added yet.'}</div>`;
+        return;
+    }
+
+    container.innerHTML = '';
+
+    exercises.forEach((ex, index) => {
+        const card = document.createElement('div');
+        card.id = editable ? `routine-card-${ex.id}` : '';
+
+        const isLinkingMode = editable && routineSupersetSourceId !== null;
+        const isSource = routineSupersetSourceId === ex.id;
+        const sourceEx = exercises.find(item => item.id === routineSupersetSourceId);
+        const belongsToSameActiveGroup = isLinkingMode && ex.supersetId && sourceEx && sourceEx.supersetId === ex.supersetId;
+        const superClass = getSupersetBlockClass(exercises, index);
+
+        card.className = `card ${ex.supersetId ? 'in-superset' : ''} ${superClass} ${isLinkingMode && !isSource && !belongsToSameActiveGroup ? 'linking-target' : ''}`;
+
+        if (isLinkingMode && !isSource && !belongsToSameActiveGroup) {
+            card.onclick = (event) => {
+                event.stopPropagation();
+                completeRoutineSupersetLink(ex.id);
+            };
+        }
+
+        let supersetHeaderHtml = '';
+        if (ex.supersetId && (superClass === 'superset-start' || superClass === 'superset-single')) {
+            supersetHeaderHtml = `<div class="superset-badge">${getSupersetLabel(ex.supersetId, exercises)}</div>`;
+        }
+
+        const safeId = escapeJS(ex.id);
+        const displayName = isLinkingMode && !isSource ? `Link ${ex.name}` : ex.name;
+
+        card.innerHTML = `
+            <div class="exercise-header">
+                <div style="flex-grow: 1; min-width: 0; padding-right: 8px;">
+                    ${supersetHeaderHtml}
+                    <div style="font-weight: 700; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${escapeHTML(displayName)}
+                    </div>
+                    <div class="list-item-sub">${escapeHTML(ex.category || 'Exercise')} · ${escapeHTML(ex.equipment || '')}</div>
+                </div>
+                ${editable ? `
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <button class="icon-btn" onclick="event.stopPropagation(); toggleRoutineExerciseMenu('${safeId}')" aria-label="Exercise options">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
+                        </button>
+                        ${activeRoutineMenuExerciseId === ex.id ? `
+                            <div class="action-menu-popup" onclick="event.stopPropagation();">
+                                <button class="menu-item" onclick="moveRoutineExerciseGroup('${safeId}', 'up')">Move Up</button>
+                                <button class="menu-item" onclick="moveRoutineExerciseGroup('${safeId}', 'down')">Move Down</button>
+                                <div style="height: 1px; background: #2c2c2e; margin: 4px 0;"></div>
+                                ${!ex.supersetId ? `
+                                    <button class="menu-item" onclick="startRoutineSupersetLink('${safeId}')">Superset</button>
+                                ` : `
+                                    <button class="menu-item danger" onclick="removeRoutineFromSuperset('${safeId}')">Remove Superset</button>
+                                `}
+                                <button class="menu-item danger" onclick="removeRoutineExerciseById('${safeId}')">Remove Exercise</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : `<div class="set-number">${index + 1}</div>`}
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
 function viewRoutineDay(dayId) {
     const routine = getCurrentRoutine();
     if (!routine) return;
@@ -2069,6 +2170,8 @@ function viewRoutineDay(dayId) {
     if (!day) return;
 
     currentRoutineDayId = day.id;
+    routineSupersetSourceId = null;
+    activeRoutineMenuExerciseId = null;
 
     const title = document.getElementById('routine-day-title');
     if (title) title.textContent = day.name || 'Day';
@@ -2077,27 +2180,7 @@ function viewRoutineDay(dayId) {
     const meta = document.getElementById('routine-day-meta');
     if (meta) meta.textContent = `${routine.name || 'Routine'} · ${count} ${count === 1 ? 'exercise' : 'exercises'}`;
 
-    const container = document.getElementById('routine-day-exercises');
-    if (container) {
-        if (!day.exercises || day.exercises.length === 0) {
-            container.innerHTML = '<div class="routine-empty-small">No exercises added yet.</div>';
-        } else {
-            container.innerHTML = '';
-            day.exercises.forEach((ex, index) => {
-                const item = document.createElement('div');
-                item.className = 'routine-edit-item';
-                item.innerHTML = `
-                    <div>
-                        <div class="list-item-title">${escapeHTML(ex.name)}</div>
-                        <div class="list-item-sub">${escapeHTML(ex.category || 'Exercise')} · ${escapeHTML(ex.equipment || '')}</div>
-                    </div>
-                    <div class="set-number">${index + 1}</div>
-                `;
-                container.appendChild(item);
-            });
-        }
-    }
-
+    renderRoutineExerciseCards(document.getElementById('routine-day-exercises'), day, { editable: false });
     showSubScreen('routine-day-screen');
 }
 
@@ -2108,12 +2191,14 @@ function editRoutineDay(dayId) {
     if (!day) return;
 
     currentRoutineDayId = day.id;
+    activeRoutineMenuExerciseId = null;
+    routineSupersetSourceId = null;
 
     const input = document.getElementById('routine-day-name-input');
     if (input) input.value = day.name || 'Day';
 
     const meta = document.getElementById('routine-day-edit-meta');
-    if (meta) meta.textContent = `${routine.name || 'Routine'} · Tap Add Exercise to build this day.`;
+    if (meta) meta.textContent = `${routine.name || 'Routine'} · Use the menu to move, superset, or remove exercises.`;
 
     renderRoutineDayEditList();
     showSubScreen('routine-day-edit-screen');
@@ -2123,34 +2208,129 @@ function renderRoutineDayEditList() {
     const day = getCurrentRoutineDay();
     const list = document.getElementById('routine-day-edit-list');
     if (!day || !list) return;
+    renderRoutineExerciseCards(list, day, { editable: true });
+}
 
-    if (!Array.isArray(day.exercises) || day.exercises.length === 0) {
-        list.innerHTML = '<div class="routine-empty-small">No exercises yet.</div>';
+function toggleRoutineExerciseMenu(id) {
+    activeRoutineMenuExerciseId = activeRoutineMenuExerciseId === id ? null : id;
+    renderRoutineDayEditList();
+}
+
+function startRoutineSupersetLink(exerciseId) {
+    routineSupersetSourceId = exerciseId;
+    activeRoutineMenuExerciseId = null;
+    renderRoutineDayEditList();
+}
+
+function completeRoutineSupersetLink(targetId) {
+    const day = getCurrentRoutineDay();
+    const routine = getCurrentRoutine();
+    if (!day || !routine || !routineSupersetSourceId || routineSupersetSourceId === targetId) return;
+
+    const sourceIndex = day.exercises.findIndex(ex => ex.id === routineSupersetSourceId);
+    const targetIndex = day.exercises.findIndex(ex => ex.id === targetId);
+    if (sourceIndex === -1 || targetIndex === -1) return;
+
+    const sourceEx = day.exercises[sourceIndex];
+    const targetEx = day.exercises[targetIndex];
+    const sharedId = sourceEx.supersetId || targetEx.supersetId || makeId('routineSS');
+    sourceEx.supersetId = sharedId;
+    targetEx.supersetId = sharedId;
+
+    const [movedItem] = day.exercises.splice(targetIndex, 1);
+    const newSourceIndex = day.exercises.findIndex(ex => ex.id === routineSupersetSourceId);
+    day.exercises.splice(newSourceIndex + 1, 0, movedItem);
+
+    routineSupersetSourceId = null;
+    activeRoutineMenuExerciseId = null;
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+    renderRoutineDayEditList();
+}
+
+function removeRoutineFromSuperset(exerciseId) {
+    const day = getCurrentRoutineDay();
+    const routine = getCurrentRoutine();
+    if (!day || !routine || !Array.isArray(day.exercises)) return;
+
+    const ex = day.exercises.find(item => item.id === exerciseId);
+    if (!ex) return;
+
+    const oldId = ex.supersetId;
+    ex.supersetId = null;
+
+    const remaining = day.exercises.filter(item => item.supersetId === oldId);
+    if (remaining.length < 2) {
+        remaining.forEach(item => item.supersetId = null);
+    }
+
+    activeRoutineMenuExerciseId = null;
+    routineSupersetSourceId = null;
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+    renderRoutineDayEditList();
+}
+
+function moveRoutineExerciseGroup(exerciseId, direction) {
+    const day = getCurrentRoutineDay();
+    const routine = getCurrentRoutine();
+    if (!day || !routine || !Array.isArray(day.exercises)) return;
+
+    activeRoutineMenuExerciseId = null;
+    routineSupersetSourceId = null;
+
+    const exercises = day.exercises;
+    const index = exercises.findIndex(ex => ex.id === exerciseId);
+    if (index === -1) return;
+
+    let startIdx = index;
+    let endIdx = index;
+    const targetEx = exercises[index];
+
+    if (targetEx.supersetId) {
+        while (startIdx > 0 && exercises[startIdx - 1].supersetId === targetEx.supersetId) startIdx--;
+        while (endIdx < exercises.length - 1 && exercises[endIdx + 1].supersetId === targetEx.supersetId) endIdx++;
+    }
+
+    let swapStartIdx = -1;
+    let swapEndIdx = -1;
+
+    if (direction === 'up' && startIdx > 0) {
+        swapEndIdx = startIdx - 1;
+        swapStartIdx = swapEndIdx;
+        const swapId = exercises[swapEndIdx].supersetId;
+        if (swapId) {
+            while (swapStartIdx > 0 && exercises[swapStartIdx - 1].supersetId === swapId) swapStartIdx--;
+        }
+    } else if (direction === 'down' && endIdx < exercises.length - 1) {
+        swapStartIdx = endIdx + 1;
+        swapEndIdx = swapStartIdx;
+        const swapId = exercises[swapStartIdx].supersetId;
+        if (swapId) {
+            while (swapEndIdx < exercises.length - 1 && exercises[swapEndIdx + 1].supersetId === swapId) swapEndIdx++;
+        }
+    } else {
         return;
     }
 
-    list.innerHTML = '';
-    day.exercises.forEach((ex, index) => {
-        const item = document.createElement('div');
-        item.className = 'routine-edit-item';
-        item.innerHTML = `
-            <div style="min-width:0; flex:1;">
-                <div class="list-item-title">${escapeHTML(ex.name)}</div>
-                <div class="list-item-sub">${escapeHTML(ex.category || 'Exercise')} · ${escapeHTML(ex.equipment || '')}</div>
-            </div>
-            <div class="routine-edit-controls">
-                <button class="icon-btn" onclick="moveRoutineExercise(${index}, -1)" aria-label="Move up">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
-                </button>
-                <button class="icon-btn" onclick="moveRoutineExercise(${index}, 1)" aria-label="Move down">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-                </button>
-                <button class="icon-btn" onclick="removeRoutineExercise(${index})" aria-label="Remove exercise" style="color:var(--mod-fail);">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
-            </div>
-        `;
-        list.appendChild(item);
+    const movingBlock = exercises.splice(startIdx, endIdx - startIdx + 1);
+    if (direction === 'up') {
+        exercises.splice(swapStartIdx, 0, ...movingBlock);
+    } else {
+        const insertIndex = swapEndIdx - movingBlock.length + 1;
+        exercises.splice(insertIndex, 0, ...movingBlock);
+    }
+
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+    renderRoutineDayEditList();
+
+    movingBlock.forEach(item => {
+        const el = document.getElementById(`routine-card-${item.id}`);
+        if (el) {
+            el.classList.add('just-moved');
+            setTimeout(() => el.classList.remove('just-moved'), 400);
+        }
     });
 }
 
@@ -2184,8 +2364,28 @@ function addExerciseToRoutineDay(name) {
         id: makeId('routineEx'),
         name: meta.name || name,
         category: meta.category || 'Exercise',
-        equipment: meta.equipment || ''
+        equipment: meta.equipment || '',
+        supersetId: null
     });
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+    renderRoutineDayEditList();
+}
+
+function removeRoutineExerciseById(exerciseId) {
+    const day = getCurrentRoutineDay();
+    const routine = getCurrentRoutine();
+    if (!day || !routine || !Array.isArray(day.exercises)) return;
+    day.exercises = day.exercises.filter(ex => ex.id !== exerciseId);
+
+    const activeSupersets = new Set(day.exercises.map(ex => ex.supersetId).filter(Boolean));
+    activeSupersets.forEach(groupId => {
+        const group = day.exercises.filter(ex => ex.supersetId === groupId);
+        if (group.length < 2) group.forEach(ex => ex.supersetId = null);
+    });
+
+    activeRoutineMenuExerciseId = null;
+    routineSupersetSourceId = null;
     routine.updatedAt = new Date().toISOString();
     saveApp();
     renderRoutineDayEditList();
@@ -2193,25 +2393,14 @@ function addExerciseToRoutineDay(name) {
 
 function moveRoutineExercise(index, direction) {
     const day = getCurrentRoutineDay();
-    const routine = getCurrentRoutine();
-    if (!day || !routine || !Array.isArray(day.exercises)) return;
-    const target = index + direction;
-    if (target < 0 || target >= day.exercises.length) return;
-    const [item] = day.exercises.splice(index, 1);
-    day.exercises.splice(target, 0, item);
-    routine.updatedAt = new Date().toISOString();
-    saveApp();
-    renderRoutineDayEditList();
+    if (!day || !Array.isArray(day.exercises) || !day.exercises[index]) return;
+    moveRoutineExerciseGroup(day.exercises[index].id, direction === 1 ? 'down' : 'up');
 }
 
 function removeRoutineExercise(index) {
     const day = getCurrentRoutineDay();
-    const routine = getCurrentRoutine();
-    if (!day || !routine || !Array.isArray(day.exercises)) return;
-    day.exercises.splice(index, 1);
-    routine.updatedAt = new Date().toISOString();
-    saveApp();
-    renderRoutineDayEditList();
+    if (!day || !Array.isArray(day.exercises) || !day.exercises[index]) return;
+    removeRoutineExerciseById(day.exercises[index].id);
 }
 
 function deleteCurrentRoutineDay() {
@@ -2233,7 +2422,7 @@ function createWorkoutExerciseFromRoutineExercise(routineExercise) {
     return {
         id: Date.now() + Math.random(),
         name: name,
-        supersetId: null,
+        supersetId: routineExercise.supersetId || null,
         previousText: getPreviousPerformanceText(name),
         sets: buildSetsFromMostRecentExercise(name)
     };
