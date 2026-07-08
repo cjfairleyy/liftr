@@ -899,6 +899,7 @@
             font-size: 1.6rem;
             font-weight: 800;
             letter-spacing: -0.5px;
+            line-height: 1.15;
             padding: 0;
             -webkit-appearance: none;
             appearance: none;
@@ -908,7 +909,10 @@
         .routine-title-input:focus,
         .routine-day-title-input:focus { outline: none; }
         .routine-title-input::placeholder,
-        .routine-day-title-input::placeholder { color: var(--text-placeholder); }
+        .routine-day-title-input::placeholder {
+            color: var(--text-placeholder);
+            opacity: 1;
+        }
 
         .routine-detail-subtitle {
             margin-bottom: 0;
@@ -1103,7 +1107,7 @@
         <div class="routine-hero">
             <button id="routine-detail-gradient" class="routine-gradient-large" onclick="rerandomizeCurrentRoutineGradient()" aria-label="Rerandomize routine gradient"></button>
             <div class="routine-detail-copy">
-                <input type="text" id="routine-title-input" class="routine-title-input" placeholder="Routine Name" autocapitalize="words" autocomplete="off" spellcheck="false" oninput="renameCurrentRoutine(this.value)" onblur="normalizeCurrentRoutineName()">
+                <input type="text" id="routine-title-input" class="routine-title-input" placeholder="Routine Name..." autocapitalize="words" autocomplete="off" spellcheck="false" oninput="renameCurrentRoutine(this.value)" onblur="normalizeCurrentRoutineName()">
                 <p id="routine-detail-meta" class="page-subtitle routine-detail-subtitle"></p>
             </div>
         </div>
@@ -1134,7 +1138,7 @@
 
     <div id="routine-day-edit-screen" class="screen">
         <div class="routine-day-edit-header">
-            <input type="text" id="routine-day-name-input" class="routine-day-title-input" placeholder="Untitled Day" autocapitalize="words" autocomplete="off" spellcheck="false" oninput="renameCurrentRoutineDay(this.value)" onblur="normalizeCurrentRoutineDayName()">
+            <input type="text" id="routine-day-name-input" class="routine-day-title-input" placeholder="Day Name..." autocapitalize="words" autocomplete="off" spellcheck="false" oninput="renameCurrentRoutineDay(this.value)" onblur="normalizeCurrentRoutineDayName()">
             <div class="routine-day-edit-actions">
                 <button class="routine-day-delete-btn" onclick="deleteCurrentRoutineDay()">Delete</button>
                 <button class="routine-day-save-btn" onclick="saveRoutineDayAndReturn()">Save</button>
@@ -1937,14 +1941,14 @@ function normalizeRoutineData() {
 
     routines.forEach((routine, rIndex) => {
         if (!routine.id) routine.id = makeId('routine');
-        if (!routine.name) routine.name = `Routine ${rIndex + 1}`;
+        if (typeof routine.name !== 'string') routine.name = '';
         if (!routine.gradient) routine.gradient = createRoutineGradient();
         if (!Array.isArray(routine.days)) routine.days = [];
         if (typeof routine.nextDayIndex !== 'number') routine.nextDayIndex = 0;
 
         routine.days.forEach((day, dIndex) => {
             if (!day.id) day.id = makeId('day');
-            if (!day.name) day.name = 'Untitled Day';
+            if (typeof day.name !== 'string') day.name = '';
             if (!Array.isArray(day.exercises)) day.exercises = [];
             day.exercises.forEach(ex => {
                 if (!ex.id) ex.id = makeId('routineEx');
@@ -2012,7 +2016,7 @@ function renderRoutinesOverview() {
         card.innerHTML = `
             <div class="routine-gradient-thumb" style="background:${getRoutineGradientStyle(routine.gradient)};"></div>
             <div style="min-width:0; flex:1;">
-                <div class="routine-card-title">${escapeHTML(routine.name)}</div>
+                <div class="routine-card-title">${escapeHTML((routine.name || '').trim() || 'Routine')}</div>
                 <div class="routine-card-meta">${stats.days} ${stats.days === 1 ? 'day' : 'days'}${routine.id === activeRoutineId ? ' · Active' : ''}</div>
             </div>
         `;
@@ -2025,7 +2029,7 @@ function createRoutine() {
     const now = new Date().toISOString();
     const routine = {
         id: makeId('routine'),
-        name: 'New Routine',
+        name: '',
         gradient: createRoutineGradient(),
         days: [],
         nextDayIndex: 0,
@@ -2051,7 +2055,7 @@ function viewRoutineDetail(routineId) {
     if (gradientEl) gradientEl.style.background = getRoutineGradientStyle(routine.gradient);
 
     const titleInput = document.getElementById('routine-title-input');
-    if (titleInput) titleInput.value = routine.name || 'Routine';
+    if (titleInput) titleInput.value = routine.name || '';
 
     const stats = getRoutineStats(routine);
     const metaEl = document.getElementById('routine-detail-meta');
@@ -2102,7 +2106,7 @@ function renderRoutineDayList() {
 function renameCurrentRoutine(value) {
     const routine = getCurrentRoutine();
     if (!routine) return;
-    routine.name = (value || '').trim() || 'Routine';
+    routine.name = value || '';
     routine.updatedAt = new Date().toISOString();
     saveApp();
 }
@@ -2111,7 +2115,7 @@ function normalizeCurrentRoutineName() {
     const routine = getCurrentRoutine();
     if (!routine) return;
     const input = document.getElementById('routine-title-input');
-    const clean = (input ? input.value : '').trim() || 'Routine';
+    const clean = (input ? input.value : '').trim();
     routine.name = clean;
     routine.updatedAt = new Date().toISOString();
     if (input) input.value = clean;
@@ -2163,7 +2167,7 @@ function createRoutineDay() {
     if (!Array.isArray(routine.days)) routine.days = [];
     const day = {
         id: makeId('day'),
-        name: 'Untitled Day',
+        name: '',
         exercises: []
     };
     routine.days.push(day);
@@ -2291,7 +2295,7 @@ function editRoutineDay(dayId) {
     routineSupersetSourceId = null;
 
     const input = document.getElementById('routine-day-name-input');
-    if (input) input.value = day.name || 'Untitled Day';
+    if (input) input.value = day.name || '';
 
     renderRoutineDayEditList();
     showSubScreen('routine-day-edit-screen');
@@ -2431,7 +2435,7 @@ function renameCurrentRoutineDay(value) {
     const day = getCurrentRoutineDay();
     const routine = getCurrentRoutine();
     if (!day || !routine) return;
-    day.name = (value || '').trim() || 'Untitled Day';
+    day.name = value || '';
     routine.updatedAt = new Date().toISOString();
     saveApp();
 }
@@ -2441,7 +2445,7 @@ function normalizeCurrentRoutineDayName() {
     const routine = getCurrentRoutine();
     if (!day || !routine) return;
     const input = document.getElementById('routine-day-name-input');
-    const clean = (input ? input.value : '').trim() || 'Untitled Day';
+    const clean = (input ? input.value : '').trim();
     day.name = clean;
     routine.updatedAt = new Date().toISOString();
     if (input) input.value = clean;
