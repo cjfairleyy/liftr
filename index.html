@@ -1976,7 +1976,7 @@ function renderRoutineDayList() {
     if (!routine || !list) return;
 
     if (!Array.isArray(routine.days) || routine.days.length === 0) {
-        list.innerHTML = '<div class="routine-empty-small">No days yet. Create a day to build this routine.</div>';
+        list.innerHTML = '';
         return;
     }
 
@@ -2092,7 +2092,7 @@ function renderRoutineExerciseCards(container, day, options = {}) {
     const editable = !!options.editable;
 
     if (exercises.length === 0) {
-        container.innerHTML = `<div class="routine-empty-small">${editable ? 'No exercises yet.' : 'No exercises added yet.'}</div>`;
+        container.innerHTML = '';
         return;
     }
 
