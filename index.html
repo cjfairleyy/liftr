@@ -1032,7 +1032,6 @@
             <button class="header-btn" onclick="editRoutineDay(currentRoutineDayId)">Edit</button>
         </div>
         <div id="routine-day-exercises"></div>
-        <button class="btn" style="margin-top: 24px;" onclick="startCurrentRoutineDay()">Start This Day</button>
     </div>
 
     <div id="routine-day-edit-screen" class="screen">
@@ -1472,7 +1471,7 @@ function goBack() {
     }
 
     if (activeId === 'routine-day-edit-screen') {
-        viewRoutineDay(currentRoutineDayId);
+        viewRoutineDetail(currentRoutineId);
         return;
     }
 
@@ -1952,8 +1951,9 @@ function viewRoutineDetail(routineId) {
 
     const activeBtn = document.getElementById('active-routine-btn');
     if (activeBtn) {
-        activeBtn.textContent = routine.id === activeRoutineId ? 'Active Routine' : 'Set Active';
+        activeBtn.textContent = routine.id === activeRoutineId ? 'Make Inactive' : 'Set Active';
         activeBtn.classList.toggle('btn-outline', routine.id !== activeRoutineId);
+        activeBtn.setAttribute('aria-pressed', routine.id === activeRoutineId ? 'true' : 'false');
     }
 
     renderRoutineDayList();
@@ -2020,8 +2020,14 @@ function rerandomizeCurrentRoutineGradient() {
 function setCurrentRoutineActive() {
     const routine = getCurrentRoutine();
     if (!routine) return;
-    activeRoutineId = routine.id;
-    if (typeof routine.nextDayIndex !== 'number') routine.nextDayIndex = 0;
+
+    if (activeRoutineId === routine.id) {
+        activeRoutineId = null;
+    } else {
+        activeRoutineId = routine.id;
+        if (typeof routine.nextDayIndex !== 'number') routine.nextDayIndex = 0;
+    }
+
     routine.updatedAt = new Date().toISOString();
     saveApp();
     viewRoutineDetail(routine.id);
@@ -2253,14 +2259,6 @@ function loadNextActiveRoutineWorkout() {
     const idx = Math.max(0, routine.nextDayIndex || 0) % routine.days.length;
     const day = routine.days[idx];
     return loadRoutineDayWorkout(routine, day);
-}
-
-function startCurrentRoutineDay() {
-    const routine = getCurrentRoutine();
-    const day = getCurrentRoutineDay();
-    if (!routine || !day) return;
-    loadRoutineDayWorkout(routine, day);
-    startWorkout({ skipRoutine: true });
 }
 
 function advanceRoutineAfterWorkout(meta) {
