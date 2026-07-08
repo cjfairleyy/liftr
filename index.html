@@ -1026,8 +1026,7 @@
     <div id="routine-day-screen" class="screen">
         <div class="screen-title-row">
             <div style="min-width:0;">
-                <h2 id="routine-day-title" style="margin-bottom:6px;">Day</h2>
-                <p id="routine-day-meta" class="page-subtitle" style="margin-bottom:0;"></p>
+                <h2 id="routine-day-title" style="margin-bottom:0;">Untitled Day</h2>
             </div>
             <button class="header-btn" onclick="editRoutineDay(currentRoutineDayId)">Edit</button>
         </div>
@@ -1035,8 +1034,7 @@
     </div>
 
     <div id="routine-day-edit-screen" class="screen">
-        <input type="text" id="routine-day-name-input" class="routine-day-title-input" placeholder="Day Name" autocapitalize="words" autocomplete="off" spellcheck="false" oninput="renameCurrentRoutineDay(this.value)" onblur="normalizeCurrentRoutineDayName()">
-        <p id="routine-day-edit-meta" class="page-subtitle"></p>
+        <input type="text" id="routine-day-name-input" class="routine-day-title-input" placeholder="Untitled Day" autocapitalize="words" autocomplete="off" spellcheck="false" oninput="renameCurrentRoutineDay(this.value)" onblur="normalizeCurrentRoutineDayName()">
         <div id="routine-day-edit-list"></div>
         <button class="btn btn-outline" style="margin-top: 12px;" onclick="showExerciseModal('routineDay')">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -1844,7 +1842,7 @@ function normalizeRoutineData() {
 
         routine.days.forEach((day, dIndex) => {
             if (!day.id) day.id = makeId('day');
-            if (!day.name) day.name = `Day ${dIndex + 1}`;
+            if (!day.name) day.name = 'Untitled Day';
             if (!Array.isArray(day.exercises)) day.exercises = [];
             day.exercises.forEach(ex => {
                 if (!ex.id) ex.id = makeId('routineEx');
@@ -1990,7 +1988,7 @@ function renderRoutineDayList() {
         row.onclick = () => viewRoutineDay(day.id);
         row.innerHTML = `
             <div>
-                <div class="list-item-title">${escapeHTML(day.name || `Day ${index + 1}`)}</div>
+                <div class="list-item-title">${escapeHTML(day.name || 'Untitled Day')}</div>
                 <div class="list-item-sub">${count} ${count === 1 ? 'exercise' : 'exercises'}${routine.id === activeRoutineId && routine.nextDayIndex % routine.days.length === index ? ' · Next' : ''}</div>
             </div>
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
@@ -2063,7 +2061,7 @@ function createRoutineDay() {
     if (!Array.isArray(routine.days)) routine.days = [];
     const day = {
         id: makeId('day'),
-        name: `Day ${routine.days.length + 1}`,
+        name: 'Untitled Day',
         exercises: []
     };
     routine.days.push(day);
@@ -2174,11 +2172,7 @@ function viewRoutineDay(dayId) {
     activeRoutineMenuExerciseId = null;
 
     const title = document.getElementById('routine-day-title');
-    if (title) title.textContent = day.name || 'Day';
-
-    const count = Array.isArray(day.exercises) ? day.exercises.length : 0;
-    const meta = document.getElementById('routine-day-meta');
-    if (meta) meta.textContent = `${routine.name || 'Routine'} · ${count} ${count === 1 ? 'exercise' : 'exercises'}`;
+    if (title) title.textContent = day.name || 'Untitled Day';
 
     renderRoutineExerciseCards(document.getElementById('routine-day-exercises'), day, { editable: false });
     showSubScreen('routine-day-screen');
@@ -2195,10 +2189,7 @@ function editRoutineDay(dayId) {
     routineSupersetSourceId = null;
 
     const input = document.getElementById('routine-day-name-input');
-    if (input) input.value = day.name || 'Day';
-
-    const meta = document.getElementById('routine-day-edit-meta');
-    if (meta) meta.textContent = `${routine.name || 'Routine'} · Use the menu to move, superset, or remove exercises.`;
+    if (input) input.value = day.name || 'Untitled Day';
 
     renderRoutineDayEditList();
     showSubScreen('routine-day-edit-screen');
@@ -2338,7 +2329,7 @@ function renameCurrentRoutineDay(value) {
     const day = getCurrentRoutineDay();
     const routine = getCurrentRoutine();
     if (!day || !routine) return;
-    day.name = (value || '').trim() || 'Day';
+    day.name = (value || '').trim() || 'Untitled Day';
     routine.updatedAt = new Date().toISOString();
     saveApp();
 }
@@ -2348,7 +2339,7 @@ function normalizeCurrentRoutineDayName() {
     const routine = getCurrentRoutine();
     if (!day || !routine) return;
     const input = document.getElementById('routine-day-name-input');
-    const clean = (input ? input.value : '').trim() || 'Day';
+    const clean = (input ? input.value : '').trim() || 'Untitled Day';
     day.name = clean;
     routine.updatedAt = new Date().toISOString();
     if (input) input.value = clean;
@@ -2431,12 +2422,12 @@ function createWorkoutExerciseFromRoutineExercise(routineExercise) {
 function loadRoutineDayWorkout(routine, day) {
     if (!routine || !day) return false;
     currentWorkout = (day.exercises || []).map(ex => createWorkoutExerciseFromRoutineExercise(ex));
-    workoutName = `${routine.name || 'Routine'} · ${day.name || 'Day'}`;
+    workoutName = `${routine.name || 'Routine'} · ${day.name || 'Untitled Day'}`;
     currentRoutineWorkout = {
         routineId: routine.id,
         routineName: routine.name || 'Routine',
         dayId: day.id,
-        dayName: day.name || 'Day',
+        dayName: day.name || 'Untitled Day',
         dayIndex: routine.days.findIndex(d => d.id === day.id)
     };
     return true;
