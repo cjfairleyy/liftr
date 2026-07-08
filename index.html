@@ -721,6 +721,12 @@
         .nav-btn svg { width: 24px; height: 24px; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .nav-btn.active { color: var(--text-main); }
 
+        #bottom-nav .nav-btn {
+            padding-left: 6px;
+            padding-right: 6px;
+            min-width: 0;
+        }
+
         /* Inputs */
         .text-input {
             width: 100%;
@@ -786,6 +792,159 @@
         .d-tag.side-l { background: var(--mod-side-l); }
         .d-tag.side-r { background: var(--mod-side-r); }
         .d-tag.fail { background: var(--mod-fail); }
+
+        /* Splits */
+        .page-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .page-top-row h2 {
+            margin-bottom: 0;
+        }
+
+        .small-action-btn {
+            width: auto;
+            padding: 11px 14px;
+            border-radius: 14px;
+            white-space: nowrap;
+        }
+
+        .split-card {
+            padding: 22px 20px;
+            margin-bottom: 16px;
+        }
+
+        .split-card-title {
+            font-size: 1.18rem;
+            font-weight: 800;
+            letter-spacing: -0.35px;
+            margin-bottom: 6px;
+        }
+
+        .split-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        .split-card-actions {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .split-secondary-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .soft-small-btn {
+            background: var(--bg-surface-elevated);
+            color: var(--text-main);
+        }
+
+        .split-exercise-item {
+            padding: 16px 0;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .split-exercise-item:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .split-exercise-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .split-exercise-title {
+            font-weight: 750;
+            font-size: 1rem;
+            line-height: 1.25;
+            margin-bottom: 4px;
+        }
+
+        .split-editor-card {
+            padding: 18px;
+            margin-bottom: 12px;
+        }
+
+        .split-editor-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .split-set-stepper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: var(--bg-surface);
+            border-radius: 16px;
+            padding: 8px 10px;
+        }
+
+        .split-set-stepper button {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            border: none;
+            background: var(--tag-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .split-set-stepper span {
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .split-field-label {
+            color: var(--text-muted);
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .split-mini-input {
+            margin-bottom: 0;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 0.92rem;
+        }
+
+        .split-notes-input {
+            margin-top: 12px;
+        }
+
+        .split-history-item {
+            cursor: pointer;
+            padding-left: 0;
+            padding-right: 0;
+        }
     </style>
 </head>
 <body>
@@ -815,6 +974,42 @@
         <div id="history-list">
             <div class="empty-state">No workouts logged yet.</div>
         </div>
+    </div>
+
+    <div id="splits-screen" class="screen">
+        <div class="page-top-row">
+            <h2>Splits</h2>
+            <button class="btn small-action-btn" onclick="createSplit()">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                New
+            </button>
+        </div>
+        <div id="splits-list"></div>
+    </div>
+
+    <div id="split-detail-screen" class="screen">
+        <div class="page-top-row">
+            <button class="header-btn" onclick="navigate('splits')">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back
+            </button>
+            <button class="btn-small finish" onclick="editCurrentSplit()">Edit</button>
+        </div>
+        <div id="split-detail-content"></div>
+    </div>
+
+    <div id="split-editor-screen" class="screen">
+        <div class="page-top-row">
+            <button class="header-btn" onclick="cancelSplitEdit()">Cancel</button>
+            <button class="btn-small finish" onclick="saveSplitDraft()">Save</button>
+        </div>
+        <input type="text" id="split-name-input" class="detail-title-input" placeholder="Split name" autocapitalize="words" autocomplete="off" spellcheck="false" oninput="updateSplitDraftName(this.value)">
+        <p class="page-subtitle">Plan the exercises, sets, reps, and notes you want ready when you start.</p>
+        <div id="split-editor-exercises"></div>
+        <button class="btn btn-outline screen-section-compact" onclick="showSplitExercisePicker()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add Exercise
+        </button>
     </div>
 
     <div id="workout-detail-screen" class="screen">
@@ -952,6 +1147,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M8 10h8"></path><path d="M8 14h5.5"></path></svg>
             Workouts
         </button>
+        <button class="nav-btn" id="nav-splits" onclick="navigate('splits')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M8 9h8"></path><path d="M8 13h5"></path><path d="M8 17h7"></path></svg>
+            Splits
+        </button>
         <button class="nav-btn" id="nav-weight" onclick="navigate('weight')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M12 8v4"></path><path d="M8 12h8"></path></svg>
             Weight
@@ -1061,8 +1260,11 @@ let currentWorkout = [];
 let workoutHistory = [];
 let weightHistory = [];
 let favoriteExercises = []; // New array to store favorite names
+let savedSplits = [];
 let workoutName = '';
 let workoutStartTime = null;
+let activeWorkoutSplitId = null;
+let activeWorkoutSplitName = '';
 let supersetSourceId = null;
 let activeMenuExerciseId = null;
 let currentCategory = 'All';
@@ -1071,6 +1273,11 @@ let currentDetailIndex = null;
 let timerInterval = null;
 let confirmModalCallback = null;
 let selectedProgressExercise = null;
+let hasSeededSplits = false;
+let viewingSplitId = null;
+let editingSplitId = null;
+let splitDraft = null;
+let exercisePickerMode = 'workout';
 
 // Maps every exercise name to its muscle category for the Stats page
 const exerciseCategoryMap = {};
@@ -1086,11 +1293,21 @@ try {
         workoutHistory = savedData.workoutHistory || [];
         weightHistory = savedData.weightHistory || [];
         favoriteExercises = savedData.favoriteExercises || []; // Load favorites
+        savedSplits = savedData.savedSplits || [];
         workoutName = savedData.workoutName || '';
         workoutStartTime = savedData.workoutStartTime || null;
+        activeWorkoutSplitId = savedData.activeWorkoutSplitId || null;
+        activeWorkoutSplitName = savedData.activeWorkoutSplitName || '';
+        hasSeededSplits = savedData.hasSeededSplits || false;
     }
 } catch (e) {
     console.error("No saved data found or error loading data.");
+}
+
+savedSplits = normalizeSplits(savedSplits);
+if (!hasSeededSplits && savedSplits.length === 0) {
+    savedSplits = createDefaultSplits();
+    hasSeededSplits = true;
 }
 
 // Save data to device storage
@@ -1100,9 +1317,118 @@ function saveApp() {
         workoutHistory: workoutHistory,
         weightHistory: weightHistory,
         favoriteExercises: favoriteExercises, // Save favorites
+        savedSplits: savedSplits,
         workoutName: workoutName,
-        workoutStartTime: workoutStartTime
+        workoutStartTime: workoutStartTime,
+        activeWorkoutSplitId: activeWorkoutSplitId,
+        activeWorkoutSplitName: activeWorkoutSplitName,
+        hasSeededSplits: hasSeededSplits
     }));
+}
+
+function makeId(prefix) {
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function escapeHTML(text) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function getExerciseMeta(name) {
+    const match = exerciseDatabase.find(ex => ex.name === name);
+    return {
+        muscleGroup: match ? match.category : 'Other',
+        equipment: match ? match.equipment : ''
+    };
+}
+
+function createSplitExercise(name, order, overrides = {}) {
+    const meta = getExerciseMeta(name);
+    return {
+        id: overrides.id || makeId('split_ex'),
+        name: name || overrides.customExerciseName || 'Exercise',
+        muscleGroup: overrides.muscleGroup || meta.muscleGroup,
+        equipment: overrides.equipment || meta.equipment,
+        order: order || 0,
+        plannedSets: Math.max(1, parseInt(overrides.plannedSets || overrides.setsCount || 3)),
+        repRange: overrides.repRange || '',
+        notes: overrides.notes || ''
+    };
+}
+
+function normalizeSplit(split, index) {
+    const now = new Date().toISOString();
+    const sourceExercises = Array.isArray(split.exercises)
+        ? split.exercises
+        : (Array.isArray(split.days) && split.days[0] && Array.isArray(split.days[0].exercises) ? split.days[0].exercises : []);
+
+    return {
+        id: String(split.id || makeId('split')),
+        name: (split.name || 'Custom Split').trim() || 'Custom Split',
+        description: split.description || '',
+        exercises: sourceExercises.map((ex, exIndex) => {
+            if (typeof ex === 'string') return createSplitExercise(ex, exIndex);
+            return createSplitExercise(ex.name || ex.customExerciseName || 'Exercise', ex.order ?? exIndex, ex);
+        }).sort((a, b) => a.order - b.order).map((ex, exIndex) => ({ ...ex, order: exIndex })),
+        createdAt: split.createdAt || now,
+        updatedAt: split.updatedAt || now,
+        lastCompletedAt: split.lastCompletedAt || null
+    };
+}
+
+function normalizeSplits(splits) {
+    if (!Array.isArray(splits)) return [];
+    return splits.map(normalizeSplit);
+}
+
+function createDefaultSplit(name, exercises) {
+    const now = new Date().toISOString();
+    return {
+        id: makeId('split'),
+        name: name,
+        description: '',
+        exercises: exercises.map((exerciseName, index) => createSplitExercise(exerciseName, index)),
+        createdAt: now,
+        updatedAt: now,
+        lastCompletedAt: null
+    };
+}
+
+function createDefaultSplits() {
+    return [
+        createDefaultSplit('Push Day', [
+            'Dumbbell Overhead Tricep Extension',
+            'Cable Tricep Pushdown',
+            'Machine Incline Press',
+            'Cable Chest Fly',
+            'Dumbbell Shoulder Press',
+            'Cable Lateral Raise',
+            'Machine Rear Delt Fly'
+        ]),
+        createDefaultSplit('Pull Day', [
+            'Cable Hammer Curl',
+            'Cable Bayesian Curl',
+            'Machine Close Grip Row',
+            'Cable Lat Pulldown',
+            'Cable Wide Grip Row',
+            'Dumbbell Wrist Curl',
+            'Dumbbell Wrist Extension'
+        ]),
+        createDefaultSplit('Leg/Core Day', [
+            'Machine Horizontal Leg Press',
+            'Machine Leg Extension',
+            'Barbell Romanian Deadlift',
+            'Machine Leg Curl',
+            'Machine Standing Calf Raise',
+            'Cable Kneeling Crunch',
+            "Machine Captain's Chair Leg Raise"
+        ])
+    ];
 }
 
 function showScreen(screenId) {
@@ -1146,6 +1472,11 @@ function navigate(tab) {
             const navHist = document.getElementById('nav-history');
             if (navHist) navHist.classList.add('active');
             renderHistory();
+        } else if (tab === 'splits') {
+            showScreen('splits-screen');
+            const navSplits = document.getElementById('nav-splits');
+            if (navSplits) navSplits.classList.add('active');
+            renderSplits();
         } else if (tab === 'weight') {
             showScreen('weight-screen');
             const navWeight = document.getElementById('nav-weight');
@@ -1192,6 +1523,8 @@ function performCancelWorkout() {
     currentWorkout = [];
     workoutName = '';
     workoutStartTime = null;
+    activeWorkoutSplitId = null;
+    activeWorkoutSplitName = '';
     const nameInput = document.getElementById('workout-name-input');
     if (nameInput) nameInput.value = '';
     saveApp();
@@ -1221,6 +1554,8 @@ function finishWorkout() {
         date: new Date().toISOString(),
         name: workoutName || 'Workout',
         durationSeconds: durationSeconds,
+        splitId: activeWorkoutSplitId,
+        splitName: activeWorkoutSplitName,
         exercises: JSON.parse(JSON.stringify(currentWorkout))
     };
 
@@ -1237,9 +1572,19 @@ function finishWorkout() {
 
     workoutHistory.unshift(completedSession);
 
+    if (activeWorkoutSplitId) {
+        const split = savedSplits.find(s => s.id === activeWorkoutSplitId);
+        if (split) {
+            split.lastCompletedAt = completedSession.date;
+            split.updatedAt = completedSession.date;
+        }
+    }
+
     currentWorkout = [];
     workoutName = '';
     workoutStartTime = null;
+    activeWorkoutSplitId = null;
+    activeWorkoutSplitName = '';
     const nameInput = document.getElementById('workout-name-input');
     if (nameInput) nameInput.value = '';
     saveApp();
@@ -1636,8 +1981,9 @@ function renderWorkout() {
             <div style="flex-grow: 1; min-width: 0; padding-right: 8px;">
                 ${supersetHeaderHtml}
                 <div style="font-weight: 700; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    ${isLinkingMode && !isSource ? `Link ${exercise.name}` : exercise.name}
+                    ${isLinkingMode && !isSource ? `Link ${escapeHTML(exercise.name)}` : escapeHTML(exercise.name)}
                 </div>
+                ${exercise.previousText ? `<div class="list-item-sub">${escapeHTML(exercise.previousText)}</div>` : ''}
             </div>
             
             <div style="position: relative; display: flex; align-items: center;">
@@ -1739,6 +2085,13 @@ function showExerciseModal() {
 }
 
 function hideExerciseModal() {
+    if (exercisePickerMode === 'split') {
+        exercisePickerMode = 'workout';
+        showScreen('split-editor-screen');
+        renderSplitEditor();
+        return;
+    }
+
     showScreen('workout-screen');
 }
 
@@ -1827,8 +2180,466 @@ function renderExerciseList() {
 }
 
 function selectExercise(name) {
+    if (exercisePickerMode === 'split') {
+        addExerciseToSplitDraft(name);
+        exercisePickerMode = 'workout';
+        showScreen('split-editor-screen');
+        renderSplitEditor();
+        return;
+    }
+
     addExercise(name);
     hideExerciseModal();
+}
+
+// --- SPLITS ---
+function formatShortDate(dateString) {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function estimateSplitMinutes(split) {
+    const exercises = split.exercises || [];
+    if (exercises.length === 0) return null;
+    const totalSets = exercises.reduce((sum, ex) => sum + (parseInt(ex.plannedSets) || 3), 0);
+    return Math.max(15, Math.round(totalSets * 2.5 + exercises.length * 2));
+}
+
+function getSessionTotalSets(session) {
+    return (session.exercises || []).reduce((sum, ex) => sum + (ex.sets ? ex.sets.length : 0), 0);
+}
+
+function getSessionVolume(session) {
+    let volume = 0;
+    (session.exercises || []).forEach(ex => {
+        (ex.sets || []).forEach(set => {
+            if (!set.isBW) volume += (parseFloat(set.weight) || 0) * (parseFloat(set.reps) || 0);
+        });
+    });
+    return volume;
+}
+
+function getSplitHistory(splitId) {
+    return workoutHistory
+        .map((session, index) => ({ session, index }))
+        .filter(entry => entry.session.splitId === splitId);
+}
+
+function getPreviousPerformanceText(exerciseName) {
+    for (const session of workoutHistory) {
+        const exercise = (session.exercises || []).find(ex => ex.name === exerciseName);
+        if (!exercise) continue;
+
+        const validSets = (exercise.sets || []).filter(set => set.isBW || ((parseFloat(set.weight) || 0) > 0 && (parseFloat(set.reps) || 0) > 0));
+        if (validSets.length === 0) continue;
+
+        const best = validSets.reduce((currentBest, set) => {
+            if (set.isBW) return currentBest || set;
+            if (!currentBest || currentBest.isBW) return set;
+            return (parseFloat(set.weight) || 0) > (parseFloat(currentBest.weight) || 0) ? set : currentBest;
+        }, null);
+
+        if (!best) continue;
+        const weightText = best.isBW ? 'BW' : `${best.weight || 0} lbs`;
+        return `Previous: ${weightText} x ${best.reps || 0}`;
+    }
+
+    return '';
+}
+
+function renderSplits() {
+    const list = document.getElementById('splits-list');
+    if (!list) return;
+
+    if (savedSplits.length === 0) {
+        list.innerHTML = '<div class="empty-state">No splits yet. Create one when you are ready.</div>';
+        return;
+    }
+
+    list.innerHTML = savedSplits.map(split => {
+        const minutes = estimateSplitMinutes(split);
+        const splitHistory = getSplitHistory(split.id);
+        return `
+            <div class="card split-card">
+                <div class="split-card-title">${escapeHTML(split.name)}</div>
+                <div class="split-meta-row">
+                    <span>${(split.exercises || []).length} exercises</span>
+                    ${minutes ? `<span>About ${minutes} min</span>` : ''}
+                    <span>Last done: ${formatShortDate(split.lastCompletedAt)}</span>
+                    ${splitHistory.length > 0 ? `<span>${splitHistory.length} logged</span>` : ''}
+                </div>
+
+                <div class="split-card-actions">
+                    <button class="btn" onclick='startSplitWorkout(${JSON.stringify(split.id)})'>Start Workout</button>
+                    <button class="btn-small soft-small-btn" onclick='openSplit(${JSON.stringify(split.id)})'>Open</button>
+                </div>
+
+                <div class="split-secondary-row">
+                    <button class="btn-small soft-small-btn" onclick='editSplit(${JSON.stringify(split.id)})'>Edit</button>
+                    <button class="btn-small soft-small-btn" onclick='duplicateSplit(${JSON.stringify(split.id)})'>Duplicate</button>
+                    <button class="btn-small cancel" onclick='deleteSplit(${JSON.stringify(split.id)})'>Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openSplit(splitId) {
+    const split = savedSplits.find(s => s.id === String(splitId));
+    if (!split) {
+        navigate('splits');
+        return;
+    }
+
+    viewingSplitId = split.id;
+
+    const bottomNav = document.getElementById('bottom-nav');
+    if (bottomNav) bottomNav.style.display = 'none';
+
+    const headerEl = document.getElementById('main-header');
+    const titleEl = document.getElementById('app-title');
+    const headerAction = document.getElementById('header-action');
+    if (headerEl) headerEl.classList.remove('has-content');
+    if (titleEl) titleEl.style.display = 'none';
+    if (headerAction) headerAction.style.display = 'none';
+
+    showScreen('split-detail-screen');
+    renderSplitDetail();
+}
+
+function renderSplitDetail() {
+    const content = document.getElementById('split-detail-content');
+    const split = savedSplits.find(s => s.id === viewingSplitId);
+    if (!content || !split) return;
+
+    const minutes = estimateSplitMinutes(split);
+    const splitHistory = getSplitHistory(split.id);
+
+    content.innerHTML = `
+        <h2>${escapeHTML(split.name)}</h2>
+        <p class="page-subtitle">
+            ${(split.exercises || []).length} exercises
+            ${minutes ? ` &middot; About ${minutes} min` : ''}
+            &middot; Last done: ${formatShortDate(split.lastCompletedAt)}
+        </p>
+
+        <button class="btn" onclick='startSplitWorkout(${JSON.stringify(split.id)})'>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7z"/></svg>
+            Start Workout
+        </button>
+
+        <div class="card screen-section">
+            ${(split.exercises || []).length === 0 ? `
+                <div class="empty-state" style="margin-top:0; padding: 20px 0;">No exercises in this split yet.</div>
+            ` : (split.exercises || []).map(ex => `
+                <div class="split-exercise-item">
+                    <div class="split-exercise-head">
+                        <div>
+                            <div class="split-exercise-title">${escapeHTML(ex.name)}</div>
+                            <div class="list-item-sub">${escapeHTML(ex.muscleGroup || 'Other')}${ex.equipment ? ` &middot; ${escapeHTML(ex.equipment)}` : ''}</div>
+                        </div>
+                        <div class="list-item-sub" style="white-space:nowrap;">${ex.plannedSets || 3} sets</div>
+                    </div>
+                    ${ex.repRange ? `<div class="list-item-sub" style="margin-top:8px;">Reps: ${escapeHTML(ex.repRange)}</div>` : ''}
+                    ${ex.notes ? `<div class="list-item-sub" style="margin-top:8px;">${escapeHTML(ex.notes)}</div>` : ''}
+                </div>
+            `).join('')}
+        </div>
+
+        <div class="split-secondary-row">
+            <button class="btn-small soft-small-btn" onclick='duplicateSplit(${JSON.stringify(split.id)})'>Duplicate</button>
+            <button class="btn-small cancel" onclick='deleteSplit(${JSON.stringify(split.id)})'>Delete</button>
+        </div>
+
+        <h3 class="section-title screen-section">History</h3>
+        <div>
+            ${splitHistory.length === 0 ? `
+                <div class="empty-state" style="margin-top:0; padding: 12px 0;">No workouts logged from this split yet.</div>
+            ` : splitHistory.map(entry => {
+                const session = entry.session;
+                const dateString = new Date(session.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                const mins = session.durationSeconds ? Math.round(session.durationSeconds / 60) : 0;
+                return `
+                    <div class="list-item split-history-item" onclick="viewWorkoutDetail(${entry.index})">
+                        <div>
+                            <div class="list-item-title">${dateString}</div>
+                            <div class="list-item-sub">${mins ? `${mins} min &middot; ` : ''}${getSessionTotalSets(session)} sets &middot; ${formatVolume(getSessionVolume(session))} lbs</div>
+                        </div>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+function createSplit() {
+    const now = new Date().toISOString();
+    editingSplitId = null;
+    splitDraft = {
+        id: makeId('split'),
+        name: 'Custom Split',
+        description: '',
+        exercises: [],
+        createdAt: now,
+        updatedAt: now,
+        lastCompletedAt: null
+    };
+    showSplitEditor();
+}
+
+function editCurrentSplit() {
+    if (viewingSplitId) editSplit(viewingSplitId);
+}
+
+function editSplit(splitId) {
+    const split = savedSplits.find(s => s.id === String(splitId));
+    if (!split) return;
+
+    editingSplitId = split.id;
+    viewingSplitId = split.id;
+    splitDraft = JSON.parse(JSON.stringify(split));
+    showSplitEditor();
+}
+
+function showSplitEditor() {
+    const bottomNav = document.getElementById('bottom-nav');
+    if (bottomNav) bottomNav.style.display = 'none';
+
+    const headerEl = document.getElementById('main-header');
+    const titleEl = document.getElementById('app-title');
+    const headerAction = document.getElementById('header-action');
+    if (headerEl) headerEl.classList.remove('has-content');
+    if (titleEl) titleEl.style.display = 'none';
+    if (headerAction) headerAction.style.display = 'none';
+
+    showScreen('split-editor-screen');
+    renderSplitEditor();
+}
+
+function renderSplitEditor() {
+    const input = document.getElementById('split-name-input');
+    const list = document.getElementById('split-editor-exercises');
+    if (!splitDraft || !list) return;
+
+    if (input && input.value !== splitDraft.name) input.value = splitDraft.name || '';
+
+    if (!Array.isArray(splitDraft.exercises) || splitDraft.exercises.length === 0) {
+        list.innerHTML = '<div class="empty-state" style="margin-top:22px;">Add exercises to build this split.</div>';
+        return;
+    }
+
+    list.innerHTML = splitDraft.exercises.map((ex, index) => `
+        <div class="card split-editor-card">
+            <div class="split-exercise-head">
+                <div style="min-width:0;">
+                    <div class="split-exercise-title">${escapeHTML(ex.name)}</div>
+                    <div class="list-item-sub">${escapeHTML(ex.muscleGroup || 'Other')}${ex.equipment ? ` &middot; ${escapeHTML(ex.equipment)}` : ''}</div>
+                </div>
+                <button class="icon-btn" onclick="removeSplitExercise(${index})" aria-label="Remove exercise">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="split-editor-controls">
+                <div>
+                    <label class="split-field-label">Sets</label>
+                    <div class="split-set-stepper">
+                        <button onclick="changeSplitExerciseSets(${index}, -1)">-</button>
+                        <span>${ex.plannedSets || 3} sets</span>
+                        <button onclick="changeSplitExerciseSets(${index}, 1)">+</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="split-field-label">Reps</label>
+                    <input class="text-input split-mini-input" type="text" inputmode="numeric" pattern="[0-9\\-]*" placeholder="Optional" value="${escapeHTML(ex.repRange || '')}" oninput="updateSplitExerciseField(${index}, 'repRange', this.value)">
+                </div>
+            </div>
+
+            <input class="text-input split-mini-input split-notes-input" type="text" placeholder="Notes optional" value="${escapeHTML(ex.notes || '')}" oninput="updateSplitExerciseField(${index}, 'notes', this.value)">
+
+            <div class="split-secondary-row">
+                <button class="btn-small soft-small-btn" onclick="moveSplitExercise(${index}, -1)">Move Up</button>
+                <button class="btn-small soft-small-btn" onclick="moveSplitExercise(${index}, 1)">Move Down</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateSplitDraftName(value) {
+    if (splitDraft) splitDraft.name = value;
+}
+
+function updateSplitExerciseField(index, field, value) {
+    if (!splitDraft || !splitDraft.exercises[index]) return;
+    splitDraft.exercises[index][field] = value;
+}
+
+function changeSplitExerciseSets(index, amount) {
+    if (!splitDraft || !splitDraft.exercises[index]) return;
+    const current = parseInt(splitDraft.exercises[index].plannedSets || 3);
+    splitDraft.exercises[index].plannedSets = Math.max(1, current + amount);
+    renderSplitEditor();
+}
+
+function moveSplitExercise(index, direction) {
+    if (!splitDraft) return;
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= splitDraft.exercises.length) return;
+
+    const moved = splitDraft.exercises.splice(index, 1)[0];
+    splitDraft.exercises.splice(newIndex, 0, moved);
+    splitDraft.exercises = splitDraft.exercises.map((ex, order) => ({ ...ex, order }));
+    renderSplitEditor();
+}
+
+function removeSplitExercise(index) {
+    if (!splitDraft) return;
+    splitDraft.exercises.splice(index, 1);
+    splitDraft.exercises = splitDraft.exercises.map((ex, order) => ({ ...ex, order }));
+    renderSplitEditor();
+}
+
+function showSplitExercisePicker() {
+    exercisePickerMode = 'split';
+    showExerciseModal();
+}
+
+function addExerciseToSplitDraft(name) {
+    if (!splitDraft || !name) return;
+    splitDraft.exercises.push(createSplitExercise(name, splitDraft.exercises.length));
+}
+
+function saveSplitDraft() {
+    if (!splitDraft) return;
+
+    const now = new Date().toISOString();
+    const splitToSave = normalizeSplit({
+        ...splitDraft,
+        name: (splitDraft.name || '').trim() || 'Custom Split',
+        updatedAt: now
+    });
+
+    if (editingSplitId) {
+        const index = savedSplits.findIndex(split => split.id === editingSplitId);
+        if (index !== -1) savedSplits[index] = splitToSave;
+    } else {
+        savedSplits.unshift(splitToSave);
+    }
+
+    viewingSplitId = splitToSave.id;
+    editingSplitId = null;
+    splitDraft = null;
+    saveApp();
+    openSplit(viewingSplitId);
+}
+
+function cancelSplitEdit() {
+    const returnId = editingSplitId || viewingSplitId;
+    editingSplitId = null;
+    splitDraft = null;
+
+    if (returnId && savedSplits.some(split => split.id === returnId)) {
+        openSplit(returnId);
+    } else {
+        navigate('splits');
+    }
+}
+
+function duplicateSplit(splitId) {
+    const split = savedSplits.find(s => s.id === String(splitId));
+    if (!split) return;
+
+    const now = new Date().toISOString();
+    const draftCopy = JSON.parse(JSON.stringify(split));
+    draftCopy.exercises = (draftCopy.exercises || []).map(ex => ({
+        ...ex,
+        id: makeId('split_ex')
+    }));
+
+    const copy = normalizeSplit({
+        ...draftCopy,
+        id: makeId('split'),
+        name: `${split.name} Copy`,
+        createdAt: now,
+        updatedAt: now,
+        lastCompletedAt: null
+    });
+
+    savedSplits.unshift(copy);
+    saveApp();
+
+    const activeScreen = document.querySelector('.screen.active');
+    if (activeScreen && activeScreen.id === 'split-detail-screen') {
+        openSplit(copy.id);
+    } else {
+        renderSplits();
+    }
+}
+
+function deleteSplit(splitId) {
+    const split = savedSplits.find(s => s.id === String(splitId));
+    if (!split) return;
+
+    showConfirmModal(`Delete ${split.name}? This will not delete past workouts.`, 'Delete', () => {
+        savedSplits = savedSplits.filter(s => s.id !== split.id);
+        saveApp();
+
+        if (viewingSplitId === split.id) {
+            viewingSplitId = null;
+            navigate('splits');
+        } else {
+            renderSplits();
+        }
+    });
+}
+
+function startSplitWorkout(splitId) {
+    const split = savedSplits.find(s => s.id === String(splitId));
+    if (!split) return;
+
+    const start = () => performStartSplitWorkout(split);
+    if (currentWorkout.length > 0) {
+        showConfirmModal('Replace your current workout with this split?', 'Replace', start);
+    } else {
+        start();
+    }
+}
+
+function performStartSplitWorkout(split) {
+    stopTimer();
+    supersetSourceId = null;
+    activeMenuExerciseId = null;
+
+    currentWorkout = (split.exercises || []).map((ex, index) => {
+        const setCount = Math.max(1, parseInt(ex.plannedSets || 3));
+        return {
+            id: Date.now() + Math.random() + index,
+            name: ex.name,
+            previousText: getPreviousPerformanceText(ex.name),
+            supersetId: null,
+            sets: Array.from({ length: setCount }, () => ({
+                weight: '',
+                reps: '',
+                completed: false,
+                isBW: false,
+                isFailure: false,
+                side: '',
+                menuOpen: false
+            }))
+        };
+    });
+
+    workoutName = split.name || 'Workout';
+    activeWorkoutSplitId = split.id;
+    activeWorkoutSplitName = split.name || '';
+    workoutStartTime = Date.now();
+
+    const nameInput = document.getElementById('workout-name-input');
+    if (nameInput) nameInput.value = workoutName;
+
+    saveApp();
+    startWorkout();
 }
 
 // --- HISTORY ---
