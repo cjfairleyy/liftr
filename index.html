@@ -771,6 +771,163 @@
             margin-top: 4px;
         }
 
+
+
+        /* Routines */
+        .screen-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .screen-title-row h2 { margin-bottom: 0; }
+
+        .round-plus-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: var(--bg-surface);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+            flex-shrink: 0;
+        }
+        .round-plus-btn:active { background: var(--bg-surface-elevated); border-color: rgba(255,255,255,0.12); transform: scale(0.92); }
+
+        .routine-section { margin-bottom: 34px; }
+
+        .routine-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .routine-card {
+            background: var(--bg-surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 12px;
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .routine-card:active { background: var(--bg-surface-elevated); transform: scale(0.97); }
+        .routine-card.active-routine { border-color: rgba(34,197,94,0.45); }
+
+        .routine-gradient-thumb {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.14);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+        }
+
+        .routine-card-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            line-height: 1.12;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .routine-card-meta {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .routine-hero {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .routine-gradient-large {
+            width: 82px;
+            height: 82px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.14);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .routine-title-input,
+        .routine-day-title-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            padding: 0;
+            margin: 0;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .routine-title-input:focus,
+        .routine-day-title-input:focus { outline: none; }
+
+        .routine-action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 34px;
+        }
+
+        .routine-action-row .btn { padding: 13px 14px; border-radius: 16px; font-size: 0.92rem; }
+
+        .routine-day-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: var(--bg-surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .routine-day-row:active { background: var(--bg-surface-elevated); }
+
+        .routine-edit-item {
+            background: var(--bg-surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 18px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .routine-edit-controls { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+
+        .routine-empty-small {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            padding: 26px 12px;
+        }
+
         .detail-set-row {
             display: flex;
             justify-content: space-between;
@@ -806,12 +963,24 @@
         </div>
         <button class="btn" onclick="startWorkout()">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            Start Empty Workout
+            Start Workout
         </button>
     </div>
 
     <div id="history-screen" class="screen">
-        <h2>Workouts</h2>
+        <div class="screen-title-row">
+            <h2>Workouts</h2>
+            <button class="round-plus-btn" onclick="createRoutine()" aria-label="Create routine">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+        </div>
+
+        <div id="routine-section" class="routine-section" style="display:none;">
+            <h3 class="section-title">Routines</h3>
+            <div id="routine-grid" class="routine-grid"></div>
+        </div>
+
+        <h3 id="workout-logs-title" class="section-title" style="display:none;">Workout Logs</h3>
         <div id="history-list">
             <div class="empty-state">No workouts logged yet.</div>
         </div>
@@ -826,6 +995,56 @@
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
                 Delete Log
             </button>
+        </div>
+    </div>
+
+
+
+    <div id="routine-detail-screen" class="screen">
+        <div class="routine-hero">
+            <button id="routine-detail-gradient" class="routine-gradient-large" onclick="rerandomizeCurrentRoutineGradient()" aria-label="Rerandomize routine gradient"></button>
+            <div style="flex:1; min-width:0;">
+                <input type="text" id="routine-title-input" class="routine-title-input" placeholder="Routine Name" autocapitalize="words" autocomplete="off" spellcheck="false" oninput="renameCurrentRoutine(this.value)" onblur="normalizeCurrentRoutineName()">
+                <p id="routine-detail-meta" class="page-subtitle" style="margin-bottom:0;"></p>
+            </div>
+        </div>
+        <div class="routine-action-row">
+            <button id="active-routine-btn" class="btn btn-outline" onclick="setCurrentRoutineActive()">Set Active</button>
+            <button class="btn btn-outline" onclick="rerandomizeCurrentRoutineGradient()">New Color</button>
+        </div>
+        <h3 class="section-title">Days</h3>
+        <div id="routine-day-list"></div>
+        <button class="btn btn-outline" style="margin-top: 12px;" onclick="createRoutineDay()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Create Day
+        </button>
+        <div class="page-actions">
+            <button class="btn btn-outline danger-soft-btn" onclick="deleteCurrentRoutine()">Delete Routine</button>
+        </div>
+    </div>
+
+    <div id="routine-day-screen" class="screen">
+        <div class="screen-title-row">
+            <div style="min-width:0;">
+                <h2 id="routine-day-title" style="margin-bottom:6px;">Day</h2>
+                <p id="routine-day-meta" class="page-subtitle" style="margin-bottom:0;"></p>
+            </div>
+            <button class="header-btn" onclick="editRoutineDay(currentRoutineDayId)">Edit</button>
+        </div>
+        <div id="routine-day-exercises"></div>
+        <button class="btn" style="margin-top: 24px;" onclick="startCurrentRoutineDay()">Start This Day</button>
+    </div>
+
+    <div id="routine-day-edit-screen" class="screen">
+        <input type="text" id="routine-day-name-input" class="routine-day-title-input" placeholder="Day Name" autocapitalize="words" autocomplete="off" spellcheck="false" oninput="renameCurrentRoutineDay(this.value)" onblur="normalizeCurrentRoutineDayName()">
+        <p id="routine-day-edit-meta" class="page-subtitle"></p>
+        <div id="routine-day-edit-list"></div>
+        <button class="btn btn-outline" style="margin-top: 12px;" onclick="showExerciseModal('routineDay')">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add Exercise
+        </button>
+        <div class="page-actions">
+            <button class="btn btn-outline danger-soft-btn" onclick="deleteCurrentRoutineDay()">Delete Day</button>
         </div>
     </div>
 
@@ -1071,6 +1290,12 @@ let currentDetailIndex = null;
 let timerInterval = null;
 let confirmModalCallback = null;
 let selectedProgressExercise = null;
+let routines = [];
+let activeRoutineId = null;
+let currentRoutineId = null;
+let currentRoutineDayId = null;
+let exercisePickerMode = 'workout';
+let currentRoutineWorkout = null;
 
 // Maps every exercise name to its muscle category for the Stats page
 const exerciseCategoryMap = {};
@@ -1088,6 +1313,10 @@ try {
         favoriteExercises = savedData.favoriteExercises || []; // Load favorites
         workoutName = savedData.workoutName || '';
         workoutStartTime = savedData.workoutStartTime || null;
+        routines = Array.isArray(savedData.routines) ? savedData.routines : [];
+        activeRoutineId = savedData.activeRoutineId || null;
+        currentRoutineWorkout = savedData.currentRoutineWorkout || null;
+        normalizeRoutineData();
     }
 } catch (e) {
     console.error("No saved data found or error loading data.");
@@ -1101,7 +1330,10 @@ function saveApp() {
         weightHistory: weightHistory,
         favoriteExercises: favoriteExercises, // Save favorites
         workoutName: workoutName,
-        workoutStartTime: workoutStartTime
+        workoutStartTime: workoutStartTime,
+        routines: routines,
+        activeRoutineId: activeRoutineId,
+        currentRoutineWorkout: currentRoutineWorkout
     }));
 }
 
@@ -1125,6 +1357,22 @@ function showScreen(screenId) {
     } else {
         console.error("Screen not found: " + screenId);
     }
+}
+
+
+function showSubScreen(screenId) {
+    const bottomNav = document.getElementById('bottom-nav');
+    if (bottomNav) bottomNav.style.display = 'none';
+
+    const headerEl = document.getElementById('main-header');
+    const titleEl = document.getElementById('app-title');
+    const headerAction = document.getElementById('header-action');
+
+    if (headerEl) headerEl.classList.remove('has-content');
+    if (titleEl) titleEl.style.display = 'none';
+    if (headerAction) headerAction.style.display = 'flex';
+
+    showScreen(screenId);
 }
 
 function navigate(tab) {
@@ -1169,7 +1417,13 @@ function navigate(tab) {
     }
 }
 
-function startWorkout() {
+function startWorkout(options = {}) {
+    const opts = options || {};
+
+    if (!opts.skipRoutine && !workoutStartTime && currentWorkout.length === 0) {
+        loadNextActiveRoutineWorkout();
+    }
+
     if (!workoutStartTime) workoutStartTime = Date.now();
     const nameInput = document.getElementById('workout-name-input');
     if (nameInput) nameInput.value = workoutName;
@@ -1201,6 +1455,7 @@ function performCancelWorkout() {
     currentWorkout = [];
     workoutName = '';
     workoutStartTime = null;
+    currentRoutineWorkout = null;
     const nameInput = document.getElementById('workout-name-input');
     if (nameInput) nameInput.value = '';
     saveApp();
@@ -1208,6 +1463,29 @@ function performCancelWorkout() {
 }
 
 function goBack() {
+    const activeScreen = document.querySelector('.screen.active');
+    const activeId = activeScreen ? activeScreen.id : '';
+
+    if (activeId === 'exercise-modal') {
+        hideExerciseModal();
+        return;
+    }
+
+    if (activeId === 'routine-day-edit-screen') {
+        viewRoutineDay(currentRoutineDayId);
+        return;
+    }
+
+    if (activeId === 'routine-day-screen') {
+        viewRoutineDetail(currentRoutineId);
+        return;
+    }
+
+    if (activeId === 'routine-detail-screen' || activeId === 'workout-detail-screen') {
+        navigate('history');
+        return;
+    }
+
     const headerAction = document.getElementById('header-action');
     if (headerAction) headerAction.style.display = 'none';
     navigate('history');
@@ -1233,6 +1511,10 @@ function finishWorkout() {
         exercises: JSON.parse(JSON.stringify(currentWorkout))
     };
 
+    if (currentRoutineWorkout) {
+        completedSession.routine = JSON.parse(JSON.stringify(currentRoutineWorkout));
+    }
+
     // Evaluate old PR ceiling state before recording this log profile
     const historicalSets = getAllSets();
     const recordsCeiling = {};
@@ -1246,9 +1528,14 @@ function finishWorkout() {
 
     workoutHistory.unshift(completedSession);
 
+    if (currentRoutineWorkout) {
+        advanceRoutineAfterWorkout(currentRoutineWorkout);
+    }
+
     currentWorkout = [];
     workoutName = '';
     workoutStartTime = null;
+    currentRoutineWorkout = null;
     const nameInput = document.getElementById('workout-name-input');
     if (nameInput) nameInput.value = '';
     saveApp();
@@ -1509,6 +1796,484 @@ function moveGroup(exerciseId, direction) {
             }
         });
     }, 150);
+}
+
+
+// --- ROUTINES ---
+function makeId(prefix = 'id') {
+    return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+}
+
+function createRoutineGradient() {
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = 84 + Math.floor(Math.random() * 10);
+    const baseLight = 50 + Math.floor(Math.random() * 10);
+    const shiftDarker = Math.random() > 0.5;
+    const secondLight = Math.max(28, Math.min(74, baseLight + (shiftDarker ? -22 : 18)));
+    return { hue, saturation, light1: baseLight, light2: secondLight };
+}
+
+function getRoutineGradientStyle(gradient) {
+    const g = gradient || createRoutineGradient();
+    if (typeof g === 'string') return g;
+    const hue2 = (Number(g.hue || 0) + 14) % 360;
+    const sat = Number(g.saturation || 88);
+    const light1 = Number(g.light1 || 54);
+    const light2 = Number(g.light2 || 36);
+    return `linear-gradient(135deg, hsl(${g.hue}, ${sat}%, ${light1}%), hsl(${hue2}, ${sat}%, ${light2}%))`;
+}
+
+function normalizeRoutineData() {
+    if (!Array.isArray(routines)) routines = [];
+
+    routines.forEach((routine, rIndex) => {
+        if (!routine.id) routine.id = makeId('routine');
+        if (!routine.name) routine.name = `Routine ${rIndex + 1}`;
+        if (!routine.gradient) routine.gradient = createRoutineGradient();
+        if (!Array.isArray(routine.days)) routine.days = [];
+        if (typeof routine.nextDayIndex !== 'number') routine.nextDayIndex = 0;
+
+        routine.days.forEach((day, dIndex) => {
+            if (!day.id) day.id = makeId('day');
+            if (!day.name) day.name = `Day ${dIndex + 1}`;
+            if (!Array.isArray(day.exercises)) day.exercises = [];
+            day.exercises.forEach(ex => {
+                if (!ex.id) ex.id = makeId('routineEx');
+                const meta = getExerciseMeta(ex.name);
+                ex.category = ex.category || meta.category;
+                ex.equipment = ex.equipment || meta.equipment;
+            });
+        });
+    });
+
+    if (activeRoutineId && !routines.some(r => r.id === activeRoutineId)) {
+        activeRoutineId = null;
+    }
+}
+
+function getExerciseMeta(name) {
+    const found = exerciseDatabase.find(ex => ex.name === name);
+    return found || { name, category: 'Custom', equipment: 'Custom' };
+}
+
+function getRoutineById(id) {
+    return routines.find(r => r.id === id) || null;
+}
+
+function getCurrentRoutine() {
+    return getRoutineById(currentRoutineId);
+}
+
+function getCurrentRoutineDay() {
+    const routine = getCurrentRoutine();
+    if (!routine || !Array.isArray(routine.days)) return null;
+    return routine.days.find(d => d.id === currentRoutineDayId) || null;
+}
+
+function getRoutineStats(routine) {
+    if (!routine || !Array.isArray(routine.days)) return { days: 0, exercises: 0 };
+    return {
+        days: routine.days.length,
+        exercises: routine.days.reduce((sum, day) => sum + (Array.isArray(day.exercises) ? day.exercises.length : 0), 0)
+    };
+}
+
+function renderRoutinesOverview() {
+    const section = document.getElementById('routine-section');
+    const grid = document.getElementById('routine-grid');
+    if (!section || !grid) return;
+
+    normalizeRoutineData();
+
+    if (routines.length === 0) {
+        section.style.display = 'none';
+        grid.innerHTML = '';
+        return;
+    }
+
+    section.style.display = 'block';
+    grid.innerHTML = '';
+
+    routines.forEach(routine => {
+        const stats = getRoutineStats(routine);
+        const card = document.createElement('div');
+        card.className = `routine-card ${routine.id === activeRoutineId ? 'active-routine' : ''}`;
+        card.onclick = () => viewRoutineDetail(routine.id);
+        card.innerHTML = `
+            <div class="routine-gradient-thumb" style="background:${getRoutineGradientStyle(routine.gradient)};"></div>
+            <div style="min-width:0; flex:1;">
+                <div class="routine-card-title">${escapeHTML(routine.name)}</div>
+                <div class="routine-card-meta">${stats.days} ${stats.days === 1 ? 'day' : 'days'}${routine.id === activeRoutineId ? ' · Active' : ''}</div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function createRoutine() {
+    normalizeRoutineData();
+    const now = new Date().toISOString();
+    const routine = {
+        id: makeId('routine'),
+        name: 'New Routine',
+        gradient: createRoutineGradient(),
+        days: [],
+        nextDayIndex: 0,
+        createdAt: now,
+        updatedAt: now
+    };
+    routines.unshift(routine);
+    currentRoutineId = routine.id;
+    currentRoutineDayId = null;
+    saveApp();
+    viewRoutineDetail(routine.id);
+}
+
+function viewRoutineDetail(routineId) {
+    normalizeRoutineData();
+    const routine = getRoutineById(routineId);
+    if (!routine) return;
+
+    currentRoutineId = routine.id;
+    currentRoutineDayId = null;
+
+    const gradientEl = document.getElementById('routine-detail-gradient');
+    if (gradientEl) gradientEl.style.background = getRoutineGradientStyle(routine.gradient);
+
+    const titleInput = document.getElementById('routine-title-input');
+    if (titleInput) titleInput.value = routine.name || 'Routine';
+
+    const stats = getRoutineStats(routine);
+    const metaEl = document.getElementById('routine-detail-meta');
+    if (metaEl) {
+        const activeText = routine.id === activeRoutineId ? 'Active routine' : 'Not active';
+        metaEl.textContent = `${stats.days} ${stats.days === 1 ? 'day' : 'days'} · ${stats.exercises} exercises · ${activeText}`;
+    }
+
+    const activeBtn = document.getElementById('active-routine-btn');
+    if (activeBtn) {
+        activeBtn.textContent = routine.id === activeRoutineId ? 'Active Routine' : 'Set Active';
+        activeBtn.classList.toggle('btn-outline', routine.id !== activeRoutineId);
+    }
+
+    renderRoutineDayList();
+    showSubScreen('routine-detail-screen');
+    saveApp();
+}
+
+function renderRoutineDayList() {
+    const routine = getCurrentRoutine();
+    const list = document.getElementById('routine-day-list');
+    if (!routine || !list) return;
+
+    if (!Array.isArray(routine.days) || routine.days.length === 0) {
+        list.innerHTML = '<div class="routine-empty-small">No days yet. Create a day to build this routine.</div>';
+        return;
+    }
+
+    list.innerHTML = '';
+    routine.days.forEach((day, index) => {
+        const count = Array.isArray(day.exercises) ? day.exercises.length : 0;
+        const row = document.createElement('div');
+        row.className = 'routine-day-row';
+        row.onclick = () => viewRoutineDay(day.id);
+        row.innerHTML = `
+            <div>
+                <div class="list-item-title">${escapeHTML(day.name || `Day ${index + 1}`)}</div>
+                <div class="list-item-sub">${count} ${count === 1 ? 'exercise' : 'exercises'}${routine.id === activeRoutineId && routine.nextDayIndex % routine.days.length === index ? ' · Next' : ''}</div>
+            </div>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        `;
+        list.appendChild(row);
+    });
+}
+
+function renameCurrentRoutine(value) {
+    const routine = getCurrentRoutine();
+    if (!routine) return;
+    routine.name = (value || '').trim() || 'Routine';
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+}
+
+function normalizeCurrentRoutineName() {
+    const routine = getCurrentRoutine();
+    if (!routine) return;
+    const input = document.getElementById('routine-title-input');
+    const clean = (input ? input.value : '').trim() || 'Routine';
+    routine.name = clean;
+    routine.updatedAt = new Date().toISOString();
+    if (input) input.value = clean;
+    saveApp();
+    viewRoutineDetail(routine.id);
+}
+
+function rerandomizeCurrentRoutineGradient() {
+    const routine = getCurrentRoutine();
+    if (!routine) return;
+    routine.gradient = createRoutineGradient();
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+    viewRoutineDetail(routine.id);
+}
+
+function setCurrentRoutineActive() {
+    const routine = getCurrentRoutine();
+    if (!routine) return;
+    activeRoutineId = routine.id;
+    if (typeof routine.nextDayIndex !== 'number') routine.nextDayIndex = 0;
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+    viewRoutineDetail(routine.id);
+}
+
+function deleteCurrentRoutine() {
+    const routine = getCurrentRoutine();
+    if (!routine) return;
+    showConfirmModal('Delete this routine? This cannot be undone.', 'Delete', () => {
+        routines = routines.filter(r => r.id !== routine.id);
+        if (activeRoutineId === routine.id) activeRoutineId = null;
+        currentRoutineId = null;
+        currentRoutineDayId = null;
+        saveApp();
+        navigate('history');
+    });
+}
+
+function createRoutineDay() {
+    const routine = getCurrentRoutine();
+    if (!routine) return;
+    if (!Array.isArray(routine.days)) routine.days = [];
+    const day = {
+        id: makeId('day'),
+        name: `Day ${routine.days.length + 1}`,
+        exercises: []
+    };
+    routine.days.push(day);
+    routine.updatedAt = new Date().toISOString();
+    currentRoutineDayId = day.id;
+    saveApp();
+    editRoutineDay(day.id);
+}
+
+function viewRoutineDay(dayId) {
+    const routine = getCurrentRoutine();
+    if (!routine) return;
+    const day = routine.days.find(d => d.id === dayId);
+    if (!day) return;
+
+    currentRoutineDayId = day.id;
+
+    const title = document.getElementById('routine-day-title');
+    if (title) title.textContent = day.name || 'Day';
+
+    const count = Array.isArray(day.exercises) ? day.exercises.length : 0;
+    const meta = document.getElementById('routine-day-meta');
+    if (meta) meta.textContent = `${routine.name || 'Routine'} · ${count} ${count === 1 ? 'exercise' : 'exercises'}`;
+
+    const container = document.getElementById('routine-day-exercises');
+    if (container) {
+        if (!day.exercises || day.exercises.length === 0) {
+            container.innerHTML = '<div class="routine-empty-small">No exercises added yet.</div>';
+        } else {
+            container.innerHTML = '';
+            day.exercises.forEach((ex, index) => {
+                const item = document.createElement('div');
+                item.className = 'routine-edit-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="list-item-title">${escapeHTML(ex.name)}</div>
+                        <div class="list-item-sub">${escapeHTML(ex.category || 'Exercise')} · ${escapeHTML(ex.equipment || '')}</div>
+                    </div>
+                    <div class="set-number">${index + 1}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+    }
+
+    showSubScreen('routine-day-screen');
+}
+
+function editRoutineDay(dayId) {
+    const routine = getCurrentRoutine();
+    if (!routine) return;
+    const day = routine.days.find(d => d.id === dayId);
+    if (!day) return;
+
+    currentRoutineDayId = day.id;
+
+    const input = document.getElementById('routine-day-name-input');
+    if (input) input.value = day.name || 'Day';
+
+    const meta = document.getElementById('routine-day-edit-meta');
+    if (meta) meta.textContent = `${routine.name || 'Routine'} · Tap Add Exercise to build this day.`;
+
+    renderRoutineDayEditList();
+    showSubScreen('routine-day-edit-screen');
+}
+
+function renderRoutineDayEditList() {
+    const day = getCurrentRoutineDay();
+    const list = document.getElementById('routine-day-edit-list');
+    if (!day || !list) return;
+
+    if (!Array.isArray(day.exercises) || day.exercises.length === 0) {
+        list.innerHTML = '<div class="routine-empty-small">No exercises yet.</div>';
+        return;
+    }
+
+    list.innerHTML = '';
+    day.exercises.forEach((ex, index) => {
+        const item = document.createElement('div');
+        item.className = 'routine-edit-item';
+        item.innerHTML = `
+            <div style="min-width:0; flex:1;">
+                <div class="list-item-title">${escapeHTML(ex.name)}</div>
+                <div class="list-item-sub">${escapeHTML(ex.category || 'Exercise')} · ${escapeHTML(ex.equipment || '')}</div>
+            </div>
+            <div class="routine-edit-controls">
+                <button class="icon-btn" onclick="moveRoutineExercise(${index}, -1)" aria-label="Move up">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+                </button>
+                <button class="icon-btn" onclick="moveRoutineExercise(${index}, 1)" aria-label="Move down">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <button class="icon-btn" onclick="removeRoutineExercise(${index})" aria-label="Remove exercise" style="color:var(--mod-fail);">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function renameCurrentRoutineDay(value) {
+    const day = getCurrentRoutineDay();
+    const routine = getCurrentRoutine();
+    if (!day || !routine) return;
+    day.name = (value || '').trim() || 'Day';
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+}
+
+function normalizeCurrentRoutineDayName() {
+    const day = getCurrentRoutineDay();
+    const routine = getCurrentRoutine();
+    if (!day || !routine) return;
+    const input = document.getElementById('routine-day-name-input');
+    const clean = (input ? input.value : '').trim() || 'Day';
+    day.name = clean;
+    routine.updatedAt = new Date().toISOString();
+    if (input) input.value = clean;
+    saveApp();
+}
+
+function addExerciseToRoutineDay(name) {
+    const day = getCurrentRoutineDay();
+    const routine = getCurrentRoutine();
+    if (!day || !routine || !name) return;
+    const meta = getExerciseMeta(name);
+    day.exercises.push({
+        id: makeId('routineEx'),
+        name: meta.name || name,
+        category: meta.category || 'Exercise',
+        equipment: meta.equipment || ''
+    });
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+    renderRoutineDayEditList();
+}
+
+function moveRoutineExercise(index, direction) {
+    const day = getCurrentRoutineDay();
+    const routine = getCurrentRoutine();
+    if (!day || !routine || !Array.isArray(day.exercises)) return;
+    const target = index + direction;
+    if (target < 0 || target >= day.exercises.length) return;
+    const [item] = day.exercises.splice(index, 1);
+    day.exercises.splice(target, 0, item);
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+    renderRoutineDayEditList();
+}
+
+function removeRoutineExercise(index) {
+    const day = getCurrentRoutineDay();
+    const routine = getCurrentRoutine();
+    if (!day || !routine || !Array.isArray(day.exercises)) return;
+    day.exercises.splice(index, 1);
+    routine.updatedAt = new Date().toISOString();
+    saveApp();
+    renderRoutineDayEditList();
+}
+
+function deleteCurrentRoutineDay() {
+    const routine = getCurrentRoutine();
+    const day = getCurrentRoutineDay();
+    if (!routine || !day) return;
+    showConfirmModal('Delete this day? This cannot be undone.', 'Delete', () => {
+        routine.days = routine.days.filter(d => d.id !== day.id);
+        if (routine.nextDayIndex >= routine.days.length) routine.nextDayIndex = 0;
+        currentRoutineDayId = null;
+        routine.updatedAt = new Date().toISOString();
+        saveApp();
+        viewRoutineDetail(routine.id);
+    });
+}
+
+function createWorkoutExerciseFromRoutineExercise(routineExercise) {
+    const name = routineExercise.name;
+    return {
+        id: Date.now() + Math.random(),
+        name: name,
+        supersetId: null,
+        previousText: getPreviousPerformanceText(name),
+        sets: buildSetsFromMostRecentExercise(name)
+    };
+}
+
+function loadRoutineDayWorkout(routine, day) {
+    if (!routine || !day) return false;
+    currentWorkout = (day.exercises || []).map(ex => createWorkoutExerciseFromRoutineExercise(ex));
+    workoutName = `${routine.name || 'Routine'} · ${day.name || 'Day'}`;
+    currentRoutineWorkout = {
+        routineId: routine.id,
+        routineName: routine.name || 'Routine',
+        dayId: day.id,
+        dayName: day.name || 'Day',
+        dayIndex: routine.days.findIndex(d => d.id === day.id)
+    };
+    return true;
+}
+
+function loadNextActiveRoutineWorkout() {
+    const routine = getRoutineById(activeRoutineId);
+    if (!routine || !Array.isArray(routine.days) || routine.days.length === 0) return false;
+    const idx = Math.max(0, routine.nextDayIndex || 0) % routine.days.length;
+    const day = routine.days[idx];
+    return loadRoutineDayWorkout(routine, day);
+}
+
+function startCurrentRoutineDay() {
+    const routine = getCurrentRoutine();
+    const day = getCurrentRoutineDay();
+    if (!routine || !day) return;
+    loadRoutineDayWorkout(routine, day);
+    startWorkout({ skipRoutine: true });
+}
+
+function advanceRoutineAfterWorkout(meta) {
+    if (!meta || !meta.routineId) return;
+    const routine = getRoutineById(meta.routineId);
+    if (!routine || !Array.isArray(routine.days) || routine.days.length === 0) return;
+
+    const completedIndex = typeof meta.dayIndex === 'number' ? meta.dayIndex : routine.days.findIndex(d => d.id === meta.dayId);
+    if (completedIndex >= 0) {
+        routine.nextDayIndex = (completedIndex + 1) % routine.days.length;
+    }
+    routine.lastCompletedAt = new Date().toISOString();
+    routine.updatedAt = routine.lastCompletedAt;
 }
 
 // --- EXERCISE / SET MANAGEMENT ---
@@ -1812,7 +2577,15 @@ function renderWorkout() {
 }
 
 // --- EXERCISE PICKER MODAL ---
-function showExerciseModal() {
+function showExerciseModal(mode = 'workout') {
+    exercisePickerMode = mode || 'workout';
+
+    const bottomNav = document.getElementById('bottom-nav');
+    if (bottomNav) bottomNav.style.display = 'none';
+
+    const headerAction = document.getElementById('header-action');
+    if (headerAction) headerAction.style.display = 'none';
+
     const searchEl = document.getElementById('search-exercise');
     if (searchEl) searchEl.value = '';
     currentCategory = 'All';
@@ -1828,6 +2601,13 @@ function showExerciseModal() {
 }
 
 function hideExerciseModal() {
+    if (exercisePickerMode === 'routineDay') {
+        exercisePickerMode = 'workout';
+        showSubScreen('routine-day-edit-screen');
+        renderRoutineDayEditList();
+        return;
+    }
+    exercisePickerMode = 'workout';
     showScreen('workout-screen');
 }
 
@@ -1916,12 +2696,21 @@ function renderExerciseList() {
 }
 
 function selectExercise(name) {
-    addExercise(name);
+    if (exercisePickerMode === 'routineDay') {
+        addExerciseToRoutineDay(name);
+    } else {
+        addExercise(name);
+    }
     hideExerciseModal();
 }
 
 // --- HISTORY ---
 function renderHistory() {
+    renderRoutinesOverview();
+
+    const logsTitle = document.getElementById('workout-logs-title');
+    if (logsTitle) logsTitle.style.display = routines.length > 0 ? 'block' : 'none';
+
     const container = document.getElementById('history-list');
     if (!container) return;
     container.innerHTML = '';
@@ -1935,13 +2724,14 @@ function renderHistory() {
         const dateObj = new Date(session.date);
         const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
         const totalSets = session.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+        const routineText = session.routine && session.routine.dayName ? ` · ${session.routine.dayName}` : '';
 
         const item = document.createElement('div');
         item.className = 'list-item';
         item.innerHTML = `
             <div>
-                <div class="list-item-title">${session.name || 'Workout'}</div>
-                <div class="list-item-sub">${dateString} &middot; ${session.exercises.length} exercises &middot; ${totalSets} sets</div>
+                <div class="list-item-title">${escapeHTML(session.name || 'Workout')}</div>
+                <div class="list-item-sub">${dateString}${routineText} &middot; ${session.exercises.length} exercises &middot; ${totalSets} sets</div>
             </div>
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         `;
