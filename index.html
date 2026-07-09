@@ -498,6 +498,16 @@
             color: var(--text-muted);
         }
 
+        .icon-btn.danger-x-btn {
+            color: var(--mod-fail);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .icon-btn.danger-x-btn:active {
+            color: #fff;
+            background: rgba(239, 68, 68, 0.22);
+        }
+
         .workout-controls {
             display: flex;
             justify-content: flex-start;
@@ -994,7 +1004,7 @@
         .routine-day-save-btn:active { transform: scale(0.9); }
 
         .routine-day-delete-btn {
-            color: var(--text-muted);
+            color: var(--mod-fail);
         }
 
         .routine-day-row {
@@ -1172,7 +1182,7 @@
                 </button>
             </div>
             <div class="routine-day-edit-actions">
-                <button class="icon-btn workout-close-btn routine-day-delete-btn" onclick="deleteCurrentRoutineDay()" aria-label="Delete day">
+                <button class="icon-btn workout-close-btn danger-x-btn routine-day-delete-btn" onclick="deleteCurrentRoutineDay()" aria-label="Delete day">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
                 <button class="routine-day-save-btn" onclick="saveRoutineDayAndReturn()">Save</button>
@@ -3244,7 +3254,7 @@ function renderWeight() {
                 <div class="list-item-title">${entry.weight} lbs</div>
                 <div class="list-item-sub">${dateString}</div>
             </div>
-            <button class="icon-btn" onclick="event.stopPropagation(); deleteWeight(${index})" style="background:none; border:none;">
+            <button class="icon-btn danger-x-btn" onclick="event.stopPropagation(); deleteWeight(${index})">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
         `;
