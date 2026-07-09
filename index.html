@@ -2303,7 +2303,7 @@ function renderRoutineExerciseCards(container, day, options = {}) {
                 </div>
                 ${editable ? `
                     <div class="routine-exercise-menu-wrap">
-                        <button class="icon-btn" onclick="event.stopPropagation(); toggleRoutineExerciseMenu('${safeId}')" aria-label="Exercise options">
+                        <button class="icon-btn" data-menu-trigger="true" onclick="event.stopPropagation(); toggleRoutineExerciseMenu('${safeId}')" aria-label="Exercise options">
                             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
                         </button>
                         ${activeRoutineMenuExerciseId === ex.id ? `
@@ -2370,7 +2370,10 @@ function renderRoutineDayEditList() {
 }
 
 function toggleRoutineExerciseMenu(id) {
-    activeRoutineMenuExerciseId = activeRoutineMenuExerciseId === id ? null : id;
+    const shouldOpen = activeRoutineMenuExerciseId !== id;
+    closeWorkoutExerciseMenus(false);
+    activeMenuExerciseId = null;
+    activeRoutineMenuExerciseId = shouldOpen ? id : null;
     renderRoutineDayEditList();
 }
 
@@ -2759,16 +2762,56 @@ function updateSetData(exerciseId, setIndex, field, value) {
     saveApp();
 }
 
+function closeWorkoutExerciseMenus(includeExerciseMenu = true) {
+    let changed = false;
+
+    if (includeExerciseMenu && activeMenuExerciseId !== null) {
+        activeMenuExerciseId = null;
+        changed = true;
+    }
+
+    currentWorkout.forEach(ex => {
+        if (!ex || !Array.isArray(ex.sets)) return;
+        ex.sets.forEach(set => {
+            if (set && set.menuOpen) {
+                set.menuOpen = false;
+                changed = true;
+            }
+        });
+    });
+
+    return changed;
+}
+
+function closeOpenThreeDotMenus() {
+    const workoutChanged = closeWorkoutExerciseMenus(true);
+    let routineChanged = false;
+
+    if (activeRoutineMenuExerciseId !== null) {
+        activeRoutineMenuExerciseId = null;
+        routineChanged = true;
+    }
+
+    if (workoutChanged) renderWorkout();
+    if (routineChanged) renderRoutineDayEditList();
+}
+
 function toggleExerciseMenu(id) {
-    activeMenuExerciseId = activeMenuExerciseId === id ? null : id;
+    const shouldOpen = activeMenuExerciseId !== id;
+    closeWorkoutExerciseMenus(true);
+    activeRoutineMenuExerciseId = null;
+    activeMenuExerciseId = shouldOpen ? id : null;
     renderWorkout();
 }
 
 function toggleSetMenu(exerciseId, setIndex) {
     const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (ex) {
-        ex.sets[setIndex].menuOpen = !ex.sets[setIndex].menuOpen;
-    }
+    if (!ex || !Array.isArray(ex.sets) || !ex.sets[setIndex]) return;
+
+    const shouldOpen = !ex.sets[setIndex].menuOpen;
+    closeWorkoutExerciseMenus(true);
+    activeRoutineMenuExerciseId = null;
+    ex.sets[setIndex].menuOpen = shouldOpen;
     renderWorkout();
 }
 
@@ -2847,7 +2890,7 @@ function renderWorkout() {
             </div>
             
             <div style="position: relative; display: flex; align-items: center;">
-                <button class="icon-btn" onclick="event.stopPropagation(); toggleExerciseMenu(${exercise.id})">
+                <button class="icon-btn" data-menu-trigger="true" onclick="event.stopPropagation(); toggleExerciseMenu(${exercise.id})">
                     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
                 </button>
                 
@@ -2898,7 +2941,7 @@ function renderWorkout() {
                     <button class="check-btn" onclick="toggleSet(${exercise.id}, ${setIndex})">
                         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
                     </button>
-                    <button class="icon-btn" onclick="toggleSetMenu(${exercise.id}, ${setIndex})">
+                    <button class="icon-btn" data-menu-trigger="true" onclick="event.stopPropagation(); toggleSetMenu(${exercise.id}, ${setIndex})">
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
                     </button>
                 </div>
@@ -3611,10 +3654,14 @@ function renderMuscleBalance() {
 
 // --- GLOBAL LISTENERS & BOOT ---
 document.addEventListener('click', (e) => {
-    if (activeMenuExerciseId !== null && e.target.tagName !== 'INPUT') {
-        activeMenuExerciseId = null;
-        renderWorkout();
-    }
+    if (!(e.target instanceof Element)) return;
+
+    const clickedInsideMenu = e.target.closest('.action-menu-popup, .set-drawer');
+    const clickedMenuTrigger = e.target.closest('[data-menu-trigger="true"]');
+
+    if (clickedInsideMenu || clickedMenuTrigger) return;
+
+    closeOpenThreeDotMenus();
 });
 
 window.onload = function() {
