@@ -38,7 +38,11 @@
             --mod-bw: #3b82f6;      
             --mod-side-l: #f97316; /* Orange */
             --mod-side-r: #8b5cf6; /* Purple */   
-            --mod-fail: #ef4444;    
+            --mod-fail: #ef4444;
+            --danger-bg-soft: rgba(239, 68, 68, 0.09);
+            --danger-bg-active: rgba(239, 68, 68, 0.18);
+            --danger-border-soft: rgba(239, 68, 68, 0.36);
+            --danger-border-active: rgba(239, 68, 68, 0.58);
             --mod-superset: #ec4899; /* Premium Pink */
         }
 
@@ -229,13 +233,13 @@
 
         .danger-soft-btn {
             color: var(--mod-fail) !important;
-            border: 1px solid rgba(239, 68, 68, 0.38) !important;
-            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid var(--danger-border-soft) !important;
+            background: var(--danger-bg-soft);
             font-weight: 700;
         }
         .danger-soft-btn:active {
-            background: rgba(239, 68, 68, 0.14);
-            border-color: rgba(239, 68, 68, 0.6) !important;
+            background: var(--danger-bg-active);
+            border-color: var(--danger-border-active) !important;
         }
 
         .inline-form-row {
@@ -434,6 +438,7 @@
         }
         .menu-item:active { background: #2c2c2e; }
         .menu-item.danger { color: var(--mod-fail); }
+        .menu-item.danger:active { background: var(--danger-bg-active); }
 
         .icon-btn {
             color: var(--text-muted);
@@ -502,16 +507,18 @@
             color: var(--text-muted);
         }
 
-        .icon-btn.danger-x-btn {
+        .icon-btn.danger-x-btn,
+        .workout-close-btn.danger-x-btn {
             color: var(--mod-fail);
-            background: rgba(239, 68, 68, 0.06);
-            border: 1px solid rgba(239, 68, 68, 0.32);
+            background: var(--danger-bg-soft);
+            border: 1px solid var(--danger-border-soft);
         }
 
-        .icon-btn.danger-x-btn:active {
+        .icon-btn.danger-x-btn:active,
+        .workout-close-btn.danger-x-btn:active {
             color: #fff;
-            background: rgba(239, 68, 68, 0.22);
-            border-color: rgba(239, 68, 68, 0.55);
+            background: var(--danger-bg-active);
+            border-color: var(--danger-border-active);
         }
 
         .workout-controls {
@@ -642,10 +649,10 @@
         .mod-tag.fail.active { background: var(--mod-fail); color: #fff; }
         .mod-tag.delete { 
             color: var(--mod-fail) !important; 
-            background: rgba(239, 68, 68, 0.05) !important; 
-            border: 1px solid rgba(239, 68, 68, 0.28) !important;
+            background: var(--danger-bg-soft) !important; 
+            border: 1px solid var(--danger-border-soft) !important;
         }
-        .mod-tag.delete:active { background: rgba(239, 68, 68, 0.15) !important; }
+        .mod-tag.delete:active { background: var(--danger-bg-active) !important; border-color: var(--danger-border-active) !important; }
 
         .add-set-btn {
             background: rgba(255, 255, 255, 0.015);
@@ -1011,6 +1018,10 @@
 
         .routine-day-delete-btn {
             color: var(--mod-fail);
+        }
+
+        .danger-x-btn svg {
+            stroke-width: 2.6;
         }
 
         .routine-day-row {
