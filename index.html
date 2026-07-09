@@ -647,12 +647,20 @@
         .mod-tag.side-l.active { background: var(--mod-side-l); color: #fff; }
         .mod-tag.side-r.active { background: var(--mod-side-r); color: #fff; }
         .mod-tag.fail.active { background: var(--mod-fail); color: #fff; }
+        .set-delete-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 12px;
+            justify-self: center;
+        }
+
         .mod-tag.delete { 
             color: var(--mod-fail) !important; 
             background: var(--danger-bg-soft) !important; 
             border: 1px solid var(--danger-border-soft) !important;
         }
-        .mod-tag.delete:active { background: var(--danger-bg-active) !important; border-color: var(--danger-border-active) !important; }
+        .mod-tag.delete:active { background: var(--danger-bg-active) !important; border-color: var(--danger-border-active) !important; color: #fff !important; }
 
         .add-set-btn {
             background: rgba(255, 255, 255, 0.015);
@@ -2952,8 +2960,8 @@ function renderWorkout() {
                     <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${setIndex}, 'BW')">BW</button>
                     <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Fail')">F</button>
                     <button class="mod-tag ${sideBtnClass}" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Side')">${sideBtnText}</button>
-                    <button class="mod-tag delete" onclick="removeSet(${exercise.id}, ${setIndex})">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <button class="icon-btn danger-x-btn set-delete-btn" onclick="removeSet(${exercise.id}, ${setIndex})" aria-label="Delete set">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
                     </button>
                 </div>
                 ` : ''}
