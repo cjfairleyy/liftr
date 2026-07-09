@@ -1675,6 +1675,34 @@ let appSettings = {
 const REGULAR_REST_OPTIONS = [180, 210, 240, 270, 300];
 const SUPERSET_REST_OPTIONS = [60, 90, 120, 150, 180];
 
+
+function normalizeAppSettings(settings) {
+    const defaults = {
+        restTimerEnabled: true,
+        restDurationSeconds: 180,
+        supersetRestDurationSeconds: 90
+    };
+
+    const merged = Object.assign({}, defaults, settings || {});
+    merged.restTimerEnabled = merged.restTimerEnabled !== false;
+    merged.restDurationSeconds = clampToRestOption(merged.restDurationSeconds, REGULAR_REST_OPTIONS, defaults.restDurationSeconds);
+    merged.supersetRestDurationSeconds = clampToRestOption(merged.supersetRestDurationSeconds, SUPERSET_REST_OPTIONS, defaults.supersetRestDurationSeconds);
+    return merged;
+}
+
+function clampToRestOption(value, options, fallback) {
+    const numericValue = parseInt(value, 10);
+    if (options.includes(numericValue)) return numericValue;
+    return fallback;
+}
+
+function formatTimerSeconds(totalSeconds) {
+    const safeSeconds = Math.max(0, parseInt(totalSeconds, 10) || 0);
+    const minutes = Math.floor(safeSeconds / 60);
+    const seconds = String(safeSeconds % 60).padStart(2, '0');
+    return `${minutes}:${seconds}`;
+}
+
 // Maps every exercise name to its muscle category for the Stats page
 const exerciseCategoryMap = {};
 if (typeof exerciseDatabase !== 'undefined' && Array.isArray(exerciseDatabase)) {
@@ -3090,6 +3118,7 @@ function toggleSet(exerciseId, setIndex) {
         if (!wasCompleted && set.completed) {
             handleRestTimerAfterSet(ex, setIndex);
         }
+        saveApp();
     }
     renderWorkout();
 }
