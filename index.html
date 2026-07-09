@@ -228,10 +228,14 @@
         }
 
         .danger-soft-btn {
-            color: var(--mod-fail);
-            border: none;
-            background: rgba(239, 68, 68, 0.1);
+            color: var(--mod-fail) !important;
+            border: 1px solid rgba(239, 68, 68, 0.38) !important;
+            background: rgba(239, 68, 68, 0.06);
             font-weight: 700;
+        }
+        .danger-soft-btn:active {
+            background: rgba(239, 68, 68, 0.14);
+            border-color: rgba(239, 68, 68, 0.6) !important;
         }
 
         .inline-form-row {
@@ -500,12 +504,14 @@
 
         .icon-btn.danger-x-btn {
             color: var(--mod-fail);
-            background: rgba(239, 68, 68, 0.08);
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.32);
         }
 
         .icon-btn.danger-x-btn:active {
             color: #fff;
             background: rgba(239, 68, 68, 0.22);
+            border-color: rgba(239, 68, 68, 0.55);
         }
 
         .workout-controls {
@@ -637,7 +643,7 @@
         .mod-tag.delete { 
             color: var(--mod-fail) !important; 
             background: rgba(239, 68, 68, 0.05) !important; 
-            border: none !important;
+            border: 1px solid rgba(239, 68, 68, 0.28) !important;
         }
         .mod-tag.delete:active { background: rgba(239, 68, 68, 0.15) !important; }
 
@@ -1241,7 +1247,7 @@
             <div class="workout-title-row">
                 <input type="text" id="workout-name-input" class="workout-name-input" placeholder="Workout Name..." oninput="workoutName = this.value" onchange="saveApp()">
                 <div class="workout-actions">
-                    <button class="icon-btn workout-close-btn" onclick="cancelWorkout()" aria-label="Cancel workout">
+                    <button class="icon-btn workout-close-btn danger-x-btn" onclick="cancelWorkout()" aria-label="Cancel workout">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                     </button>
                     <button class="btn-small finish" onclick="finishWorkout()">Finish</button>
