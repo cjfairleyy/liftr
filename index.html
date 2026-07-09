@@ -185,6 +185,63 @@
             font-size: 0.8rem;
         }
 
+        .home-routine-preview {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin: -54px 0 24px;
+            padding: 14px 16px;
+            background: var(--bg-surface);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s;
+        }
+
+        .home-routine-preview:active {
+            background: var(--bg-surface-elevated);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: scale(0.98);
+        }
+
+        .home-routine-copy {
+            min-width: 0;
+        }
+
+        .home-routine-eyebrow {
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .home-routine-title {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.25px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .home-routine-next {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .home-routine-arrow {
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
         .screen-section {
             margin-top: 48px;
         }
@@ -1356,6 +1413,14 @@
             <h2 id="streak-text" class="home-count">0</h2>
             <p class="home-label">Workouts Completed</p>
         </div>
+        <button id="home-routine-preview" class="home-routine-preview" onclick="openActiveRoutineFromHome()" aria-label="Open active routine">
+            <div class="home-routine-copy">
+                <div class="home-routine-eyebrow">Active Routine</div>
+                <div id="home-routine-title" class="home-routine-title">Routine</div>
+                <div id="home-routine-next" class="home-routine-next">Next</div>
+            </div>
+            <svg class="home-routine-arrow" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
         <button class="btn" onclick="startWorkout()">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             Start Workout
@@ -1904,6 +1969,7 @@ function navigate(tab) {
         const navHome = document.getElementById('nav-home');
         if (navHome) navHome.classList.add('active');
         updateStreak();
+        renderHomeRoutinePreview();
     } else {
         if (headerEl) headerEl.classList.remove('has-content');
         if (titleEl) titleEl.style.display = 'none';
@@ -2006,6 +2072,49 @@ function goBack() {
 function updateStreak() {
     const streakText = document.getElementById('streak-text');
     if (streakText) streakText.textContent = workoutHistory.length;
+}
+
+function getActiveRoutineHomeInfo() {
+    normalizeRoutineData();
+    const routine = getRoutineById(activeRoutineId);
+    if (!routine || !Array.isArray(routine.days) || routine.days.length === 0) return null;
+
+    const nextIndex = Math.max(0, routine.nextDayIndex || 0) % routine.days.length;
+    const day = routine.days[nextIndex];
+    if (!day) return null;
+
+    return {
+        routine,
+        day,
+        exerciseCount: Array.isArray(day.exercises) ? day.exercises.length : 0
+    };
+}
+
+function renderHomeRoutinePreview() {
+    const preview = document.getElementById('home-routine-preview');
+    if (!preview) return;
+
+    const info = getActiveRoutineHomeInfo();
+    if (!info) {
+        preview.style.display = 'none';
+        return;
+    }
+
+    const titleEl = document.getElementById('home-routine-title');
+    const nextEl = document.getElementById('home-routine-next');
+    const routineName = (info.routine.name || '').trim() || 'Routine';
+    const dayName = (info.day.name || '').trim() || 'Untitled Day';
+    const count = info.exerciseCount;
+
+    if (titleEl) titleEl.textContent = routineName;
+    if (nextEl) nextEl.textContent = `Next: ${dayName}${count ? ` · ${count} ${count === 1 ? 'exercise' : 'exercises'}` : ''}`;
+    preview.style.display = 'flex';
+}
+
+function openActiveRoutineFromHome() {
+    const info = getActiveRoutineHomeInfo();
+    if (!info) return;
+    viewRoutineDetail(info.routine.id);
 }
 
 function finishWorkout() {
