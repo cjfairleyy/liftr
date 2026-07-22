@@ -233,6 +233,13 @@
             margin-bottom: 6px;
         }
 
+        .home-routine-mainline {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            min-width: 0;
+        }
+
         .home-routine-title {
             font-size: 1rem;
             font-weight: 800;
@@ -245,11 +252,10 @@
         }
 
         .home-routine-next {
-            color: var(--text-main);
-            font-size: 1rem;
-            font-weight: 800;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            font-weight: 650;
             line-height: 1.2;
-            letter-spacing: -0.2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1450,7 +1456,10 @@
             <div id="home-routine-thumb" class="home-routine-thumb"></div>
             <div class="home-routine-copy">
                 <div class="home-routine-eyebrow">Active routine</div>
-                <div id="home-routine-next" class="home-routine-next">Day</div>
+                <div class="home-routine-mainline">
+                    <span id="home-routine-title" class="home-routine-title">Routine</span>
+                    <span id="home-routine-next" class="home-routine-next">Day</span>
+                </div>
             </div>
             <svg class="home-routine-arrow" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         </button>
@@ -2328,10 +2337,13 @@ function renderHomeRoutinePreview() {
         return;
     }
 
+    const titleEl = document.getElementById('home-routine-title');
     const nextEl = document.getElementById('home-routine-next');
     const thumbEl = document.getElementById('home-routine-thumb');
+    const routineName = (info.routine.name || '').trim() || 'Routine';
     const dayName = (info.day.name || '').trim() || 'Untitled Day';
 
+    if (titleEl) titleEl.textContent = routineName;
     if (nextEl) nextEl.textContent = dayName;
     if (thumbEl) thumbEl.style.background = getRoutineGradientStyle(info.routine.gradient);
     preview.style.display = 'flex';
