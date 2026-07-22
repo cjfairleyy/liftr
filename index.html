@@ -1747,7 +1747,7 @@
         { name: "Cable Chest Fly", category: "Chest", equipment: "Cable" },
         { name: "Machine Chest Press", category: "Chest", equipment: "Machine" },
         { name: "Machine Incline Press", category: "Chest", equipment: "Machine" },
-        { name: "Machine Pec Deck", category: "Chest", equipment: "Machine" },
+        { name: "Pec Deck Chest Fly", category: "Chest", equipment: "Machine" },
 
         { name: "Barbell Squat", category: "Legs", equipment: "Barbell" },
         { name: "Barbell Front Squat", category: "Legs", equipment: "Barbell" },
@@ -1785,7 +1785,6 @@
         { name: "Cable Lateral Raise", category: "Shoulders", equipment: "Cable" },
         { name: "Cable Face Pull", category: "Shoulders", equipment: "Cable" },
         { name: "Machine Shoulder Press", category: "Shoulders", equipment: "Machine" },
-        { name: "Machine Reverse Pec Deck", category: "Shoulders", equipment: "Machine" },
 
         { name: "Barbell Biceps Curl", category: "Arms", equipment: "Barbell" },
         { name: "Barbell Skull Crusher", category: "Arms", equipment: "Barbell" },
@@ -1809,7 +1808,7 @@
         { name: "Bodyweight Russian Twist", category: "Core", equipment: "Bodyweight" },
         { name: "Bodyweight Ab Wheel Rollout", category: "Core", equipment: "Bodyweight" },
         { name: "Cable Crunch", category: "Core", equipment: "Cable" },
-        { name: "Machine Captain's Chair Leg Raise", category: "Core", equipment: "Machine" }
+        { name: "Captain's Chair Leg Raise", category: "Core", equipment: "Machine" }
     ].sort((a, b) => a.name.localeCompare(b.name));
 
 // --- CORE TRACKING VARIABLES ---
@@ -1892,7 +1891,6 @@ const exerciseNameAliases = {
     "Machine Close Grip Row": "Machine Close-Grip Row",
     "Barbell Shrugs": "Barbell Shrug",
     "Dumbbell Shrugs": "Dumbbell Shrug",
-    "Machine Rear Delt Fly": "Machine Reverse Pec Deck",
     "Barbell Bicep Curl": "Barbell Biceps Curl",
     "Barbell Skullcrusher": "Barbell Skull Crusher",
     "Barbell Close Grip Bench": "Barbell Close-Grip Bench Press",
@@ -1903,7 +1901,9 @@ const exerciseNameAliases = {
     "Cable Overhead Tricep Extension": "Cable Overhead Triceps Extension",
     "Machine Tricep Extension": "Machine Triceps Extension",
     "Cable Kneeling Crunch": "Cable Crunch",
-    "Machine Ab Wheel Rollout": "Bodyweight Ab Wheel Rollout"
+    "Machine Ab Wheel Rollout": "Bodyweight Ab Wheel Rollout",
+    "Machine Pec Deck": "Pec Deck Chest Fly",
+    "Machine Captain's Chair Leg Raise": "Captain's Chair Leg Raise"
 };
 
 function canonicalExerciseName(name) {
