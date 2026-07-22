@@ -1430,7 +1430,36 @@
         .d-tag.side-l { background: var(--mod-side-l); }
         .d-tag.side-r { background: var(--mod-side-r); }
         .d-tag.fail { background: var(--mod-fail); }
-    </style>
+    
+/* Hide scrollbars while preserving touch and mouse scrolling. */
+html,
+body,
+.screen,
+.sub-screen,
+.modal-content,
+.exercise-list,
+.history-list,
+.routine-list,
+.routine-day-list {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.screen::-webkit-scrollbar,
+.sub-screen::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar,
+.exercise-list::-webkit-scrollbar,
+.history-list::-webkit-scrollbar,
+.routine-list::-webkit-scrollbar,
+.routine-day-list::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+</style>
 </head>
 <body>
 
