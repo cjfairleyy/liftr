@@ -967,6 +967,16 @@
         .round-plus-btn:active { background: var(--bg-surface-elevated); border-color: rgba(255,255,255,0.12); transform: scale(0.92); }
         .round-plus-btn.secondary { color: var(--text-muted); }
         .round-plus-btn.secondary svg { width: 21px; height: 21px; }
+        .round-plus-btn.rest-settings-btn {
+            color: var(--text-main);
+        }
+        .round-plus-btn.rest-settings-btn svg {
+            width: 21px;
+            height: 21px;
+            color: var(--text-main);
+            stroke: currentColor;
+            opacity: 1;
+        }
 
         .routine-section { margin-bottom: 34px; }
 
@@ -1449,7 +1459,7 @@
         <div class="screen-title-row">
             <h2>Workouts</h2>
             <div class="top-icon-group">
-                <button class="round-plus-btn secondary" onclick="openRestSettings()" aria-label="Rest timer settings">
+                <button class="round-plus-btn rest-settings-btn" onclick="openRestSettings()" aria-label="Rest timer settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
                 </button>
                 <button class="round-plus-btn" onclick="createRoutine()" aria-label="Create routine">
@@ -1685,7 +1695,6 @@
             <div class="settings-header">
                 <div>
                     <div class="settings-title">Rest Timer</div>
-                    <div class="settings-subtitle">Choose when the workout screen starts a timer after completed sets.</div>
                 </div>
                 <button class="settings-close-btn" onclick="closeRestSettings()" aria-label="Close rest timer settings">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -1695,14 +1704,12 @@
                 <div class="settings-row">
                     <div class="settings-copy">
                         <div class="settings-label">Rest Timer</div>
-                        <div class="settings-help">Automatically starts after logged sets.</div>
                     </div>
                     <button id="rest-timer-toggle" class="settings-toggle" onclick="toggleRestTimerSetting()" aria-pressed="true">On</button>
                 </div>
                 <div class="settings-row">
                     <div class="settings-copy">
                         <div class="settings-label">Normal Sets</div>
-                        <div class="settings-help">After a regular completed set.</div>
                     </div>
                     <div class="settings-select-wrap">
                         <select id="rest-duration-select" class="settings-select" onchange="updateRestTimerSetting('restDurationSeconds', this.value)" aria-label="Normal rest duration"></select>
@@ -1711,7 +1718,6 @@
                 <div class="settings-row">
                     <div class="settings-copy">
                         <div class="settings-label">Supersets</div>
-                        <div class="settings-help">After one full superset round.</div>
                     </div>
                     <div class="settings-select-wrap">
                         <select id="superset-rest-duration-select" class="settings-select" onchange="updateRestTimerSetting('supersetRestDurationSeconds', this.value)" aria-label="Superset rest duration"></select>
@@ -3388,7 +3394,7 @@ function createWorkoutExerciseFromRoutineExercise(routineExercise) {
 function loadRoutineDayWorkout(routine, day) {
     if (!routine || !day) return false;
     currentWorkout = (day.exercises || []).map(ex => createWorkoutExerciseFromRoutineExercise(ex));
-    workoutName = `${routine.name || 'Routine'} · ${day.name || 'Untitled Day'}`;
+    workoutName = day.name || 'Untitled Day';
     currentRoutineWorkout = {
         routineId: routine.id,
         routineName: routine.name || 'Routine',
