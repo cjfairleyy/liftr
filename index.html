@@ -698,6 +698,51 @@
             border-color: rgba(239, 68, 68, 0.28);
             box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.08);
         }
+        .set-container.is-warmup {
+            background-color: rgba(59, 130, 246, 0.10);
+            border-color: rgba(59, 130, 246, 0.22);
+        }
+        .set-container.is-drop-set {
+            background-color: rgba(168, 85, 247, 0.10);
+            border-color: rgba(168, 85, 247, 0.22);
+        }
+        .set-container {
+            position: relative;
+        }
+        .set-action-popup {
+            top: 54px;
+            right: 8px;
+            min-width: 205px;
+        }
+        .set-state-labels {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 5px;
+            min-height: 0;
+        }
+        .set-state-label {
+            font-size: 0.58rem;
+            font-weight: 800;
+            line-height: 1;
+            padding: 3px 5px;
+            border-radius: 5px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .set-state-label.warmup {
+            color: #93c5fd;
+            background: rgba(59, 130, 246, 0.16);
+        }
+        .set-state-label.drop {
+            color: #d8b4fe;
+            background: rgba(168, 85, 247, 0.16);
+        }
+        .set-state-label.failure {
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.16);
+        }
 
         .set-row, .set-drawer {
             display: grid;
@@ -1430,6 +1475,8 @@
         .d-tag.side-l { background: var(--mod-side-l); }
         .d-tag.side-r { background: var(--mod-side-r); }
         .d-tag.fail { background: var(--mod-fail); }
+        .d-tag.warmup { background: #2563eb; }
+        .d-tag.drop { background: #7e22ce; }
     
 /* Hide scrollbars while preserving touch and mouse scrolling. */
 html,
@@ -2101,6 +2148,34 @@ function canonicalExerciseName(name) {
     return exerciseNameAliases[name] || name;
 }
 
+
+function normalizeSetTypes() {
+    const normalizeSets = exercises => {
+        if (!Array.isArray(exercises)) return;
+        exercises.forEach(exercise => {
+            if (!exercise || !Array.isArray(exercise.sets)) return;
+            exercise.sets.forEach(set => {
+                if (!set) return;
+                set.isWarmup = !!set.isWarmup;
+                set.isDropSet = !!set.isDropSet;
+                set.isFailure = !!set.isFailure;
+                set.menuOpen = false;
+            });
+        });
+    };
+
+    normalizeSets(currentWorkout);
+    if (Array.isArray(workoutHistory)) {
+        workoutHistory.forEach(session => normalizeSets(session && session.exercises));
+    }
+    if (Array.isArray(routines)) {
+        routines.forEach(routine => {
+            if (!routine || !Array.isArray(routine.days)) return;
+            routine.days.forEach(day => normalizeSets(day && day.exercises));
+        });
+    }
+}
+
 function migrateSavedExerciseNames() {
     const migrateExerciseArray = exercises => {
         if (!Array.isArray(exercises)) return;
@@ -2148,6 +2223,7 @@ try {
         currentRoutineWorkout = savedData.currentRoutineWorkout || null;
         appSettings = normalizeAppSettings(savedData.appSettings);
         migrateSavedExerciseNames();
+        normalizeSetTypes();
         normalizeRoutineData();
     }
 } catch (e) {
@@ -2523,6 +2599,8 @@ function renderPostWorkout(session, recordsCeiling) {
                 if (set.isBW) tags += `<span class="d-tag bw">BW</span>`;
                 if (set.side === 'L') tags += `<span class="d-tag side-l">L</span>`;
                 if (set.side === 'R') tags += `<span class="d-tag side-r">R</span>`;
+                if (set.isWarmup) tags += `<span class="d-tag warmup">W</span>`;
+                if (set.isDropSet) tags += `<span class="d-tag drop">D</span>`;
                 if (set.isFailure) tags += `<span class="d-tag fail">F</span>`;
                 return `
                     <div class="detail-set-row">
@@ -3466,7 +3544,7 @@ function advanceRoutineAfterWorkout(meta) {
 
 // --- EXERCISE / SET MANAGEMENT ---
 function createBlankSet() {
-    return { weight: '', reps: '', completed: false, isBW: false, isFailure: false, side: '', menuOpen: false };
+    return { weight: '', reps: '', completed: false, isBW: false, isWarmup: false, isDropSet: false, isFailure: false, side: '', menuOpen: false };
 }
 
 function createSetFromPrevious(previousSet) {
@@ -3479,6 +3557,8 @@ function createSetFromPrevious(previousSet) {
         reps: previousSet.reps || '',
         completed: false,
         isBW: wasBodyweight,
+        isWarmup: false,
+        isDropSet: false,
         isFailure: false,
         side: previousSet.side || '',
         menuOpen: false
@@ -3663,6 +3743,10 @@ function toggleMod(exerciseId, setIndex, type) {
     if (type === 'BW') {
         set.isBW = !set.isBW;
         set.weight = set.isBW ? 'BW' : '';
+    } else if (type === 'Warmup') {
+        set.isWarmup = !set.isWarmup;
+    } else if (type === 'Drop') {
+        set.isDropSet = !set.isDropSet;
     } else if (type === 'Fail') {
         set.isFailure = !set.isFailure;
     } else if (type === 'Side') {
@@ -3670,6 +3754,7 @@ function toggleMod(exerciseId, setIndex, type) {
         else if (set.side === 'L') set.side = 'R';
         else set.side = '';
     }
+    set.menuOpen = false;
     renderWorkout();
 }
 
@@ -3753,7 +3838,7 @@ function renderWorkout() {
 
         exercise.sets.forEach((set, setIndex) => {
             const setContainer = document.createElement('div');
-            setContainer.className = `set-container ${set.completed ? 'completed' : ''} ${set.isFailure ? 'is-failure' : ''}`;
+            setContainer.className = `set-container ${set.completed ? 'completed' : ''} ${set.isWarmup ? 'is-warmup' : ''} ${set.isDropSet ? 'is-drop-set' : ''} ${set.isFailure ? 'is-failure' : ''}`;
             
             let weightPlaceholder = 'lbs';
             let weightValue = set.weight;
@@ -3763,15 +3848,18 @@ function renderWorkout() {
             let sideNumClass = '';
             if(set.side === 'L') { setNumDisplay = 'L'; sideNumClass = 'side-l'; }
             if(set.side === 'R') { setNumDisplay = 'R'; sideNumClass = 'side-r'; }
-
-            let sideBtnText = 'L/R';
-            let sideBtnClass = '';
-            if(set.side === 'L') { sideBtnText = 'L'; sideBtnClass = 'side-l active'; }
-            if(set.side === 'R') { sideBtnText = 'R'; sideBtnClass = 'side-r active'; }
-            
-            setContainer.innerHTML = `
+setContainer.innerHTML = `
                 <div class="set-row">
-                    <div class="set-number ${sideNumClass}">${setNumDisplay}</div>
+                    <div>
+                        <div class="set-number ${sideNumClass}">${setNumDisplay}</div>
+                        ${(set.isWarmup || set.isDropSet || set.isFailure) ? `
+                            <div class="set-state-labels">
+                                ${set.isWarmup ? '<span class="set-state-label warmup">W</span>' : ''}
+                                ${set.isDropSet ? '<span class="set-state-label drop">D</span>' : ''}
+                                ${set.isFailure ? '<span class="set-state-label failure">F</span>' : ''}
+                            </div>
+                        ` : ''}
+                    </div>
                     <div class="input-group">
                         <input type="text" inputmode="${set.isBW ? 'text' : 'decimal'}" ${set.isBW ? '' : 'pattern="[0-9]*[.]?[0-9]*"'} enterkeyhint="next" placeholder="${weightPlaceholder}" value="${escapeHTML(weightValue)}" class="${set.isBW ? 'bw-active' : ''}" onchange="updateSetData(${exercise.id}, ${setIndex}, 'weight', this.value)" ${set.completed || set.isBW ? 'disabled' : ''}>
                     </div>
@@ -3785,17 +3873,26 @@ function renderWorkout() {
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
                     </button>
                 </div>
-                
                 ${set.menuOpen ? `
-                <div class="set-drawer">
-                    <div></div>
-                    <button class="mod-tag bw ${set.isBW ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${setIndex}, 'BW')">BW</button>
-                    <button class="mod-tag fail ${set.isFailure ? 'active' : ''}" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Fail')">F</button>
-                    <button class="mod-tag ${sideBtnClass}" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Side')">${sideBtnText}</button>
-                    <button class="icon-btn danger-x-btn set-delete-btn" onclick="removeSet(${exercise.id}, ${setIndex})" aria-label="Delete set">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                    </button>
-                </div>
+                    <div class="action-menu-popup set-action-popup" onclick="event.stopPropagation();">
+                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Warmup')">
+                            ${set.isWarmup ? 'Unmark warm up' : 'Mark as warm up'}
+                        </button>
+                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Drop')">
+                            ${set.isDropSet ? 'Unmark drop set' : 'Mark as drop set'}
+                        </button>
+                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Fail')">
+                            ${set.isFailure ? 'Unmark failure' : 'Mark as failure'}
+                        </button>
+                        <div style="height:1px; background:#2c2c2e; margin:4px 0;"></div>
+                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'BW')">
+                            ${set.isBW ? 'Use weight' : 'Mark as bodyweight'}
+                        </button>
+                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Side')">
+                            ${set.side === 'L' ? 'Mark right side' : set.side === 'R' ? 'Clear side' : 'Mark left side'}
+                        </button>
+                        <button class="menu-item danger" onclick="removeSet(${exercise.id}, ${setIndex})">Delete set</button>
+                    </div>
                 ` : ''}
             `;
             card.appendChild(setContainer);
@@ -4029,7 +4126,9 @@ function viewWorkoutDetail(index) {
             if (set.isBW) tags += `<span class="d-tag bw">BW</span>`;
             if (set.side === 'L') tags += `<span class="d-tag side-l">L</span>`;
             if (set.side === 'R') tags += `<span class="d-tag side-r">R</span>`;
-            if (set.isFailure) tags += `<span class="d-tag fail">F</span>`;
+            if (set.isWarmup) tags += `<span class="d-tag warmup">W</span>`;
+                if (set.isDropSet) tags += `<span class="d-tag drop">D</span>`;
+                if (set.isFailure) tags += `<span class="d-tag fail">F</span>`;
             return `
                 <div class="detail-set-row">
                     <span>Set ${sIdx + 1}</span>
