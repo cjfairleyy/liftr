@@ -713,6 +713,44 @@
             top: 54px;
             right: 8px;
             min-width: 205px;
+            padding: 6px;
+        }
+
+        .set-action-popup .set-menu-item {
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .set-menu-check {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            color: transparent;
+            background: transparent;
+            font-size: 0.72rem;
+            font-weight: 900;
+        }
+
+        .set-menu-check.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.10);
+        }
+
+        .set-menu-value {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+            flex: 0 0 auto;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: #2c2c2e;
+            margin: 4px 0;
         }
         .set-state-labels {
             display: flex;
@@ -3875,23 +3913,29 @@ setContainer.innerHTML = `
                 </div>
                 ${set.menuOpen ? `
                     <div class="action-menu-popup set-action-popup" onclick="event.stopPropagation();">
-                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Warmup')">
-                            ${set.isWarmup ? 'Unmark warm up' : 'Mark as warm up'}
+                        <button class="menu-item set-menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Warmup')">
+                            <span>Mark as Warm Up</span>
+                            <span class="set-menu-check ${set.isWarmup ? 'active' : ''}">✓</span>
                         </button>
-                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Drop')">
-                            ${set.isDropSet ? 'Unmark drop set' : 'Mark as drop set'}
+                        <button class="menu-item set-menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Drop')">
+                            <span>Mark as Drop Set</span>
+                            <span class="set-menu-check ${set.isDropSet ? 'active' : ''}">✓</span>
                         </button>
-                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Fail')">
-                            ${set.isFailure ? 'Unmark failure' : 'Mark as failure'}
+                        <button class="menu-item set-menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Fail')">
+                            <span>Mark as Failure</span>
+                            <span class="set-menu-check ${set.isFailure ? 'active' : ''}">✓</span>
                         </button>
-                        <div style="height:1px; background:#2c2c2e; margin:4px 0;"></div>
-                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'BW')">
-                            ${set.isBW ? 'Use weight' : 'Mark as bodyweight'}
+                        <div class="menu-divider"></div>
+                        <button class="menu-item set-menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'BW')">
+                            <span>Mark as Bodyweight</span>
+                            <span class="set-menu-check ${set.isBW ? 'active' : ''}">✓</span>
                         </button>
-                        <button class="menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Side')">
-                            ${set.side === 'L' ? 'Mark right side' : set.side === 'R' ? 'Clear side' : 'Mark left side'}
+                        <button class="menu-item set-menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Side')">
+                            <span>Side</span>
+                            <span class="set-menu-value">${set.side === 'L' ? 'Left' : set.side === 'R' ? 'Right' : 'None'}</span>
                         </button>
-                        <button class="menu-item danger" onclick="removeSet(${exercise.id}, ${setIndex})">Delete set</button>
+                        <div class="menu-divider"></div>
+                        <button class="menu-item danger" onclick="removeSet(${exercise.id}, ${setIndex})">Delete Set</button>
                     </div>
                 ` : ''}
             `;
