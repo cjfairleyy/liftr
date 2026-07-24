@@ -87,8 +87,7 @@
             background-color: transparent;
             backdrop-filter: none;
             -webkit-backdrop-filter: none;
-            position: sticky;
-            top: 0;
+            position: relative;
             z-index: 10;
             display: flex;
             align-items: center;
@@ -96,6 +95,8 @@
             transition: padding 0.2s, background-color 0.2s;
         }
         header.has-content {
+            position: sticky;
+            top: 0;
             padding: 24px 24px 16px;
             background-color: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(20px);
@@ -3573,7 +3574,6 @@ function createWorkoutExerciseFromRoutineExercise(routineExercise) {
         id: Date.now() + Math.random(),
         name: name,
         supersetId: routineExercise.supersetId || null,
-        previousText: getPreviousPerformanceText(name),
         sets: buildSetsFromMostRecentExercise(name)
     };
 }
@@ -3671,26 +3671,6 @@ function buildNextSetFromMostRecentExercise(exerciseName, setIndex) {
     return createBlankSet();
 }
 
-function getPreviousPerformanceText(exerciseName) {
-    const previousExercise = getMostRecentExerciseLog(exerciseName);
-    if (!previousExercise || !Array.isArray(previousExercise.sets) || previousExercise.sets.length === 0) return '';
-
-    const completedSets = previousExercise.sets.filter(set => set && (set.completed || set.weight || set.reps || set.isBW));
-    const setsToShow = completedSets.length > 0 ? completedSets : previousExercise.sets;
-    const preview = setsToShow.slice(0, 3).map(set => {
-        const weight = set.isBW || set.weight === 'BW' ? 'BW' : `${set.weight || 0} lbs`;
-        return `${weight} × ${set.reps || 0}`;
-    }).join(', ');
-
-    const extra = setsToShow.length > 3 ? ` +${setsToShow.length - 3} more` : '';
-    return preview ? `Last time: ${preview}${extra}` : '';
-}
-
-function refreshExercisePreviousData(exercise) {
-    if (!exercise || !exercise.name) return;
-    exercise.previousText = getPreviousPerformanceText(exercise.name);
-}
-
 function addExercise(name) {
     if (!name) return;
 
@@ -3698,7 +3678,6 @@ function addExercise(name) {
         id: Date.now() + Math.random(),
         name: name,
         supersetId: null,
-        previousText: getPreviousPerformanceText(name),
         sets: buildSetsFromMostRecentExercise(name)
     });
 
@@ -3842,7 +3821,6 @@ function setSetSide(exerciseId, setIndex, side) {
 }
 
 function renderWorkout() {
-    currentWorkout.forEach(refreshExercisePreviousData);
     saveApp();
     const container = document.getElementById('workout-cards');
     if (!container) return;
@@ -3894,7 +3872,6 @@ function renderWorkout() {
                 <div style="font-weight: 700; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                     ${isLinkingMode && !isSource ? `Link ${escapeHTML(exercise.name)}` : escapeHTML(exercise.name)}
                 </div>
-                ${exercise.previousText ? `<div class="list-item-sub">${escapeHTML(exercise.previousText)}</div>` : ''}
             </div>
             
             <div style="position: relative; display: flex; align-items: center;">
