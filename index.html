@@ -747,6 +747,47 @@
             flex: 0 0 auto;
         }
 
+        .set-options-btn:disabled {
+            cursor: default;
+            pointer-events: none;
+            color: rgba(161, 161, 170, 0.32);
+            opacity: 1;
+        }
+
+        .set-side-row {
+            cursor: default;
+        }
+
+        .set-side-options {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px;
+            border-radius: 9px;
+            background: rgba(255, 255, 255, 0.055);
+        }
+
+        .set-side-option {
+            width: 29px;
+            height: 26px;
+            border: none;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .set-side-option.active {
+            background: rgba(255, 255, 255, 0.13);
+            color: var(--text-main);
+        }
+
+        .set-side-option:active {
+            transform: scale(0.94);
+        }
+
         .menu-divider {
             height: 1px;
             background: #2c2c2e;
@@ -782,21 +823,13 @@
             background: rgba(239, 68, 68, 0.16);
         }
 
-        .set-row, .set-drawer {
+        .set-row {
             display: grid;
             grid-template-columns: 28px 1fr 1fr 44px 36px !important;
             gap: 12px;
             align-items: center;
         }
-
-        .set-drawer {
-            margin-top: 6px;
-            padding: 0;
-            background: transparent !important;
-            border: none !important;
-        }
-
-        .set-number {
+.set-number {
             font-size: 0.95rem;
             color: var(--text-muted);
             font-weight: 700;
@@ -3703,6 +3736,7 @@ function toggleSet(exerciseId, setIndex) {
         const set = ex.sets[setIndex];
         const wasCompleted = !!set.completed;
         set.completed = !set.completed;
+        set.menuOpen = false;
 
         if (!wasCompleted && set.completed) {
             handleRestTimerAfterSet(ex, setIndex);
@@ -3714,9 +3748,10 @@ function toggleSet(exerciseId, setIndex) {
 
 function updateSetData(exerciseId, setIndex, field, value) {
     const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (ex) {
-        ex.sets[setIndex][field] = value;
-    }
+    if (!ex || !Array.isArray(ex.sets) || !ex.sets[setIndex]) return;
+    if (ex.sets[setIndex].completed) return;
+
+    ex.sets[setIndex][field] = value;
     saveApp();
 }
 
@@ -3765,6 +3800,7 @@ function toggleExerciseMenu(id) {
 function toggleSetMenu(exerciseId, setIndex) {
     const ex = currentWorkout.find(e => e.id === exerciseId);
     if (!ex || !Array.isArray(ex.sets) || !ex.sets[setIndex]) return;
+    if (ex.sets[setIndex].completed) return;
 
     const shouldOpen = !ex.sets[setIndex].menuOpen;
     closeWorkoutExerciseMenus(true);
@@ -3775,8 +3811,9 @@ function toggleSetMenu(exerciseId, setIndex) {
 
 function toggleMod(exerciseId, setIndex, type) {
     const ex = currentWorkout.find(e => e.id === exerciseId);
-    if (!ex) return;
+    if (!ex || !Array.isArray(ex.sets) || !ex.sets[setIndex]) return;
     const set = ex.sets[setIndex];
+    if (set.completed) return;
     
     if (type === 'BW') {
         set.isBW = !set.isBW;
@@ -3787,12 +3824,20 @@ function toggleMod(exerciseId, setIndex, type) {
         set.isDropSet = !set.isDropSet;
     } else if (type === 'Fail') {
         set.isFailure = !set.isFailure;
-    } else if (type === 'Side') {
-        if (!set.side) set.side = 'L';
-        else if (set.side === 'L') set.side = 'R';
-        else set.side = '';
     }
-    set.menuOpen = false;
+    set.menuOpen = true;
+    renderWorkout();
+}
+
+function setSetSide(exerciseId, setIndex, side) {
+    const ex = currentWorkout.find(e => e.id === exerciseId);
+    if (!ex || !Array.isArray(ex.sets) || !ex.sets[setIndex]) return;
+
+    const set = ex.sets[setIndex];
+    if (set.completed) return;
+
+    set.side = set.side === side ? '' : side;
+    set.menuOpen = true;
     renderWorkout();
 }
 
@@ -3907,7 +3952,7 @@ setContainer.innerHTML = `
                     <button class="check-btn" onclick="toggleSet(${exercise.id}, ${setIndex})">
                         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
                     </button>
-                    <button class="icon-btn" data-menu-trigger="true" onclick="event.stopPropagation(); toggleSetMenu(${exercise.id}, ${setIndex})">
+                    <button class="icon-btn set-options-btn" data-menu-trigger="true" onclick="event.stopPropagation(); toggleSetMenu(${exercise.id}, ${setIndex})" ${set.completed ? 'disabled aria-disabled="true"' : ''} aria-label="${set.completed ? 'Set options unavailable while completed' : 'Set options'}">
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
                     </button>
                 </div>
@@ -3930,10 +3975,13 @@ setContainer.innerHTML = `
                             <span>Mark as Bodyweight</span>
                             <span class="set-menu-check ${set.isBW ? 'active' : ''}">✓</span>
                         </button>
-                        <button class="menu-item set-menu-item" onclick="toggleMod(${exercise.id}, ${setIndex}, 'Side')">
+                        <div class="menu-item set-menu-item set-side-row">
                             <span>Side</span>
-                            <span class="set-menu-value">${set.side === 'L' ? 'Left' : set.side === 'R' ? 'Right' : 'None'}</span>
-                        </button>
+                            <div class="set-side-options" role="group" aria-label="Set side">
+                                <button class="set-side-option ${set.side === 'L' ? 'active' : ''}" onclick="event.stopPropagation(); setSetSide(${exercise.id}, ${setIndex}, 'L')" aria-pressed="${set.side === 'L'}">L</button>
+                                <button class="set-side-option ${set.side === 'R' ? 'active' : ''}" onclick="event.stopPropagation(); setSetSide(${exercise.id}, ${setIndex}, 'R')" aria-pressed="${set.side === 'R'}">R</button>
+                            </div>
+                        </div>
                         <div class="menu-divider"></div>
                         <button class="menu-item danger" onclick="removeSet(${exercise.id}, ${setIndex})">Delete Set</button>
                     </div>
